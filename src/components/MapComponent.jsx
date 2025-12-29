@@ -9,6 +9,7 @@ import { Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import LineComponent from './LineComponent.jsx';
 import FullscreenModal from './FullscreenModal.jsx';
+import ListDeviceModal from './ListDeviceModal.jsx';
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
@@ -20,165 +21,22 @@ const MapComponent = () => {
   const [data, setData] = useState([]);
   const [dataJalur, setDataJalur] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [deviceList, setDeviceList] = useState(null);
+  const [selectedStation, setSelectedStation] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [loadingDeviceList, setLoadingDeviceList] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [isOpenDeviceList, setIsOpenDeviceList] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.post('/api/v1/output/all-data', {}); // Replace with your API URL
-    // console.log("Response", response.data)
+        const response = await axios.post('/api/v1/output/all-station', {}); // Replace with your API URL
+    console.log("Response", response.data)
         setData(response.data.data);
       } catch (error) {
         console.error('Error fetching data:', error);
         // Fallback to dummy data if API fails
-        setData([
-          {
-            lat: -6.373988,  // Approximate coordinates for LRT Harjamukti (adjust as needed)
-            lng: 106.895623,
-            status: 'good',
-            nama: 'LRT Station Harjamukti',
-            suhu: 27,
-            kelembapan: 30
-          },
-          {
-            lat: -6.323826,  // Approximate coordinates for LRT Harjamukti (adjust as needed)
-            lng: 106.886606,
-            status: 'warning',
-            nama: 'LRT Station Ciracas',
-            suhu: 27,
-            kelembapan: 30
-          },
-          {
-            lat: -6.309541,  // Approximate coordinates for LRT Harjamukti (adjust as needed)
-            lng: 106.884325,
-            status: 'good',
-            nama: 'LRT Station Kp Rambutan',
-            suhu: 27,
-            kelembapan: 30
-          },
-          {
-            lat: -6.292874,  // Approximate coordinates for LRT Harjamukti (adjust as needed)
-            lng: 106.880535,
-            status: 'good',
-            nama: 'LRT Station Taman Mini',
-            suhu: 27,
-            kelembapan: 30
-          },
-          {
-            lat: -6.246225,  // Approximate coordinates for LRT Harjamukti (adjust as needed)
-            lng: 106.872386,
-            status: 'good',
-            nama: 'LRT Station Cawang',
-            suhu: 27,
-            kelembapan: 30
-          },
-          {
-            lat: -6.243477,  // Approximate coordinates for LRT Harjamukti (adjust as needed)
-            lng: 106.864131,
-            status: 'good',
-            nama: 'LRT Station Ciliwung',
-            suhu: 27,
-            kelembapan: 30
-          },
-          {
-            lat: -6.243476,  // Approximate coordinates for LRT Harjamukti (adjust as needed)
-            lng: 106.857102,
-            status: 'error',
-            nama: 'LRT Station Cikoko',
-            suhu: 27,
-            kelembapan: 30
-          },
-          {
-            lat: -6.242127,  // Approximate coordinates for LRT Harjamukti (adjust as needed)
-            lng: 106.838469,
-            status: 'good',
-            nama: 'LRT Station Pancoran Bank BJB',
-            suhu: 27,
-            kelembapan: 30
-          },
-          {
-            lat: -6.228881,  // Approximate coordinates for LRT Harjamukti (adjust as needed)
-            lng: 106.833175,
-            status: 'good',
-            nama: 'LRT Station Kuningan',
-            suhu: 27,
-            kelembapan: 30
-          },
-          {
-            lat: -6.221753,  // Approximate coordinates for LRT Harjamukti (adjust as needed)
-            lng: 106.832261,
-            status: 'good',
-            nama: 'LRT Station Rasuna Said',
-            suhu: 27,
-            kelembapan: 30
-          },
-          {
-            lat: -6.209277,  // Approximate coordinates for LRT Harjamukti (adjust as needed)
-            lng: 106.830211,
-            status: 'good',
-            nama: 'LRT Station Setiabudi',
-            suhu: 27,
-            kelembapan: 30
-          },
-          {
-            lat: -6.204846,  // Approximate coordinates for LRT Harjamukti (adjust as needed)
-            lng: 106.825605,
-            status: 'good',
-            nama: 'LRT Station Dukuh Atas',
-            suhu: 27,
-            kelembapan: 30
-          },
-          {
-            lat: -6.246470,  // Approximate coordinates for LRT Harjamukti (adjust as needed)
-            lng: 106.885241,
-            status: 'good',
-            nama: 'LRT Station Halim',
-            suhu: 27,
-            kelembapan: 30
-          },
-          {
-            lat: -6.257775,  // Approximate coordinates for LRT Harjamukti (adjust as needed)
-            lng: 106.927679,
-            status: 'good',
-            nama: 'LRT Station Jatibening Baru',
-            suhu: 27,
-            kelembapan: 30
-          },
-          {
-            lat: -6.256240,  // Approximate coordinates for LRT Harjamukti (adjust as needed)
-            lng: 106.950998,
-            status: 'good',
-            nama: 'LRT Station Cikunir 1',
-            suhu: 27,
-            kelembapan: 30
-          },
-          {
-            lat: -6.254512,  // Approximate coordinates for LRT Harjamukti (adjust as needed)
-            lng: 106.963378,
-            status: 'good',
-            nama: 'LRT Station Cikunir 2',
-            suhu: 27,
-            kelembapan: 30
-          },
-          {
-            lat: -6.252926,  // Approximate coordinates for LRT Harjamukti (adjust as needed)
-            lng: 106.990076,
-            status: 'good',
-            nama: 'LRT Station Bekasi Barat',
-            suhu: 27,
-            kelembapan: 30
-          },
-          {
-            lat: -6.263952,  // Approximate coordinates for LRT Harjamukti (adjust as needed)
-            lng: 107.021432,
-            status: 'good',
-            nama: 'LRT Station Jatimulya',
-            suhu: 27,
-            kelembapan: 30
-          },
-        ]);
-        
       }
     };
     fetchData();
@@ -381,18 +239,34 @@ setDataJalur(
   const handleOpenDetail = async (item) => {
     setLoading(true)
     setIsOpen(true)
-    console.log("Handle", item)
+    console.log("HandleDetail", item)
     try{
       const response = await axios.post('/api/v1/output/detail-device', {
         c_device : item.c_device, 
         c_project: item.c_project
       }); 
-    // console.log("Response", response.data)
+    console.log("Response", response.data)
         setSelectedItem(response.data.data);
         setLoading(false)
     } catch (err) {
       console.error("Error fetching:", err);
       setSelectedItem({ error: "Failed to load device data" });
+    }
+  }
+  const handleOpenListDevice = async (c_station) => {
+    setLoadingDeviceList(true)
+    setIsOpenDeviceList(true)
+    console.log("HandleDevice", c_station)
+    try{
+      const response = await axios.post('/api/v1/output/device-by-station', {
+        c_station : c_station
+      }); 
+    console.log("Response Station", response.data)
+        setDeviceList(response.data.data);
+        setLoadingDeviceList(false)
+    } catch (err) {
+      console.error("Error fetching:", err);
+      setSelectedStation({ error: "Failed to load Station data" });
     }
   }
   return (
@@ -409,7 +283,7 @@ setDataJalur(
 
       {data.map((item, index) => (
         <MarkerComponent key={index} item={item} 
-        onClick={() => {setSelectedItem(item), handleOpenDetail(item)}}   // <── Trigger Modal
+        onClick={() => { setSelectedStation(item), handleOpenListDevice(item.c_station)}}   // <── Trigger Modal
         />
       ))}
       {
@@ -426,7 +300,15 @@ setDataJalur(
         loading={loading}
         onClose={() => setIsOpen(false)} 
       />
-
+    {/* List Device MODAL */}
+      <ListDeviceModal 
+        item={deviceList} 
+        station={selectedStation}
+        open={isOpenDeviceList}
+        loading={loadingDeviceList}
+        funcClick={(e)=> handleOpenDetail(e)}
+        onClose={() => setIsOpenDeviceList(false)} 
+      />
     </MapContainer>
   </div>
 );

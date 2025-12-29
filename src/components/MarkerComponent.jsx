@@ -33,10 +33,9 @@ const MarkerComponent = ({ item, onClick  }) => {
 
             {/* 🟢 Tooltip muncul saat hover */}
             <Tooltip direction="top" offset={[0, -30]}>
-                <b>Nama:</b> {item.n_device_name}<br />
-                <b>Status:</b> {item.status}<br />
-                <b>Device Type:</b> {item.n_device_type_name}<br />
-                <b>Project:</b> {item.n_project_name}
+                <b>Nama:</b> {item.n_station}<br />
+                <b>Project:</b> {item.n_project_name}<br />
+                <b>Status:</b> {item.status}
             </Tooltip>
 
             {/* 🟡 Popup saat di klik (jika masih ingin menampilkan) */}
