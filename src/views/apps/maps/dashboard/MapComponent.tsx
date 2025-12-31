@@ -30,8 +30,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
-
-
 import MarkerComponent from './MarkerComponent';
 import LineComponent from './LineComponent';
 import FullscreenModal from './FullscreenModal';
@@ -298,7 +296,6 @@ const MapComponent = () => {
       try {
         const response = await axios.get('http://localhost:3000/api/pages/monit/station');
 
-        console.log("Response", response.data)
         setData(response.data.data);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -363,34 +360,38 @@ const MapComponent = () => {
   };
 
   const [dataAlat, setdataAlat] = useState<DeviceDetail[]>([]);
-
-  console.log(dataAlat);
-
+  const [loadingDataAlat, setloadingdataAlat] = useState<boolean>(true);
 
   useEffect(() => {
-    if (MIN_ZOOM_TO_SHOW <= currentZoom) {
+    console.log(MIN_ZOOM_TO_SHOW, currentZoom, MIN_ZOOM_TO_SHOW <= currentZoom);
+
+    if (MIN_ZOOM_TO_SHOW <= currentZoom && loadingDataAlat && dataFilter.length) {
+      setloadingdataAlat(false);
+
       const fetchData = async () => {
         try {
           const response = await axios.post('http://localhost:3000/api/pages/monit/alat', {
             c_station: dataFilter.find((item) => item.c_station)?.c_station
           });
 
-          console.log("Response", response.data)
-
-          if (response.data.code) {
+          if (response.data.data.code) {
             throw new Error("Error Data")
           }
 
-          setdataAlat(response.data.data)
+          setdataAlat(response.data.data ?? [])
         } catch (error) {
           console.error('Error fetching data:', error);
+        } finally {
+          setloadingdataAlat(true);
         }
       };
 
       fetchData();
     }
 
-  }, [dataFilter, currentZoom])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentZoom, dataFilter])
+
 
   return (
     <div className="w-full h-full min-h-[400px] relative z-0">
@@ -430,7 +431,11 @@ const MapComponent = () => {
 
         <ZoomHandler onZoomChange={(zoom) => setCurrentZoom(zoom)} />
         {currentZoom >= MIN_ZOOM_TO_SHOW && (
-          <MarkerClusterGroup chunkedLoading>
+          <MarkerClusterGroup
+            chunkedLoading
+            maxClusterRadius={1}
+
+          >
             {dataAlat.map((m, idx) => (
               <Marker key={idx} position={[Number(m.n_lat || 0), Number(m.n_lng || 0)]}>
                 <Popup>{m.n_device_name}</Popup>

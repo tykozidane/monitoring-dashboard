@@ -2,8 +2,10 @@
 import Grid from '@mui/material/Grid'
 
 // Component Imports
-import MapComponent from '@views/apps/maps/dashboard'
+// import MapComponent from '@views/apps/maps/dashboard'
+
 import WelcomeCard from '@views/apps/academy/dashboard/WelcomeCard'
+import FleetMap from '@views/apps/maps/fleet'
 
 /**
  * ! If you need data using an API call, uncomment the below API code, update the `process.env.API_URL` variable in the
@@ -30,8 +32,11 @@ const AcademyDashboard = async () => {
       <Grid size={{ xs: 12 }}>
         <WelcomeCard />
       </Grid>
-      <Grid size={{ xs: 12 }}>
+      {/* <Grid size={{ xs: 12 }}>
         <MapComponent />
+      </Grid> */}
+      <Grid className="w-full h-[500px] flex-1" >
+        <FleetMap mapboxAccessToken={process.env.MAPBOX_ACCESS_TOKEN!} />
       </Grid>
     </Grid>
   )

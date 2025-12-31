@@ -48,7 +48,7 @@ const FleetMap = (props: Props) => {
         // @ts-ignore
         ref={mapRef}
         initialViewState={{ longitude: -73.999024, latitude: 40.75249842, zoom: 12.5 }}
-        mapStyle='mapbox://styles/mapbox/light-v9'
+        mapStyle='mapbox://styles/fembinurilham/cmjqzdxpx00el01sd5al36oz7'
         attributionControl={false}
       >
         {geojson.features.map((item, index) => {
