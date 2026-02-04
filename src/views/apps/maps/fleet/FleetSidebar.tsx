@@ -206,7 +206,7 @@ const VehicleTracking = ({
       const a = document.createElement("a");
 
       a.href = url;
-      a.download = `device-config-${vehicleTrackingData.n_station}.json`;
+      a.download = `${Terminal.c_terminal_type}-config-${Terminal.c_terminal_sn}.json`;
       document.body.appendChild(a);
       a.click();
 
@@ -232,7 +232,7 @@ const VehicleTracking = ({
         </div>
       </AccordionSummary>
       <AccordionDetails>
-        <div className="relative flex flex-col gap-3 plb-4 ">
+        {!!expandedData?.length ? <div className="relative flex flex-col gap-3 plb-4 ">
           <div className="flex items-center justify-between">
             <Typography className="text-textPrimary!">
               Progress Success
@@ -251,7 +251,9 @@ const VehicleTracking = ({
             variant="determinate"
             value={progress}
           />
-        </div>
+        </div> : <div className="relative flex flex-col gap-3 p-4 text-center  bg-gray-200/5">
+          Not Data
+        </div>}
 
         {expandedData?.map((item, index) => (
           <Timeline
@@ -281,17 +283,16 @@ const VehicleTracking = ({
 
               <TimelineContent className="flex flex-col gap-0.5 pbs-0 pis-4 pbe-5">
                 <Typography
-                  variant="caption"
-                  className={
-                    item.status === 'OK'
-                      ? 'uppercase text-success! font-medium'
-                      : 'uppercase text-red-500! font-medium'
-                  }
+                  className="font-medium text-textPrimary!"
                 >
                   {item.c_terminal_type}
                 </Typography>
 
-                <Typography className="font-medium text-textPrimary!">
+                <Typography className={
+                  item.status === 'OK'
+                    ? 'uppercase text-success! font-medium'
+                    : 'uppercase text-red-500! font-medium'
+                }>
                   {item.status}
                 </Typography>
 
