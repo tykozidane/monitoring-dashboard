@@ -15,7 +15,7 @@ import classNames from 'classnames'
 
 //Components Imports
 import CustomIconButton from '@core/components/mui/IconButton'
-import FleetSidebar from './FleetSidebar'
+import FleetSidebar, { type TerminalMonitoringProps } from './FleetSidebar'
 import FleetMap from './FleetMap'
 
 // Hook Imports
@@ -81,7 +81,7 @@ const Fleet = ({ mapboxAccessToken }: { mapboxAccessToken: string }) => {
   const [backdropOpen, setBackdropOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [expanded, setExpanded] = useState<number | false>(false)
-  const [expandedData, setExpandedData] = useState<DeviceDetail[]>([])
+  const [expandedData, setExpandedData] = useState<TerminalMonitoringProps[]>([])
   const [expandedDataSelected, setExpandedDataSelected] = useState<viewStateType>()
 
   const [viewState, setViewState] = useState<viewStateType>({
@@ -99,7 +99,7 @@ const Fleet = ({ mapboxAccessToken }: { mapboxAccessToken: string }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.post('http://36.66.3.44:7015/api/v1/output/all-station');
+        const response = await axios.post('http://192.168.62.90:4003/api/v1/output/all-station');
 
         setGeojson({
           type: 'FeatureCollection',
@@ -190,11 +190,11 @@ const Fleet = ({ mapboxAccessToken }: { mapboxAccessToken: string }) => {
 
   const handleOpenDetail = async (item: coordinate) => {
     try {
-      const response = await axios.post('http://36.66.3.44:7015/api/v1/output/device-by-station', {
-        c_station: item.c_station
-      });
 
-      console.log("Response", response.data.data)
+      const response = await axios.post('http://192.168.62.90:4003/api/v1/output/terminal-by-station', {
+        c_station: item.c_station,
+        c_project: item.n_project_name
+      });
 
       setExpandedData(response.data.data);
       setExpandedDataSelected(undefined)

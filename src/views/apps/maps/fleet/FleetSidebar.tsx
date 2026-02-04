@@ -1,5 +1,5 @@
 // React Imports
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import type { ReactNode, SyntheticEvent } from 'react'
 
 // Mui Imports
@@ -26,7 +26,11 @@ import type { TimelineProps } from '@mui/lab/Timeline'
 import PerfectScrollbar from 'react-perfect-scrollbar'
 
 // Types Imports
-import type { coordinate, DeviceDetail, viewStateType } from './index'
+import { CircularProgress } from '@mui/material'
+
+import axios from 'axios'
+
+import type { coordinate, viewStateType } from './index'
 
 // Components Imports
 import CustomAvatar from '@core/components/mui/Avatar'
@@ -40,7 +44,7 @@ type Props = {
   isBelowMdScreen: boolean
   isBelowSmScreen: boolean
   expanded: number | false
-  expandedData: DeviceDetail[]
+  expandedData: TerminalMonitoringProps[]
   setExpandedDataSelected: (value: viewStateType) => void
   setExpanded: (value: number | false) => void
   setViewState: (value: viewStateType) => void
@@ -96,13 +100,43 @@ const Timeline = styled(MuiTimeline)<TimelineProps>({
   }
 })
 
-type VehicleTrackingDataType = {
-  name: string
-  describe: string
-  progress: number
-  driverName: string
-  passengerName: string
+export interface TerminalMonitoringProps {
+  c_project: string;
+  n_project_name: string;
+  n_project_desc: string;
+
+  c_terminal_sn: string;
+  c_terminal_type: string;
+
+  c_terminal_01: string;
+  c_terminal_02: string | null;
+
+  c_station: string;
+  n_station: string;
+
+  n_lat: string;   // string karena dari API string
+  n_lng: string;   // string karena dari API string
+
+  d_monitoring: string | null; // null saat NO DATA
+  status: string;
+  progress: number;
 }
+
+export interface StationMonitoringProps {
+  c_project: string;           // "2"
+  c_station: string;           // "CIL"
+
+  n_project_name: string | null;
+  n_project_desc: string | null;
+
+  n_station: string;           // "Station CiliwungLRT Jabodebek"
+
+  n_lat: string;               // "-6.243477"
+  n_lng: string;               // "106.864131"
+
+  status: string;
+}
+
 
 const ScrollWrapper = ({ children, isBelowLgScreen }: { children: ReactNode; isBelowLgScreen: boolean }) => {
   if (isBelowLgScreen) {
@@ -124,13 +158,17 @@ const VehicleTracking = ({
   handleChange,
   setExpandedDataSelected
 }: {
-  vehicleTrackingData: VehicleTrackingDataType
+  vehicleTrackingData: StationMonitoringProps
   index: number
   expanded: number | false
-  expandedData: DeviceDetail[]
+  expandedData: TerminalMonitoringProps[]
   handleChange: (panel: number) => (event: SyntheticEvent, isExpanded: boolean) => void
   setExpandedDataSelected: (value: viewStateType) => void
 }) => {
+
+
+  const [loading, setloading] = useState(false);
+
   const getProgressColor = (value: number) => {
     // Jika nilai di bawah 35% -> Merah
     if (value <= 35) return '#ef4444'; // Tailwind: red-500 (Danger)
@@ -144,6 +182,42 @@ const VehicleTracking = ({
 
   const progress = expandedData.length ? Math.round((expandedData.filter(i => i.status === 'OK').length / expandedData.length) * 100) : 0;
 
+  const downloadConfig = async (Terminal: TerminalMonitoringProps) => {
+    try {
+      setloading(true);
+
+      const response = await axios.post('http://192.168.62.90:4003/api/v1/terminal/get-terminal-config', {
+        "c_project": Terminal.c_project,
+        "c_terminal_sn": Terminal.c_terminal_sn
+      }, {
+        headers: { 'authorization': "Basic aGlzbnV0ZWNoOm51dGVjaDEyMw==" }
+      });
+
+      // 🔹 Convert object → JSON string
+      const jsonString = JSON.stringify(response?.data?.data, null, 2);
+
+      // 🔹 Buat file Blob
+      const blob = new Blob([jsonString], { type: "application/json" });
+
+      // 🔹 Buat URL download
+      const url = window.URL.createObjectURL(blob);
+
+      // 🔹 Trigger download
+      const a = document.createElement("a");
+
+      a.href = url;
+      a.download = `device-config-${vehicleTrackingData.n_station}.json`;
+      document.body.appendChild(a);
+      a.click();
+
+      // 🔹 Cleanup
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } finally {
+      setTimeout(() => setloading(false), 1000);
+    }
+  };
+
   return (
     <Accordion expanded={expanded === index} onChange={handleChange(index)}>
       <AccordionSummary>
@@ -152,51 +226,103 @@ const VehicleTracking = ({
             <i className=' tabler-train text-3xl' />
           </CustomAvatar>
           <div className='flex flex-col gap-1'>
-            <Typography className='font-normal'>{vehicleTrackingData.name}</Typography>
-            <Typography className='font-normal text-textSecondary!'>{vehicleTrackingData.describe}</Typography>
+            <Typography className='font-normal'>{vehicleTrackingData.n_station}</Typography>
+            <Typography className='font-normal text-textSecondary!'>{vehicleTrackingData.status}</Typography>
           </div>
         </div>
       </AccordionSummary>
       <AccordionDetails>
-        <div className='flex flex-col gap-1 plb-4'>
-          <div className='flex items-center justify-between'>
-            <Typography className='text-textPrimary!'>Progress Success</Typography>
+        <div className="relative flex flex-col gap-3 plb-4 ">
+          <div className="flex items-center justify-between">
+            <Typography className="text-textPrimary!">
+              Progress Success
+            </Typography>
             <Typography>{progress}%</Typography>
           </div>
           <LinearProgress
             sx={{
-              height: 8, // Opsional: sedikit lebih tebal agar warnanya jelas
-              borderRadius: 4, // Opsional: membuat ujungnya bulat
-
+              height: 8,
+              borderRadius: 4,
               '& .MuiLinearProgress-bar': {
                 backgroundColor: getProgressColor(progress),
                 transition: 'background-color 0.4s ease-in-out, transform 0.4s linear'
               }
-            }} variant='determinate' value={progress} />
+            }}
+            variant="determinate"
+            value={progress}
+          />
         </div>
+
         {expandedData?.map((item, index) => (
-          <Timeline key={index} className='pbs-4 cursor-pointer' onClick={() => setExpandedDataSelected({
-            longitude: Number(item.n_lng),
-            latitude: Number(item.n_lat),
-            zoom: 22
-          })}>
+          <Timeline
+            key={index}
+            className="relative pbs-4 pr-14 cursor-pointer"
+            onClick={() =>
+              setExpandedDataSelected({
+                longitude: Number(item.n_lng),
+                latitude: Number(item.n_lat),
+                zoom: 22
+              })
+            }
+          >
             <TimelineItem>
               <TimelineSeparator>
-                <TimelineDot variant='outlined' className='mlb-0'>
-                  <i className={item.status === 'OK' ? 'tabler-circle-check text-xl text-success' : 'tabler-circle-x text-xl text-red-500'} />
+                <TimelineDot variant="outlined" className="mlb-0">
+                  <i
+                    className={
+                      item.status === 'OK'
+                        ? 'tabler-circle-check text-xl text-success'
+                        : 'tabler-circle-x text-xl text-red-500'
+                    }
+                  />
                 </TimelineDot>
                 <TimelineConnector />
               </TimelineSeparator>
-              <TimelineContent className='flex flex-col gap-0.5 pbs-0 pis-4 pbe-5'>
-                <Typography variant='caption' className={item.status === 'OK' ? 'uppercase text-success!' : 'uppercase text-red-500!'}>
-                  {item.n_device_name}
+
+              <TimelineContent className="flex flex-col gap-0.5 pbs-0 pis-4 pbe-5">
+                <Typography
+                  variant="caption"
+                  className={
+                    item.status === 'OK'
+                      ? 'uppercase text-success! font-medium'
+                      : 'uppercase text-red-500! font-medium'
+                  }
+                >
+                  {item.c_terminal_type}
                 </Typography>
-                <Typography className='font-medium text-textPrimary!'>{item.status}</Typography>
-                <Typography variant='body2'>{item.n_device_subtype_name} ({item.c_device})</Typography>
+
+                <Typography className="font-medium text-textPrimary!">
+                  {item.status}
+                </Typography>
+
+                <Typography variant="body2">
+                  SN:{item.c_terminal_sn} ({item.c_terminal_01}{item.c_terminal_02 ? ' | ' + item.c_terminal_02 : ''})
+                </Typography>
               </TimelineContent>
             </TimelineItem>
+
+            {/* 🔘 TOMBOL KANAN TENGAH */}
+
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                downloadConfig(item)
+              }}
+              title="Download Config"
+              disabled={loading}
+              className="
+                absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer
+                h-10 w-10 flex items-center justify-center
+                rounded bg-blue-600 text-white
+                hover:bg-blue-900"
+            >
+              {loading ? <CircularProgress size={20} color="inherit" /> : <i className="tabler-download text-xl" />}
+
+            </button>
           </Timeline>
         ))}
+
+
         {/* <Timeline className='pbs-4'>
           <TimelineItem>
             <TimelineSeparator>
@@ -313,7 +439,7 @@ const FleetSidebar = (props: Props) => {
       }}
     >
       <div className='flex justify-between items-center p-6'>
-        <Typography variant='h5'>Fleet</Typography>
+        <Typography variant='h5'>Monitoring Station</Typography>
 
         {isBelowMdScreen ? (
           <IconButton
@@ -329,13 +455,7 @@ const FleetSidebar = (props: Props) => {
       <ScrollWrapper isBelowLgScreen={isBelowLgScreen}>
         {geojson.features.map((item, index) => (
           <VehicleTracking
-            vehicleTrackingData={{
-              name: item.data?.n_station || 'N/A',
-              describe: item.data?.status || 'N/A',
-              progress: 100,
-              driverName: item.data?.status || 'N/A',
-              passengerName: item.data?.n_station || 'N/A'
-            }}
+            vehicleTrackingData={item.data}
             index={index}
             expanded={expanded}
             expandedData={expandedData}

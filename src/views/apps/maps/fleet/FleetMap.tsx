@@ -7,10 +7,11 @@ import type { MapRef } from 'react-map-gl/mapbox'
 import 'mapbox-gl/dist/mapbox-gl.css'
 
 // Types Imports
-import type { DeviceDetail, viewStateType } from './index'
+import type { viewStateType } from './index'
 
 // Style Imports
 import './styles.css'
+import { type TerminalMonitoringProps } from './FleetSidebar'
 
 type Props = {
   viewState: viewStateType
@@ -27,7 +28,7 @@ type Props = {
     }[]
   }
   expandedDataSelected?: viewStateType
-  expandedData?: DeviceDetail[]
+  expandedData?: TerminalMonitoringProps[]
   mapboxAccessToken: string
 }
 
@@ -52,12 +53,16 @@ const FleetMap = (props: Props) => {
     <div className='is-full bs-full'>
       <Map
         mapboxAccessToken={mapboxAccessToken}
-        // eslint-disable-next-line lines-around-comment
-        // @ts-ignore
         ref={mapRef}
-        initialViewState={{ longitude: 106.900, latitude: -6.236, zoom: 12.5 }}
         mapStyle='mapbox://styles/fembinurilham/cmjqzdxpx00el01sd5al36oz7'
         attributionControl={false}
+        initialViewState={{
+          longitude: 106.838469,
+          latitude: -6.242127,
+          zoom: 16,
+          bearing: -50,
+          pitch: 80
+        }}
       >
         {geojson.features.map((item, index) => {
           return (
@@ -104,10 +109,10 @@ const FleetMap = (props: Props) => {
                   })}
                 />
                 {Number(expandedDataSelected?.longitude) == Number(item.n_lng) && Number(expandedDataSelected?.latitude) == Number(item.n_lat) && (
-                  <p className='text-[10px] leading-3 font-bold text-gray-800 '>{item.n_device_subtype_name} </p>
+                  <p className='text-[10px] leading-3 font-bold text-gray-800 '>{item.c_terminal_type} </p>
                 )}
                 {Number(expandedDataSelected?.longitude) == Number(item.n_lng) && Number(expandedDataSelected?.latitude) == Number(item.n_lat) && (
-                  <p className='text-[10px] leading-3 font-bold text-gray-800 '> ({item.c_device})</p>
+                  <p className='text-[10px] leading-3 font-bold text-gray-800 '> ({item.c_terminal_01}{item.c_terminal_02 ? ' | ' + item.c_terminal_02 : ''})</p>
                 )}
               </div>
             </Marker>
