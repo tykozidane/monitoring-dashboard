@@ -99,7 +99,7 @@ const Fleet = ({ mapboxAccessToken }: { mapboxAccessToken: string }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/pages/monit/station');
+        const response = await axios.post('http://36.66.3.44:7015/api/v1/output/all-station');
 
         setGeojson({
           type: 'FeatureCollection',
@@ -124,6 +124,44 @@ const Fleet = ({ mapboxAccessToken }: { mapboxAccessToken: string }) => {
     // const interval = setInterval(fetchData, 60000);
     // return () => clearInterval(interval);
   }, []);
+
+
+  useEffect(() => {
+    // 1️⃣ Cegah refresh / close tab (browser dialog)
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = ''
+    }
+
+    // 2️⃣ Cegah tombol F5 & Ctrl+R
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.key === 'F5' ||
+        ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'r')
+      ) {
+        e.preventDefault()
+        alert('Sangat tidak di anjurkan untuk refresh')
+      }
+    }
+
+    // 3️⃣ Cegah tombol Back browser
+    history.pushState(null, '', location.href)
+
+    const handlePopState = () => {
+      alert('Anda yakin ingin meninggalkan halaman ini?')
+      history.pushState(null, '', location.href)
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('popstate', handlePopState)
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('popstate', handlePopState)
+    }
+  }, [])
 
   // Hooks
   const { settings } = useSettings()
@@ -152,7 +190,7 @@ const Fleet = ({ mapboxAccessToken }: { mapboxAccessToken: string }) => {
 
   const handleOpenDetail = async (item: coordinate) => {
     try {
-      const response = await axios.post('http://localhost:3000/api/pages/monit/alat', {
+      const response = await axios.post('http://36.66.3.44:7015/api/v1/output/device-by-station', {
         c_station: item.c_station
       });
 
