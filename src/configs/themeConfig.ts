@@ -54,8 +54,8 @@ export type Config = {
 }
 
 const themeConfig: Config = {
-  templateName: 'nutech',
-  homePageUrl: '/dashboards/maps',
+  templateName: 'Nutech',
+  homePageUrl: '/dashboards/monitoring',
   settingsCookieName: 'vuexy-mui-next-demo-1',
   mode: 'system', // 'system', 'light', 'dark'
   skin: 'default', // 'default', 'bordered'

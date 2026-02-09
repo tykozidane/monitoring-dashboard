@@ -14,6 +14,8 @@ module.exports = {
     '@typescript-eslint/no-non-null-assertion': 'off',
     '@typescript-eslint/no-unused-expressions': 'off',
     'import/no-named-as-default': 'off',
+    'no-unused-vars': 'off',
+    '@typescript-eslint/no-unused-vars': 'off',
     'lines-around-comment': [
       'error',
       {

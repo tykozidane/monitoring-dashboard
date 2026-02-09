@@ -14,9 +14,9 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
     children: [
       // This is how you will normally render menu item
       {
-        label: dictionary['navigation'].maps,
-        icon: 'tabler-circle',
-        href: '/dashboards/maps'
+        label: dictionary['navigation'].monitoring,
+        icon: 'tabler-chart-histogram',
+        href: '/dashboards/monitoring'
       },
     ]
   },
