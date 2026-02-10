@@ -11,6 +11,9 @@ import IconButton from '@mui/material/IconButton'
 import classnames from 'classnames'
 
 // Type Imports
+// eslint-disable-next-line import/no-unresolved
+import frontCommonStyles from '@views/front-pages/styles.module.css'
+
 import type { Mode } from '@core/types'
 
 // Component Imports
@@ -26,7 +29,6 @@ import { frontLayoutClasses } from '@layouts/utils/layoutClasses'
 
 // Styles Imports
 import styles from './styles.module.css'
-import frontCommonStyles from '@views/front-pages/styles.module.css'
 
 const Footer = ({ mode }: { mode: Mode }) => {
   // Vars
@@ -39,7 +41,7 @@ const Footer = ({ mode }: { mode: Mode }) => {
   return (
     <footer className={frontLayoutClasses.footer}>
       <div className='relative'>
-        <img src={dashboardImage} alt='footer bg' className='absolute inset-0 is-full bs-full object-cover -z-[1]' />
+        <img src={dashboardImage} alt='footer bg' className='absolute inset-0 is-full bs-full object-cover -z-1' />
         <div className={classnames('plb-12 text-white', frontCommonStyles.layoutSpacing)}>
           <Grid container rowSpacing={10} columnSpacing={12}>
             <Grid size={{ xs: 12, lg: 5 }}>
@@ -91,7 +93,7 @@ const Footer = ({ mode }: { mode: Mode }) => {
                 <Typography component={Link} href='/front-pages/pricing' color='white' className='opacity-[0.78]'>
                   Pricing
                 </Typography>
-                <Link href='/front-pages/payment' className='flex items-center gap-[10px]'>
+                <Link href='/front-pages/payment' className='flex items-center gap-2.5'>
                   <Typography color='white' className='opacity-[0.78]'>
                     Payment
                   </Typography>
@@ -134,8 +136,8 @@ const Footer = ({ mode }: { mode: Mode }) => {
                 Download our App
               </Typography>
               <div className='flex flex-col gap-4'>
-                <Link className='bg-[#282C3E] bs-[56px] is-[211px] rounded'>
-                  <div className='flex items-center pli-5 plb-[7px] gap-6'>
+                <Link className='bg-[#282C3E] bs-14 is-[211px] rounded'>
+                  <div className='flex items-center pli-5 py-[7px] gap-6'>
                     <img src='/images/front-pages/apple-icon.png' alt='apple store' className='bs-[34px]' />
                     <div className='flex flex-col items-start'>
                       <Typography variant='body2' color='white' className='opacity-75'>
@@ -147,8 +149,8 @@ const Footer = ({ mode }: { mode: Mode }) => {
                     </div>
                   </div>
                 </Link>
-                <Link className='bg-[#282C3E] bs-[56px] is-[211px] rounded'>
-                  <div className='flex items-center pli-5 plb-[7px] gap-6'>
+                <Link className='bg-[#282C3E] bs-14 is-[211px] rounded'>
+                  <div className='flex items-center pli-5 py-[7px] gap-6'>
                     <img src='/images/front-pages/google-play-icon.png' alt='Google play' className='bs-[34px]' />
                     <div className='flex flex-col items-start'>
                       <Typography variant='body2' color='white' className='opacity-75'>
@@ -168,17 +170,12 @@ const Footer = ({ mode }: { mode: Mode }) => {
       <div className='bg-[#211B2C]'>
         <div
           className={classnames(
-            'flex flex-wrap items-center justify-center sm:justify-between gap-4 plb-[15px]',
+            'flex flex-wrap items-center justify-center sm:justify-between gap-4 py-[15px]',
             frontCommonStyles.layoutSpacing
           )}
         >
           <Typography className='text-white' variant='body2'>
-            <span>{`© ${new Date().getFullYear()}, Made with `}</span>
-            <span>{`❤️`}</span>
-            <span>{` by `}</span>
-            <Link href='https://pixinvent.com/' target='_blank' className='font-medium text-white'>
-              Pixinvent
-            </Link>
+            <span>{`© ${new Date().getFullYear()}, Made with Nutech`}</span>
           </Typography>
           <div className='flex gap-1.5 items-center'>
             <IconButton component={Link} size='small' href='https://github.com/pixinvent' target='_blank'>
