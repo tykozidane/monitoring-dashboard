@@ -12,13 +12,17 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
     },
     icon: 'tabler-smart-home',
     children: [
-      // This is how you will normally render menu item
       {
         label: dictionary['navigation'].monitoring,
         icon: 'tabler-chart-histogram',
         href: '/dashboards/monitoring'
       },
     ]
+  },
+  {
+    label: dictionary['navigation'].terminal,
+    icon: 'tabler-layout-sidebar-right-expand',
+    href: '/terminal'
   },
 ]
 

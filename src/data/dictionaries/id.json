@@ -101,6 +101,7 @@
     "menuLevels": "Tingkat Menu",
     "menuLevel2": "Menu Tingkat 2",
     "menuLevel3": "Menu Tingkat 3",
-    "disabledMenu": "Menu Nonaktif"
+    "disabledMenu": "Menu Nonaktif",
+    "terminal": "Terminal"
   }
 }

@@ -15,7 +15,7 @@ import classNames from 'classnames'
 
 //Components Imports
 import CustomIconButton from '@core/components/mui/IconButton'
-import FleetSidebar, { type TerminalMonitoringProps } from './FleetSidebar'
+import FleetSidebar from './FleetSidebar'
 import FleetMap from './FleetMap'
 
 // Hook Imports
@@ -24,74 +24,22 @@ import { useSettings } from '@core/hooks/useSettings'
 // Util Imports
 import { commonLayoutClasses } from '@layouts/utils/layoutClasses'
 
-
-export type DeviceDetail = {
-  c_project: string;
-  n_project_name: string;
-  n_project_desc: string;
-  c_device: string;
-  n_device_name: string;
-  c_device_type: string;
-  n_device_type_name: string;
-  c_device_subtype: string;
-  n_device_subtype_name: string;
-  c_station: string;
-  n_station: string;
-  c_terminal: string;
-  n_lat: string;
-  n_lng: string;
-  d_time_sensor: string; // ISO Date String
-  created_at: string;    // ISO Date String
-  status: "OK" | "WARNING" | "ERROR" | string;
-};
-
-export type coordinate = {
-  c_project: string,
-  n_project_name: string,
-  n_project_desc: string,
-  c_station: string,
-  n_station: string,
-  n_lat: string,
-  n_lng: string,
-  status: string
-}
-
-export type viewStateType = {
-  longitude: number
-  latitude: number
-  zoom: number
-}
-
-export type geojsonProps = {
-
-  type: 'FeatureCollection',
-  features: Array<{
-    type: 'Feature',
-    geometry: {
-      type: 'Point',
-      longitude: number,
-      latitude: number
-    },
-    data: DeviceDetail
-  }>
-}
-
 const Fleet = ({ mapboxAccessToken }: { mapboxAccessToken: string }) => {
   // States
   const [backdropOpen, setBackdropOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [expanded, setExpanded] = useState<number | false>(false)
   const [expandedData, setExpandedData] = useState<TerminalMonitoringProps[]>([])
-  const [expandedDataSelected, setExpandedDataSelected] = useState<viewStateType>()
+  const [expandedDataSelected, setExpandedDataSelected] = useState<ViewStateType>()
 
-  const [viewState, setViewState] = useState<viewStateType>({
+  const [viewState, setViewState] = useState<ViewStateType>({
     longitude: 106.900,
     latitude: -6.236,
     zoom: 12.5
   })
 
 
-  const [geojson, setGeojson] = useState<geojsonProps>({
+  const [geojson, setGeojson] = useState<GeojsonProps>({
     type: 'FeatureCollection',
     features: []
   });
@@ -103,7 +51,7 @@ const Fleet = ({ mapboxAccessToken }: { mapboxAccessToken: string }) => {
 
         setGeojson({
           type: 'FeatureCollection',
-          features: response.data.data.map((map: coordinate) => ({
+          features: response.data.data.map((map: StationProps) => ({
             type: 'Feature',
             geometry: {
               type: 'Point',
@@ -188,15 +136,15 @@ const Fleet = ({ mapboxAccessToken }: { mapboxAccessToken: string }) => {
       handleOpenDetail(geojson.features[expanded].data)
   }, [expanded, geojson])
 
-  const handleOpenDetail = async (item: coordinate) => {
+  const handleOpenDetail = async (item: StationProps) => {
     try {
 
       const response = await axios.post('http://192.168.62.90:4003/api/v1/output/terminal-by-station', {
         c_station: item.c_station,
-        c_project: item.n_project_name
+        c_project: item.n_project_name ?? 'KCI'
       });
 
-      setExpandedData(response.data.data);
+      response.data.data.code ?? setExpandedData(response.data.data ?? []);
       setExpandedDataSelected(undefined)
     } catch (err) {
       console.error("Error fetching:", err);

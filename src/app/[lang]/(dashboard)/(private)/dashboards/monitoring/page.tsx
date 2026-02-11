@@ -4,8 +4,8 @@ import Grid from '@mui/material/Grid'
 // Component Imports
 // import MapComponent from '@views/apps/maps/dashboard'
 
-import WelcomeCard from '@views/apps/academy/dashboard/WelcomeCard'
-import FleetMap from '@views/apps/maps/fleet'
+import WelcomeCard from '@/views/dashboard/WelcomeCard'
+import FleetMap from '@views/dashboard/maps/fleet'
 
 /**
  * ! If you need data using an API call, uncomment the below API code, update the `process.env.API_URL` variable in the

@@ -6,15 +6,11 @@ import { Map, Marker } from 'react-map-gl/mapbox'
 import type { MapRef } from 'react-map-gl/mapbox'
 import 'mapbox-gl/dist/mapbox-gl.css'
 
-// Types Imports
-import type { viewStateType } from './index'
-
 // Style Imports
 import './styles.css'
-import { type TerminalMonitoringProps } from './FleetSidebar'
 
 type Props = {
-  viewState: viewStateType
+  viewState: ViewStateType
   carIndex: number | false
   geojson: {
     type: string
@@ -27,7 +23,7 @@ type Props = {
       }
     }[]
   }
-  expandedDataSelected?: viewStateType
+  expandedDataSelected?: ViewStateType
   expandedData?: TerminalMonitoringProps[]
   mapboxAccessToken: string
 }

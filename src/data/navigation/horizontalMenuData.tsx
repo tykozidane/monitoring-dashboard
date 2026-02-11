@@ -20,6 +20,11 @@ const horizontalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>
       },
     ]
   },
+  {
+    label: dictionary['navigation'].terminal,
+    icon: 'tabler-layout-sidebar-right-expand',
+    href: '/terminal'
+  },
 ]
 
 export default horizontalMenuData

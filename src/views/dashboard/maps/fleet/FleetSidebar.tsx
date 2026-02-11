@@ -30,8 +30,6 @@ import { CircularProgress } from '@mui/material'
 
 import axios from 'axios'
 
-import type { coordinate, viewStateType } from './index'
-
 // Components Imports
 import CustomAvatar from '@core/components/mui/Avatar'
 
@@ -45,9 +43,9 @@ type Props = {
   isBelowSmScreen: boolean
   expanded: number | false
   expandedData: TerminalMonitoringProps[]
-  setExpandedDataSelected: (value: viewStateType) => void
+  setExpandedDataSelected: (value: ViewStateType) => void
   setExpanded: (value: number | false) => void
-  setViewState: (value: viewStateType) => void
+  setViewState: (value: ViewStateType) => void
   geojson: {
     type: string
     features: {
@@ -57,7 +55,7 @@ type Props = {
         longitude: number
         latitude: number
       },
-      data: coordinate
+      data: StationProps
     }[]
   }
 }
@@ -100,28 +98,6 @@ const Timeline = styled(MuiTimeline)<TimelineProps>({
   }
 })
 
-export interface TerminalMonitoringProps {
-  c_project: string;
-  n_project_name: string;
-  n_project_desc: string;
-
-  c_terminal_sn: string;
-  c_terminal_type: string;
-
-  c_terminal_01: string;
-  c_terminal_02: string | null;
-
-  c_station: string;
-  n_station: string;
-
-  n_lat: string;   // string karena dari API string
-  n_lng: string;   // string karena dari API string
-
-  d_monitoring: string | null; // null saat NO DATA
-  status: string;
-  progress: number;
-}
-
 export interface StationMonitoringProps {
   c_project: string;           // "2"
   c_station: string;           // "CIL"
@@ -163,7 +139,7 @@ const VehicleTracking = ({
   expanded: number | false
   expandedData: TerminalMonitoringProps[]
   handleChange: (panel: number) => (event: SyntheticEvent, isExpanded: boolean) => void
-  setExpandedDataSelected: (value: viewStateType) => void
+  setExpandedDataSelected: (value: ViewStateType) => void
 }) => {
 
 
@@ -232,7 +208,7 @@ const VehicleTracking = ({
         </div>
       </AccordionSummary>
       <AccordionDetails>
-        {!!expandedData?.length ? <div className="relative flex flex-col gap-3 plb-4 ">
+        {!expandedData?.length ? <div className="relative flex flex-col gap-3 plb-4 ">
           <div className="flex items-center justify-between">
             <Typography className="text-textPrimary!">
               Progress Success
@@ -255,7 +231,7 @@ const VehicleTracking = ({
           Not Data
         </div>}
 
-        {expandedData?.map((item, index) => (
+        {expandedData.map((item, index) => (
           <Timeline
             key={index}
             className="relative pbs-4 pr-14 cursor-pointer"

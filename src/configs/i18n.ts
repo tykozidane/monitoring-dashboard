@@ -3,7 +3,7 @@ export const i18n = {
   locales: ['id', 'en'],
   langDirection: {
     en: 'ltr',
-    in: 'ltr'
+    id: 'ltr'
   }
 } as const
 

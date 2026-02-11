@@ -171,7 +171,7 @@ const WelcomeCard = () => {
       <div className='md:is-8/12'>
         <div className='flex items-baseline gap-1 mbe-2'>
           <Typography variant='h5'>Welcome back,</Typography>
-          <Typography variant='h4'>Felecia 👋🏻</Typography>
+          <Typography variant='h4'>nutech 👋🏻</Typography>
         </div>
         <div className='mbe-4'>
           <Typography>Your progress this week is Awesome. let&apos;s keep it up</Typography>
