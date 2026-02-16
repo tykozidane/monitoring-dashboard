@@ -19,6 +19,26 @@ declare global {
     status: 'OK' | 'WARNING' | 'ERROR' | string
   }
 
+  export type SyncDataProps = {
+    sync_id: string
+    item_serial_code: string
+    client_name: string
+    model_code: string
+    model_name: string
+    station_code: string
+    station_name: string
+    d_sync: string
+    b_mapping: boolean
+    b_active: boolean
+    terminal_id: string | null
+    c_terminal_sn: string | null
+    c_project: string | null
+    c_station: string | null
+    c_terminal_type: string | null
+    match_status: 'MATCH' | 'NOT_MATCH' | string
+    signature_status: 'SIGNATURE_NOT_IDENTIC' | 'SIGNATURE_MATCH' | string | null
+  }
+
   type TerminalMonitoringProps = {
     c_project: string
     n_project_name: string
@@ -69,6 +89,68 @@ declare global {
       }
       data: DeviceDetail // Mengacu pada DeviceDetail di atas
     }>
+  }
+
+  type TerminalMonitoringProps = {
+    c_terminal_type: string
+    c_terminal_sn: string
+    c_station: string
+    n_project_name?: string
+    status: string
+    [key: string]: any
+  }
+
+  type DataWithAction = TerminalMonitoringProps & {
+    action?: string
+  }
+
+  type SyncDataProps = {
+    sync_id: string
+    item_serial_code: string
+    client_name: string
+    model_code: string
+    model_name: string
+    station_code: string
+    station_name: string
+    d_sync: string
+    b_mapping: boolean
+    b_active: boolean
+    terminal_id: string | null
+    c_terminal_sn: string | null
+    c_project: string | null
+    c_station: string | null
+    c_terminal_type: string | null
+    match_status: 'MATCH' | 'NOT_MATCH'
+    signature_status: string | null
+  }
+
+  type StationProps = {
+    c_station: string
+    n_station: string
+    n_project_name?: string
+  }
+
+  type DeviceDetail = {
+    i_id: string
+    n_device_name: string
+    n_device_type_name: string
+    c_device: string
+    c_device_type: string
+    c_serial_number: string
+    status: 'OK' | 'WARNING' | 'ERROR'
+    d_time_sensor: string
+    c_terminal: string
+  }
+
+  type SyncDetailResponse = {
+    t_m_terminal: any[]
+    t_m_sync_terminal: any[]
+  }
+
+  type DeviceOption = {
+    c_device: string
+    c_device_type: string
+    n_device_name: string
   }
 }
 

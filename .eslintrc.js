@@ -15,6 +15,8 @@ module.exports = {
     '@typescript-eslint/no-unused-expressions': 'off',
     'import/no-named-as-default': 'off',
     'no-unused-vars': 'off',
+    'react-hooks/rules-of-hooks': 'error',
+    'react-hooks/exhaustive-deps': 'off',
     '@typescript-eslint/no-unused-vars': 'off',
     'lines-around-comment': [
       'error',
