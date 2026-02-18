@@ -22,6 +22,7 @@ declare global {
   export type SyncDataProps = {
     sync_id: string
     item_serial_code: string
+    serial_number: string
     client_name: string
     model_code: string
     model_name: string
@@ -30,13 +31,15 @@ declare global {
     d_sync: string
     b_mapping: boolean
     b_active: boolean
+
     terminal_id: string | null
     c_terminal_sn: string | null
     c_project: string | null
     c_station: string | null
     c_terminal_type: string | null
+
     match_status: 'MATCH' | 'NOT_MATCH' | string
-    signature_status: 'SIGNATURE_NOT_IDENTIC' | 'SIGNATURE_MATCH' | string | null
+    signature_status: 'SIGNATURE_VALID' | 'SIGNATURE_INVALID' | 'SIGNATURE_NOT_IDENTIC' | null | string
   }
 
   type TerminalMonitoringProps = {

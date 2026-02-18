@@ -170,13 +170,13 @@ const Customizer = ({ breakpoint = 'lg', dir = 'ltr', disableDirection = false }
   return (
     !breakpointReached && (
       <div
-        className={classnames('customizer', styles.customizer, {
+        className={classnames('customizer hidden', styles.customizer, {
           [styles.show]: isOpen,
           [styles.smallScreen]: isMobileScreen
         })}
       >
         <div className={styles.toggler} onClick={handleToggle}>
-          <i className='tabler-settings text-[22px]' />
+          <i className='tabler-settings text-[22px] ' />
         </div>
         <div className={styles.header}>
           <div className='flex flex-col'>
@@ -240,7 +240,7 @@ const Customizer = ({ breakpoint = 'lg', dir = 'ltr', disableDirection = false }
                     disablePortal
                     anchorEl={anchorRef.current}
                     placement='bottom-end'
-                    className='z-[1]'
+                    className='z-1'
                   >
                     {({ TransitionProps }) => (
                       <Fade {...TransitionProps} style={{ transformOrigin: 'right top' }}>
@@ -332,8 +332,8 @@ const Customizer = ({ breakpoint = 'lg', dir = 'ltr', disableDirection = false }
                 </div>
               </div>
               {settings.mode === 'dark' ||
-              (settings.mode === 'system' && isSystemDark) ||
-              settings.layout === 'horizontal' ? null : (
+                (settings.mode === 'system' && isSystemDark) ||
+                settings.layout === 'horizontal' ? null : (
                 <div className='flex items-center justify-between'>
                   <label className='font-medium cursor-pointer' htmlFor='customizer-semi-dark'>
                     Semi Dark

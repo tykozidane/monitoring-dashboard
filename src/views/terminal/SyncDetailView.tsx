@@ -5,12 +5,17 @@ import { useEffect, useState } from 'react'
 import {
   Card, Button, TextField, Typography, Grid, Box, Chip, IconButton,
   Tooltip, Divider, Paper, Dialog, DialogTitle, DialogContent,
-  DialogActions, Autocomplete, CircularProgress, MenuItem, useTheme
+  DialogActions, Autocomplete, CircularProgress, MenuItem, useTheme,
+  Alert
 } from '@mui/material'
 import classnames from 'classnames'
 import { toast } from 'react-toastify'
+import axios from 'axios'
 
-import json from './json.json'
+// --- KONFIGURASI API ---
+const API_URL_MAPPING = 'https://da.devops-nutech.com/api/v1/terminal/get-data-mapping-terminal-sync';
+const API_URL_FREE = 'https://da.devops-nutech.com/api/v1/terminal/get-free-terminal'; // URL BARU (GET)
+const API_AUTH = 'Basic aGlzbnV0ZWNoOm51dGVjaDEyMw==';
 
 // --- 1. DEFINISI TIPE DATA ---
 interface DeviceProps {
@@ -37,56 +42,70 @@ interface TerminalProps {
   c_project?: string | null
   c_station?: string | null
   n_terminal_name: string
-  t_m_device: DeviceProps[]
+  item: DeviceProps[]
 }
 
-interface SyncItemParsed {
-  sub_item_type: string
-  sub_model_code: string
-  sub_model_name: string
-  sub_serial_number: string
+export interface SyncSubItem {
+  sub_item_type: string;
+  sub_model_code: string;
+  sub_model_name: string;
+  sub_serial_number: string;
+  sub_item_serial_code: string;
 }
 
-interface SyncTerminalProps {
-  i_id: string
-  item_serial_code: string
-  model_name: string
-  model_code?: string
-  station_name: string
-  station_code: string
-  item: string
-  c_signature: string | null
+export interface SyncTerminalProps {
+  i_id: string;
+  item_serial_code: string;
+  client_name: string;
+  model_code: string;
+  model_name: string;
+  station_code: string;
+  station_name: string;
+  location: string;
+  note: string;
+  d_sync: string;
+  b_mapping: boolean;
+  c_signature: string;
+  serial_number: string;
+  item: SyncSubItem[]
 }
 
 interface ApiResponse {
-  t_m_terminal: TerminalProps[]
-  t_m_sync_terminal: SyncTerminalProps[]
+  terminal: TerminalProps | null
+  sync_terminal: SyncTerminalProps | null
 }
 
 interface SyncDetailViewProps {
   rowData: {
     sync_id: string
     item_serial_code: string
+    serial_number: string
     model_name: string
     model_code?: string
     station_name: string
     station_code: string
     terminal_id?: string | null
     c_terminal_sn?: string | null
+    client_name?: string
+    item?: SyncSubItem[] | string
     [key: string]: any
   }
   onClose: () => void
 }
 
 const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
-  const theme = useTheme() // Hook Theme untuk Dark Mode logic
+  const theme = useTheme()
   const [loading, setLoading] = useState(true)
   const [detailData, setDetailData] = useState<ApiResponse | null>(null)
 
   const [selectedTerminal, setSelectedTerminal] = useState<TerminalProps | null>(null)
-  const [parsedSyncItems, setParsedSyncItems] = useState<SyncItemParsed[]>([])
+  const [parsedSyncItems, setParsedSyncItems] = useState<SyncSubItem[]>([])
+
+  // State untuk Autocomplete
   const [isLocked, setIsLocked] = useState(false)
-  const [filteredTerminals, setFilteredTerminals] = useState<TerminalProps[]>([])
+  const [terminalOptions, setTerminalOptions] = useState<TerminalProps[]>([])
+  const [loadingOptions, setLoadingOptions] = useState(false)
+
   const [restoredItems, setRestoredItems] = useState<string[]>([])
   const [optionDevice, setOptionDevice] = useState<selectDevicesOption[]>([])
 
@@ -95,7 +114,7 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
   const [editingItemId, setEditingItemId] = useState<string | null>(null)
   const [loadingConfig, setLoadingConfig] = useState(false)
 
-  // Mapping Store: Key bisa "src-INDEX" (untuk source) atau "ID-EXISTING" (untuk unmatched target)
+  // Mapping Store
   const [mappedDevices, setMappedDevices] = useState<Record<string, DeviceProps | null>>({})
 
   // Temp State untuk Dialog
@@ -139,6 +158,42 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
     }
   }, [parsedSyncItems, optionDevice, rowData.station_code]);
 
+  // --- API: FETCH OPTION TERMINAL (GET FREE TERMINAL) ---
+  const fetchFreeTerminals = async () => {
+    setLoadingOptions(true);
+
+    try {
+      // PERUBAHAN: Menggunakan GET dan Params
+      const response = await axios.get(API_URL_FREE, {
+        headers: {
+          'Authorization': API_AUTH,
+          'Content-Type': 'application/json'
+        },
+        params: {
+          c_project: "KCI" // Dikirim sebagai query param: ?c_project=KCI
+        }
+      });
+
+      // Asumsi response: { status: ..., data: [TerminalProps, ...] }
+      const data = response.data?.data;
+
+      if (Array.isArray(data)) {
+        setTerminalOptions(data);
+      } else if (data && typeof data === 'object') {
+        setTerminalOptions([data]);
+      } else {
+        setTerminalOptions([]);
+      }
+
+    } catch (error) {
+      console.error("Error fetching free terminals:", error);
+      toast.error("Gagal memuat data terminal yang tersedia.");
+    } finally {
+      setLoadingOptions(false);
+    }
+  };
+
+  // --- API 1: LOAD OPTION DEVICE (Static / Library) ---
   const fecthOptionDevice = async () => {
     setTimeout(() => {
       setOptionDevice([
@@ -153,66 +208,80 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
         { "c_device_type": "SCAN", "n_device_type": "SCANNER", "c_device": "scan", "c_project": "KCI", "n_number": "01" },
         { "c_device_type": "TRS", "n_device_type": "TURNSTILE", "c_device": "turnstile", "c_project": "KCI", "n_number": "01" }
       ])
-    }, 800)
+    }, 500)
   }
 
+  // --- API 2: FETCH DETAIL (POST) ---
   const fetchDetail = async () => {
     setLoading(true)
-    setTimeout(() => {
-      const MOCK_TERMINALS: TerminalProps[] = json as unknown as TerminalProps[];
 
-      const mockResponse: ApiResponse = {
-        "t_m_terminal": MOCK_TERMINALS,
-        "t_m_sync_terminal": [
-          {
-            "i_id": rowData.sync_id || "gen-id",
-            "item_serial_code": rowData.item_serial_code,
-            "model_name": rowData.model_name,
-            "station_name": rowData.station_name,
-            "station_code": rowData.station_code,
-            "item": JSON.stringify([
-              { "sub_item_type": "MODULE READER", "sub_model_code": "0120201", "sub_model_name": "DE-AFCMI Reader 6 SAM", "sub_serial_number": "1071137441" },
-              { "sub_item_type": "BARCODE SCANNER", "sub_model_code": "0720301", "sub_model_name": "Code CR 5210", "sub_serial_number": "1070037881" },
-              { "sub_item_type": "DISPLAY", "sub_model_code": "DISP01", "sub_model_name": "LCD Display", "sub_serial_number": "SN-BARU-001" }
-            ]),
-            "c_signature": "mQ1n1a3NsZNiHOMUfq09QV3H3yHce+qnxyFFqH+krmM="
-          }
-        ]
+    try {
+      const payload = {
+        serial_number: rowData.serial_number,
+        c_project: rowData.c_project || "KCI"
       }
 
-      setDetailData(mockResponse)
+      const response = await axios.post(API_URL_MAPPING, payload, {
+        headers: {
+          'Authorization': API_AUTH,
+          'Content-Type': 'application/json'
+        }
+      });
 
-      if (mockResponse.t_m_sync_terminal?.[0]?.item) {
+      const apiRes = response.data?.data;
+
+      if (!apiRes) {
+        throw new Error("Data not found");
+      }
+
+      const formattedData: ApiResponse = {
+        terminal: apiRes.terminal,
+        sync_terminal: apiRes.sync_terminal
+      }
+
+      setDetailData(formattedData)
+
+      // 1. Parse Sync Item
+      if (formattedData.sync_terminal?.item) {
         try {
-          const items = JSON.parse(mockResponse.t_m_sync_terminal[0].item) as SyncItemParsed[];
+          const rawItem = formattedData.sync_terminal.item;
+          const items = Array.isArray(rawItem) ? rawItem : JSON.parse(rawItem);
 
-          setParsedSyncItems(items)
-        } catch (e) { console.error("JSON Parse Error:", e) }
+          setParsedSyncItems(items as SyncSubItem[]);
+        } catch (e) {
+          console.error("JSON Parse Error:", e);
+          setParsedSyncItems([]);
+        }
       }
 
-      setFilteredTerminals(mockResponse.t_m_terminal)
+      // 2. LOGIC PENENTUAN TARGET TERMINAL & LOCKING
+      const existingTerminal: TerminalProps | null = formattedData.terminal;
 
-      let targetTerminal: TerminalProps | undefined;
-
-      if (rowData.terminal_id) targetTerminal = mockResponse.t_m_terminal.find((t) => t.i_id === rowData.terminal_id);
-      if (!targetTerminal && rowData.c_terminal_sn) targetTerminal = mockResponse.t_m_terminal.find((t) => t.c_terminal_sn === rowData.c_terminal_sn);
-
-      if (targetTerminal) {
-        setSelectedTerminal(targetTerminal);
-        setIsLocked(rowData.item_serial_code === targetTerminal.c_terminal_sn);
+      if (existingTerminal) {
+        // KASUS 1: Data Terminal SUDAH ADA (Mapping ditemukan)
+        setSelectedTerminal(existingTerminal);
+        setTerminalOptions([existingTerminal]); // Masukkan ke opsi agar autocomplete terisi
+        setIsLocked(true); // DISABLE AUTOCOMPLETE
       } else {
+        // KASUS 2: Data Terminal BELUM ADA
         setSelectedTerminal(null);
-        setIsLocked(false);
+        setIsLocked(false); // ENABLE AUTOCOMPLETE
       }
 
+    } catch (error) {
+      console.error("Fetch Detail Error:", error);
+      toast.error("Gagal mengambil detail mapping terminal.");
+      setDetailData(null);
+    } finally {
       setLoading(false)
-    }, 800)
+    }
   }
 
   const handleToggleRestore = (deviceId: string) => {
     setRestoredItems(prev => prev.includes(deviceId) ? prev.filter(id => id !== deviceId) : [...prev, deviceId])
   }
 
+  // --- API 3: SUBMIT / CONFIRM ---
   const handleSyncSubmit = () => {
     if (!selectedTerminal) return toast.error("Please select a target terminal first!")
 
@@ -241,38 +310,35 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
       }
     });
 
-    // 2. Devices existing (Unmatched) yang di-restore atau di-edit manual
-    selectedTerminal.t_m_device.forEach((targetDev) => {
-      // Cek apakah item ini sudah diedit manual?
+    // 2. Devices existing (Unmatched)
+    selectedTerminal.item?.forEach((targetDev) => {
       const manualMap = mappedDevices[targetDev.i_id];
 
       if (manualMap) {
-        // Jika sudah di-map manual, ambil data baru
         devicesPayload.push({
           c_device: manualMap.c_device,
-          c_serial_number: targetDev.c_serial_number, // SN Tetap dari fisik
+          c_serial_number: targetDev.c_serial_number,
           c_device_type: manualMap.c_device_type,
           c_direction: manualMap.c_direction ?? 0,
           n_device_name: manualMap.n_device_name
         });
       } else if (restoredItems.includes(targetDev.i_id)) {
-        // Jika hanya di-restore tanpa edit, ambil data lama
         devicesPayload.push({ ...targetDev, c_direction: 0 })
       }
     });
 
-    const syncData = detailData?.t_m_sync_terminal[0];
+    const syncData = detailData?.sync_terminal;
 
     const payload = {
-      c_project: selectedTerminal.c_project || "Unknown",
+      c_project: selectedTerminal.c_project || "KCI",
       c_terminal_sn: selectedTerminal.c_terminal_sn,
       n_terminal_name: selectedTerminal.n_terminal_name,
       i_sync_id: syncData?.i_id,
       devices: devicesPayload
     };
 
-    console.log("=== PAYLOAD ===", payload);
-    toast.success(`Sync Success! Check Console.`);
+    console.log("=== PAYLOAD SUBMIT ===", payload);
+    toast.success(`Sync Confirmed (Check Console)`);
   }
 
   // --- LOGIC EDIT ---
@@ -300,8 +366,7 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
 
       setTempDirection(existingMap.c_direction ?? 0);
     } else {
-      // Jika belum ada mapping (misal Unmatched item yg belum di edit), coba cari berdasarkan kode device yang lama
-      const deviceRaw = selectedTerminal?.t_m_device.find(d => d.i_id === id);
+      const deviceRaw = selectedTerminal?.item?.find(d => d.i_id === id);
 
       if (deviceRaw) {
         const matchingOption = optionDevice.find(opt => opt.c_device === deviceRaw.c_device);
@@ -321,7 +386,7 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
   const handleSaveMapping = () => {
     if (!editingItemId) return;
 
-    // A. JIKA EDIT SOURCE ITEM
+    // Logic Simpan Mapping
     if (editingItemId.startsWith('src-')) {
       const idx = parseInt(editingItemId.split('-')[1]);
       const sourceSN = parsedSyncItems[idx]?.sub_serial_number || "";
@@ -340,12 +405,8 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
 
         setMappedDevices(prev => ({ ...prev, [editingItemId]: newMapping }));
       }
-    }
-
-    // B. JIKA EDIT UNMATCHED TARGET ITEM
-    else {
-      // Ambil SN asli dari device target
-      const originalDev = selectedTerminal?.t_m_device.find(d => d.i_id === editingItemId);
+    } else {
+      const originalDev = selectedTerminal?.item?.find(d => d.i_id === editingItemId);
       const targetSN = originalDev?.c_serial_number || "";
 
       if (tempFormOption) {
@@ -356,14 +417,12 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
           c_device: tempFormOption.c_device,
           c_device_type: tempFormOption.c_device_type,
           n_device_name: generatedName,
-          c_serial_number: targetSN, // SN tetap pakai yang lama
+          c_serial_number: targetSN,
           c_direction: tempDirection
         };
 
-        // Simpan mapping dengan Key ID original device
         setMappedDevices(prev => ({ ...prev, [editingItemId]: newMapping }));
 
-        // Otomatis "Restore" item ini agar tidak terhapus
         if (!restoredItems.includes(editingItemId)) {
           setRestoredItems(prev => [...prev, editingItemId]);
         }
@@ -379,31 +438,26 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
   const renderTargetComparison = () => {
     if (!selectedTerminal) return null
 
-    // --- BAGIAN 1: SOURCE ITEMS (Incoming) ---
+    // SOURCE ITEMS
     const mergedView = parsedSyncItems.map((sourceItem, idx) => {
       const itemId = `src-${idx}`
       const mapping = mappedDevices[itemId]
       const isMapped = !!mapping;
 
+      // ... Style logic same as before
       let statusLabel = "UNMAPPED";
       let statusColor: "success" | "info" | "warning" = "warning";
-
-      // Theme Aware Colors
-      let borderColor = theme.palette.mode === 'dark' ? 'rgba(255, 167, 38, 0.5)' : '#fdba74'; // Orange
+      let borderColor = theme.palette.mode === 'dark' ? 'rgba(255, 167, 38, 0.5)' : '#fdba74';
 
       if (isMapped) {
-        const isExactMatch = selectedTerminal.t_m_device.some(
+        const isExactMatch = selectedTerminal.item?.some(
           t => t.c_serial_number === sourceItem.sub_serial_number && t.c_device === mapping.c_device
         );
 
         if (isExactMatch) {
-          statusLabel = "MATCH";
-          statusColor = "success";
-          borderColor = theme.palette.mode === 'dark' ? 'rgba(102, 187, 106, 0.5)' : '#4ade80'; // Green
+          statusLabel = "MATCH"; statusColor = "success"; borderColor = theme.palette.mode === 'dark' ? 'rgba(102, 187, 106, 0.5)' : '#4ade80';
         } else {
-          statusLabel = "CREATE";
-          statusColor = "info";
-          borderColor = theme.palette.mode === 'dark' ? 'rgba(41, 182, 246, 0.5)' : '#60a5fa'; // Blue
+          statusLabel = "CREATE"; statusColor = "info"; borderColor = theme.palette.mode === 'dark' ? 'rgba(41, 182, 246, 0.5)' : '#60a5fa';
         }
       }
 
@@ -417,38 +471,30 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
               <Typography variant="subtitle2" className="text-md font-bold text-primary mb-3 mt-2">{sourceItem.sub_item_type}</Typography>
               <div className="flex flex-col text-xs mt-1 gap-1">
                 <div className="flex justify-between"><Typography variant="caption" color="text.secondary">Model</Typography><Typography variant="caption">{sourceItem.sub_model_name}</Typography></div>
-                <div className="flex justify-between"><Typography variant="caption" color="text.secondary">SN (Source)</Typography><span className="font-mono font-bold text-xs">{sourceItem.sub_serial_number}</span></div>
+                <div className="flex justify-between"><Typography variant="caption" color="text.secondary">Serial Number</Typography><span className="font-mono font-bold text-xs">{sourceItem.sub_serial_number}</span></div>
               </div>
-
-              <div className="mt-2 p-2 border border-gray-200 rounded text-xs animate-in fade-in zoom-in duration-300 dark:border-gray-700">
+              <div className="mt-2 p-2 border rounded text-xs animate-in fade-in zoom-in duration-300">
                 <div className="flex items-center gap-1 mb-1 font-bold border-b pb-1 dark:border-gray-700">
                   <Typography variant="caption" fontWeight="bold" color="primary"><i className="tabler-link text-xs"></i> Mapped to:</Typography>
                 </div>
-
                 {mapping ? (
                   <div className="grid grid-cols-[90px_1fr] gap-x-2 gap-y-1">
                     <Typography variant="caption" color="text.secondary">Device Code:</Typography>
                     <span className="font-mono font-medium">{mapping.c_device}</span>
-
                     <Typography variant="caption" color="text.secondary">Device Name:</Typography>
                     <span>{mapping.n_device_name}</span>
-
                     <Typography variant="caption" color="text.secondary">Direction:</Typography>
                     <span>
                       {mapping.c_direction === 1 ? <Chip label="IN" size="small" color="success" className='h-5 text-[10px]' /> :
                         mapping.c_direction === 2 ? <Chip label="OUT" size="small" color="error" className='h-5 text-[10px]' /> :
-                          <Chip label="No Direction" size="small" className='h-5 text-[10px] opacity-70 font-bold' />}
+                          <Chip label="No Direction" size="small" className='h-5 text-[10px] font-bold' />}
                     </span>
-
-                    <Typography variant="caption" color="text.secondary">SN (Target):</Typography>
-                    <span className="font-mono font-bold text-blue-500">{mapping.c_serial_number}</span>
                   </div>
                 ) : (
-                  <Typography variant="caption" className="italic opacity-50">No device definition selected. Please edit to map.</Typography>
+                  <Typography variant="caption" className="italic">No device definition selected. Please edit to map.</Typography>
                 )}
               </div>
             </div>
-
             <div className="absolute top-3.5 right-2 group-hover:opacity-100 transition-opacity">
               <Tooltip title="Edit Mapping">
                 <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); handleEditClick(itemId); }} sx={{ bgcolor: 'background.paper', boxShadow: 1 }}>
@@ -461,17 +507,12 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
       )
     })
 
-    // --- BAGIAN 2: UNMATCHED VIEW (Existing Target Items) ---
-    const targetDeletedView = selectedTerminal.t_m_device.map((dev, idx) => {
+    // UNMATCHED VIEW
+    const targetDeletedView = selectedTerminal.item?.map((dev, idx) => {
       const isRestored = restoredItems.includes(dev.i_id);
-      const manualMap = mappedDevices[dev.i_id]; // Cek jika sudah diedit manual
+      const manualMap = mappedDevices[dev.i_id];
+      const libraryInfo = optionDevice.find(opt => opt.c_device === dev.c_device);
 
-      // Cari info mapping library
-      const mappedInfo = manualMap
-        ? { c_device: manualMap.c_device, n_device_type: manualMap.n_device_name } // Jika sudah manual map
-        : optionDevice.find(opt => opt.c_device === dev.c_device); // Jika belum, cari default
-
-      // Logic Style Card
       const cardOpacity = isRestored ? 1 : 0.5;
       const cardBorderColor = isRestored ? theme.palette.success.main : theme.palette.text.disabled;
       const cardBg = isRestored ? (theme.palette.mode === 'dark' ? 'rgba(27, 94, 32, 0.2)' : '#f0fdf4') : 'transparent';
@@ -480,83 +521,41 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
         <div key={`del-${idx}`} className="relative mb-2 mt-2 group">
           <Card variant="outlined"
             sx={{
-              p: 1.5,
-              opacity: cardOpacity,
-              borderColor: cardBorderColor,
-              borderStyle: isRestored ? 'solid' : 'dashed',
-              bgcolor: cardBg,
-              borderWidth: isRestored ? 1 : 1,
-              borderLeftWidth: isRestored ? 4 : 1,
+              p: 1.5, opacity: cardOpacity, borderColor: cardBorderColor,
+              borderStyle: isRestored ? 'solid' : 'dashed', bgcolor: cardBg,
+              borderWidth: isRestored ? 1 : 1, borderLeftWidth: isRestored ? 4 : 1,
               transition: 'all 0.3s ease'
             }}>
             <div className="absolute -top-2 -right-1 z-10">
-              <Chip
-                label={isRestored ? (manualMap ? "MAPPED MANUAL" : "KEEP EXISTING") : "UNMATCHED"}
-                color={isRestored ? "success" : "error"}
-                size="small"
-                className="font-bold h-4 text-[9px]"
-              />
+              <Chip label={isRestored ? (manualMap ? "MAPPED MANUAL" : "KEEP EXISTING") : "UNMATCHED"} color={isRestored ? "success" : "error"} size="small" className="font-bold h-4 text-[9px]" />
             </div>
-
             <div className="flex justify-between items-start">
               <div className='w-full'>
-                <Typography variant="subtitle2" className="text-xs font-bold" color={isRestored ? "success.main" : "error.main"}>
-                  {manualMap ? manualMap.n_device_name : dev.n_device_name}
-                </Typography>
-
+                <Typography variant="subtitle2" className="text-xs font-bold" color={isRestored ? "success.main" : "error.main"}>{manualMap ? manualMap.n_device_name : dev.n_device_name}</Typography>
                 <div className="mt-2 p-2 sx={{ bgcolor: 'background.default' }} border border-gray-200 rounded text-xs dark:border-gray-700">
-                  <div className="flex items-center gap-1 mb-1 font-bold border-b pb-1 dark:border-gray-700 opacity-70">
-                    <i className="tabler-database text-xs"></i> Existing Device Info:
-                  </div>
+                  <div className="flex items-center gap-1 mb-1 font-bold border-b pb-1 dark:border-gray-700 opacity-70"><i className="tabler-database text-xs"></i> Existing Device Info:</div>
                   <div className="grid grid-cols-[90px_1fr] gap-x-2 gap-y-1">
                     <Typography variant="caption" color="text.secondary">Device Code:</Typography>
                     <span className="font-mono font-medium">{manualMap ? manualMap.c_device : dev.c_device}</span>
-
                     <Typography variant="caption" color="text.secondary">Device Name:</Typography>
-                    <span>{mappedInfo ? (manualMap ? manualMap.n_device_name : `${mappedInfo.n_device_type} ${rowData.station_code} ${mappedInfo?.n_number}`) : dev.n_device_name}</span>
-
+                    <span>{manualMap ? manualMap.n_device_name : (libraryInfo ? `${libraryInfo.n_device_type} ${rowData.station_code} ${libraryInfo.n_number}` : dev.n_device_name)}</span>
                     <Typography variant="caption" color="text.secondary">SN (Target):</Typography>
                     <span className="font-mono font-bold">{dev.c_serial_number}</span>
-
-                    {manualMap && (
-                      <>
-                        <Typography variant="caption" color="text.secondary">Direction:</Typography>
-                        <span>{manualMap.c_direction === 1 ? "IN" : manualMap.c_direction === 2 ? "OUT" : "None"}</span>
-                      </>
-                    )}
                   </div>
                 </div>
               </div>
             </div>
-
-            {/* TOMBOL EDIT UNTUK UNMATCHED */}
             <div className="absolute top-2 right-2 z-20">
               <Tooltip title="Edit this existing device mapping">
-                <IconButton
-                  size="small"
-                  color="primary"
-                  onClick={(e) => { e.stopPropagation(); handleEditClick(dev.i_id); }}
-                  sx={{ bgcolor: 'background.paper', boxShadow: 1, '&:hover': { bgcolor: 'primary.light', color: 'white' } }}
-                >
+                <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); handleEditClick(dev.i_id); }} sx={{ bgcolor: 'background.paper', boxShadow: 1 }}>
                   <i className="tabler-pencil text-sm" />
                 </IconButton>
               </Tooltip>
             </div>
           </Card>
-
-          {/* Restore Button (Toggle Keep/Delete) */}
           <div className={classnames("absolute inset-0 flex items-center justify-center transition-opacity pointer-events-none", { "opacity-0 group-hover:opacity-100": isRestored, "opacity-100": !isRestored })}>
             <Tooltip title={isRestored ? "Undo Keep (Remove)" : "Keep this item"}>
-              <IconButton
-                size="small"
-                onClick={() => handleToggleRestore(dev.i_id)}
-                className="pointer-events-auto shadow-md border"
-                sx={{
-                  bgcolor: 'background.paper',
-                  color: isRestored ? 'error.main' : 'success.main',
-                  '&:hover': { bgcolor: isRestored ? 'error.lighter' : 'success.lighter' }
-                }}
-              >
+              <IconButton size="small" onClick={() => handleToggleRestore(dev.i_id)} className="pointer-events-auto shadow-md border" sx={{ bgcolor: 'background.paper', color: isRestored ? 'error.main' : 'success.main' }}>
                 <i className={classnames(isRestored ? "tabler-minus" : "tabler-plus")}></i>
               </IconButton>
             </Tooltip>
@@ -568,32 +567,31 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
     return (
       <div className="max-h-80 overflow-y-auto pr-1">
         {mergedView}
-        {selectedTerminal.t_m_device.length > 0 && (
-          <Divider className="my-4">
-            <Typography variant="caption" className="font-bold" color="text.secondary">Unmatched Devices (In Terminal but not in Source)</Typography>
-          </Divider>
-        )}
+        {selectedTerminal.item?.length > 0 && <Divider className="my-4"><Typography variant="caption" className="font-bold" color="text.secondary">Unmatched Devices</Typography></Divider>}
         {targetDeletedView}
       </div>
     )
   }
 
   if (loading) return <div className="p-8 text-center"><CircularProgress /></div>
-  const syncData = detailData?.t_m_sync_terminal[0]
 
-  if (!syncData) return null
+  const syncData = detailData?.sync_terminal;
+
+  if (!syncData) return (<Box sx={{ p: 4, textAlign: 'center' }}><Alert severity="error">Data not found.</Alert><Button onClick={onClose} sx={{ mt: 2 }}>Close</Button></Box>)
 
   return (
     <Box sx={{ p: 3, borderLeft: '4px solid', borderColor: 'primary.main', bgcolor: 'background.default' }}>
       <Typography variant="h6" className="mb-4 flex items-center gap-2"><i className="tabler-arrows-diff"></i> Data Synchronization & Mapping</Typography>
       <Grid container spacing={4}>
         <Grid size={{ xs: 12, md: 6 }}>
-          <Paper elevation={0} variant="outlined" sx={{ p: 2, height: '100%', bgcolor: 'background.paper' }}>
+          <Paper elevation={0} variant="outlined" sx={{ p: 2, height: '100%', borderColor: 'warning.main', bgcolor: 'background.paper' }}>
             <div className="flex items-center gap-2 mb-3"><Chip label="SOURCE" color="warning" size="small" className="font-bold" /><Typography variant="subtitle1" fontWeight="bold">Incoming Sync Data</Typography></div>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-2 text-sm">
-                <Typography variant="caption" color="text.secondary">Serial Code:</Typography><span className="font-mono font-medium">{syncData.item_serial_code}</span>
+                <Typography variant="caption" color="text.secondary">Serial No (Short):</Typography><span className="font-mono font-bold text-primary">{syncData.serial_number}</span>
+                <Typography variant="caption" color="text.secondary">Item Serial (Long):</Typography><span className="font-mono text-xs">{syncData.item_serial_code}</span>
                 <Typography variant="caption" color="text.secondary">Model:</Typography><span>{syncData.model_name}</span>
+                <Typography variant="caption" color="text.secondary">Station:</Typography><span>{syncData.station_name} ({syncData.station_code})</span>
               </div>
               <Divider textAlign="left"><Typography variant="caption" color="textSecondary">INCLUDED DEVICES</Typography></Divider>
               <div className="max-h-60 overflow-y-auto pr-1">
@@ -610,14 +608,34 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
         <Grid size={{ xs: 12, md: 6 }}>
           <Paper elevation={0} variant="outlined" sx={{ p: 2, height: '100%', borderColor: 'primary.main', bgcolor: 'background.paper' }}>
             <div className="flex items-center gap-2 mb-3"><Chip label="TARGET" color="primary" size="small" className="font-bold" /><Typography variant="subtitle1" fontWeight="bold">Result After Sync</Typography></div>
-            <div className="mb-4">
+            <div className="mb-4 pt-3">
               <Autocomplete
-                options={filteredTerminals}
+                options={terminalOptions}
                 getOptionLabel={(o) => `${o.n_terminal_name} ${o.c_terminal_sn ? `(${o.c_terminal_sn})` : '(No SN)'}`}
                 value={selectedTerminal}
                 onChange={(_, v) => setSelectedTerminal(v)}
                 disabled={isLocked}
-                renderInput={(p) => <TextField {...p} size="small" placeholder="Select Target Terminal" />}
+                loading={loadingOptions}
+                onOpen={() => {
+                  if (!isLocked && terminalOptions.length === 0) fetchFreeTerminals();
+                }}
+                renderInput={(p) => (
+                  <TextField
+                    {...p}
+                    size="small"
+                    label={isLocked ? "Terminal Locked" : "Search Target Terminal"}
+                    placeholder={isLocked ? "Terminal Locked" : "Search Free Terminal..."}
+                    InputProps={{
+                      ...p.InputProps,
+                      endAdornment: (
+                        <>
+                          {loadingOptions ? <CircularProgress color="inherit" size={20} /> : null}
+                          {p.InputProps.endAdornment}
+                        </>
+                      ),
+                    }}
+                  />
+                )}
               />
             </div>
             {selectedTerminal ? <div className="animate-in fade-in slide-in-from-bottom-2 duration-300"><Divider sx={{ my: 2 }} />{renderTargetComparison()}</div> : <div className="h-40 flex items-center justify-center border-2 border-dashed rounded opacity-50"><Typography variant="body2" color="text.secondary">Select a terminal first</Typography></div>}
@@ -631,39 +649,23 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
         <DialogContent dividers>
           {loadingConfig ? <div className="flex justify-center p-5"><CircularProgress /></div> : (
             <div className="flex flex-col gap-4 pt-1">
-
               <Autocomplete
                 options={optionDevice}
                 getOptionLabel={(o) => `${o.n_device_type} (${o.c_device})`}
                 value={tempFormOption}
                 onChange={(_, v) => setTempFormOption(v)}
-                renderInput={(p) => <TextField {...p} label="Select Device Definition" helperText="Choose from library" />}
+                renderInput={(p) => <TextField {...p} label="Select Device Definition" />}
                 isOptionEqualToValue={(option, value) => option.c_device === value.c_device}
               />
-
-              <TextField
-                select
-                label="Direction"
-                value={tempDirection}
-                onChange={(e) => setTempDirection(Number(e.target.value))}
-                size="small"
-                variant="outlined"
-              >
+              <TextField select label="Direction" value={tempDirection} onChange={(e) => setTempDirection(Number(e.target.value))} size="small" variant="outlined">
                 <MenuItem value={0}>No Direction</MenuItem>
                 <MenuItem value={1}>IN</MenuItem>
                 <MenuItem value={2}>OUT</MenuItem>
               </TextField>
-
-              {/* Read Only Info */}
               <TextField label="Device Type" value={tempFormOption?.c_device_type || ''} disabled variant="filled" size='small' />
-
               <Paper variant="outlined" sx={{ p: 1.5, bgcolor: 'action.hover', borderLeft: '4px solid', borderColor: 'info.main' }}>
-                <Typography variant="caption" color="text.secondary" component="div" className="flex items-center gap-1">
-                  <i className="tabler-info-circle"></i> Device Name Preview:
-                </Typography>
-                <Typography variant="body2" fontWeight="bold">
-                  {tempFormOption ? `${tempFormOption.n_device_type} ${rowData.station_code} ${tempFormOption.n_number}` : 'Select definition to generate name'}
-                </Typography>
+                <Typography variant="caption" color="text.secondary" component="div" className="flex items-center gap-1"><i className="tabler-info-circle"></i> Device Name Preview:</Typography>
+                <Typography variant="body2" fontWeight="bold">{tempFormOption ? `${tempFormOption.n_device_type} ${rowData.station_code} ${tempFormOption.n_number}` : 'Select definition to generate name'}</Typography>
               </Paper>
             </div>
           )}
