@@ -16,7 +16,7 @@ const List = () => {
           </div>
         </Grid>
         <Grid size={12}>
-          <ListTable subject={Subject} />
+          <ListTable />
         </Grid>
       </Grid>
     </Grow>

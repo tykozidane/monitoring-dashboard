@@ -54,7 +54,7 @@ const Library = () => {
       const dataStation = stationData.find(s => s.c_station === stationActive)
 
       if (dataStation) {
-        axios.post('http://192.168.62.90:4000/api/v1/output/terminal-by-station', {
+        axios.post(`${process.env.API_MONITORING_URL}output/terminal-by-station`, {
           c_station: dataStation.c_station,
           c_project: dataStation.n_project_name ?? 'KCI'
         }).then(res => setData(res.data.data?.code ? [] : res.data.data ?? []))
@@ -71,7 +71,7 @@ const Library = () => {
     setLoadingExpanded(prev => ({ ...prev, [sn]: true }));
 
     try {
-      const response = await axios.post('http://192.168.62.90:4000/api/v1/output/device-by-station', {
+      const response = await axios.post(`${process.env.API_MONITORING_URL}output/device-by-station`, {
         c_station: row.c_station,
         c_project: row.n_project_name ?? 'KCI'
       })
