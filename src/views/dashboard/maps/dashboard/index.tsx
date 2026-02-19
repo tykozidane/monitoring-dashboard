@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 
 const MapView = dynamic(
-  () => import('@/views/apps/maps/dashboard/MapComponent'),
+  () => import('@/views/dashboard/maps/dashboard/MapComponent'),
   {
     ssr: false,
     loading: () => <div className="h-[400px] bg-gray-100 flex items-center justify-center">Loading Peta...</div>
