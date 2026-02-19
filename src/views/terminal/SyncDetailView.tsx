@@ -367,10 +367,6 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
 
     const syncData = detailData?.sync_terminal;
 
-    console.log(syncData);
-    console.log(selectedTerminal);
-
-
     const payload = {
       ...selectedTerminal,
       c_project: selectedTerminal.c_project || "KCI",
