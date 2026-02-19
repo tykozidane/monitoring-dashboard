@@ -72,7 +72,7 @@ const HorizontalMenu = ({ dictionary }: { dictionary: Awaited<ReturnType<typeof 
         backgroundColor: 'var(--mui-palette-background-paper)'
       }}
     >
-      <Menu
+      {/* <Menu
         rootStyles={menuRootStyles(theme)}
         renderExpandIcon={({ level }) => <RenderExpandIcon level={level} />}
         menuItemStyles={menuItemStyles(theme, 'tabler-circle')}
@@ -418,7 +418,7 @@ const HorizontalMenu = ({ dictionary }: { dictionary: Awaited<ReturnType<typeof 
           </SubMenu>
           <MenuItem disabled>{dictionary['navigation'].disabledMenu}</MenuItem>
         </SubMenu>
-      </Menu>
+      </Menu> */}
       {/* <Menu
         rootStyles={menuRootStyles(theme)}
         renderExpandIcon={({ level }) => <RenderExpandIcon level={level} />}
