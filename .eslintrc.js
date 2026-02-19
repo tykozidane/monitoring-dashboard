@@ -14,6 +14,7 @@ module.exports = {
     '@typescript-eslint/no-non-null-assertion': 'off',
     '@typescript-eslint/no-unused-expressions': 'off',
     'import/no-named-as-default': 'off',
+    'import/no-unresolved': 'off',
     'no-unused-vars': 'off',
     'react-hooks/rules-of-hooks': 'error',
     'react-hooks/exhaustive-deps': 'off',
