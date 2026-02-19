@@ -23,7 +23,13 @@ interface DeviceProps {
   c_serial_number: string
   c_device_type: string
   n_device_name: string
-  c_direction?: number
+  c_direction: number
+  c_project: string
+  c_terminal_sn: string
+  b_active: boolean
+  sub_item_type: string | null
+  sub_item_code: string | null
+  sub_item_serial_code: string | null
 }
 
 interface selectDevicesOption {
@@ -156,7 +162,13 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
             c_device_type: matchOption.c_device_type,
             n_device_name: generatedName,
             c_serial_number: sourceItem.sub_serial_number,
-            c_direction: 0
+            c_direction: 0,
+            c_project: rowData.c_project || "KCI",
+            c_terminal_sn: rowData.c_terminal_sn || "",
+            b_active: true,
+            sub_item_type: sourceItem.sub_item_type,
+            sub_item_code: sourceItem.sub_model_code,
+            sub_item_serial_code: sourceItem.sub_item_serial_code
           };
         }
       });
@@ -323,7 +335,13 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
           c_serial_number: mapping.c_serial_number,
           c_device_type: mapping.c_device_type,
           c_direction: mapping.c_direction ?? 0,
-          n_device_name: mapping.n_device_name
+          n_device_name: mapping.n_device_name,
+          c_project: mapping.c_project || "KCI",
+          c_terminal_sn: mapping.c_terminal_sn || "",
+          b_active: mapping.b_active,
+          sub_item_type: mapping.sub_item_type,
+          sub_item_code: mapping.sub_item_code,
+          sub_item_serial_code: mapping.sub_item_serial_code
         });
       }
     });
@@ -338,7 +356,9 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
           c_serial_number: targetDev.c_serial_number,
           c_device_type: manualMap.c_device_type,
           c_direction: manualMap.c_direction ?? 0,
-          n_device_name: manualMap.n_device_name
+          n_device_name: manualMap.n_device_name,
+          c_project: manualMap.c_project || "KCI"
+
         });
       } else if (restoredItems.includes(targetDev.i_id)) {
         devicesPayload.push({ ...targetDev, c_direction: 0 })
@@ -347,11 +367,19 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
 
     const syncData = detailData?.sync_terminal;
 
+    console.log(syncData);
+    console.log(selectedTerminal);
+
+
     const payload = {
+      ...selectedTerminal,
       c_project: selectedTerminal.c_project || "KCI",
-      c_terminal_sn: selectedTerminal.c_terminal_sn,
-      n_terminal_name: selectedTerminal.n_terminal_name,
+      c_signature: syncData?.c_signature,
       i_sync_id: syncData?.i_id,
+      c_model_code: syncData?.model_code,
+      c_model_name: syncData?.model_name,
+      c_terminal_sn: syncData?.serial_number,
+      c_item_serial_code: syncData?.item_serial_code,
       devices: devicesPayload
     };
 
@@ -418,7 +446,13 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
           c_device_type: tempFormOption.c_device_type,
           n_device_name: generatedName,
           c_serial_number: sourceSN,
-          c_direction: tempDirection
+          c_direction: tempDirection,
+          c_project: rowData.c_project || "KCI",
+          c_terminal_sn: rowData.c_terminal_sn || "",
+          b_active: rowData.b_active,
+          sub_item_type: parsedSyncItems[idx].sub_item_type,
+          sub_item_code: parsedSyncItems[idx].sub_model_code,
+          sub_item_serial_code: parsedSyncItems[idx].sub_item_serial_code
         };
 
         setMappedDevices(prev => ({ ...prev, [editingItemId]: newMapping }));
@@ -436,7 +470,13 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
           c_device_type: tempFormOption.c_device_type,
           n_device_name: generatedName,
           c_serial_number: targetSN,
-          c_direction: tempDirection
+          c_direction: tempDirection,
+          c_project: rowData.c_project || "KCI",
+          c_terminal_sn: rowData.c_terminal_sn || "",
+          b_active: rowData.b_active,
+          sub_item_type: originalDev?.sub_item_type || "",
+          sub_item_code: originalDev?.sub_item_code || "",
+          sub_item_serial_code: originalDev?.sub_item_serial_code || ""
         };
 
         setMappedDevices(prev => ({ ...prev, [editingItemId]: newMapping }));

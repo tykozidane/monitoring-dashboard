@@ -169,7 +169,7 @@ const Sync = ({ onUpdateCount }: SyncProps) => {
                 <Fragment key={row.id}>
                   <tr
                     onClick={() => row.toggleExpanded()}
-                    className={classnames('cursor-pointer hover:bg-action-hover hover:bg-gray-500/10 transition-colors', { 'bg-action-selected': row.getIsExpanded() })}
+                    className={classnames('cursor-pointer hover:bg-action-hover hover:bg-gray-50/10 transition-colors', { 'bg-action-selected': row.getIsExpanded() })}
                   >
                     {row.getVisibleCells().map(cell => <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>)}
                   </tr>

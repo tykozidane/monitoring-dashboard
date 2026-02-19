@@ -47,7 +47,7 @@ const Fleet = ({ mapboxAccessToken }: { mapboxAccessToken: string }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.post(`${process.env.API_MONITORING_URL}output/all-station`);
+        const response = await axios.post(`${process.env.API_MONITORING_URL}/output/all-station`);
 
         setGeojson({
           type: 'FeatureCollection',
@@ -139,7 +139,7 @@ const Fleet = ({ mapboxAccessToken }: { mapboxAccessToken: string }) => {
   const handleOpenDetail = async (item: StationProps) => {
     try {
 
-      const response = await axios.post(`${process.env.API_MONITORING_URL}output/terminal-by-station`, {
+      const response = await axios.post(`${process.env.API_MONITORING_URL}/output/terminal-by-station`, {
         c_station: item.c_station,
         c_project: item.n_project_name ?? 'KCI'
       });

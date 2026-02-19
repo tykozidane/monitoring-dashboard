@@ -8,7 +8,7 @@ import Sync from './Sync'
 import Library from './Library'
 
 const ListTable = () => {
-  const [activeTab, setActiveTab] = useState('library')
+  const [activeTab, setActiveTab] = useState('sync')
   const [unsyncedCount, setUnsyncedCount] = useState(0)
 
   return (
