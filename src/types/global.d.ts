@@ -19,7 +19,7 @@ declare global {
     status: 'OK' | 'WARNING' | 'ERROR' | string
   }
 
-  export type SyncDataProps = {
+  type SyncDataProps = {
     sync_id: string
     item_serial_code: string
     serial_number: string

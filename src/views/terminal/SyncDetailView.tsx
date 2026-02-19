@@ -13,9 +13,8 @@ import { toast } from 'react-toastify'
 import axios from 'axios'
 
 // --- KONFIGURASI API ---
-const API_URL_MAPPING = 'https://da.devops-nutech.com/api/v1/terminal/get-data-mapping-terminal-sync';
-const API_URL_FREE = 'https://da.devops-nutech.com/api/v1/terminal/get-free-terminal'; // URL BARU (GET)
-const API_AUTH = 'Basic aGlzbnV0ZWNoOm51dGVjaDEyMw==';
+const BASE_URL = process.env.API_MONITORING_URL;
+const API_AUTH = process.env.API_AUTH;
 
 // --- 1. DEFINISI TIPE DATA ---
 interface DeviceProps {
@@ -80,15 +79,23 @@ interface SyncDetailViewProps {
     sync_id: string
     item_serial_code: string
     serial_number: string
+    client_name: string
+    model_code: string
     model_name: string
-    model_code?: string
-    station_name: string
     station_code: string
-    terminal_id?: string | null
-    c_terminal_sn?: string | null
-    client_name?: string
-    item?: SyncSubItem[] | string
-    [key: string]: any
+    station_name: string
+    d_sync: string
+    b_mapping: boolean
+    b_active: boolean
+
+    terminal_id: string | null
+    c_terminal_sn: string | null
+    c_project: string | null
+    c_station: string | null
+    c_terminal_type: string | null
+
+    match_status: 'MATCH' | 'NOT_MATCH' | string
+    signature_status: 'SIGNATURE_VALID' | 'SIGNATURE_INVALID' | 'SIGNATURE_NOT_IDENTIC' | null | string
   }
   onClose: () => void
 }
@@ -164,7 +171,7 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
 
     try {
       // PERUBAHAN: Menggunakan GET dan Params
-      const response = await axios.get(API_URL_FREE, {
+      const response = await axios.get(`${BASE_URL}/terminal/get-free-terminal`, {
         headers: {
           'Authorization': API_AUTH,
           'Content-Type': 'application/json'
@@ -195,20 +202,31 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
 
   // --- API 1: LOAD OPTION DEVICE (Static / Library) ---
   const fecthOptionDevice = async () => {
-    setTimeout(() => {
-      setOptionDevice([
-        { "c_device_type": "CD", "n_device_type": "Card Dispenser", "c_device": "card_dispenser", "c_project": "KCI", "n_number": "01" },
-        { "c_device_type": "CR", "n_device_type": "Card Reader", "c_device": "card_reader_01", "c_project": "KCI", "n_number": "01" },
-        { "c_device_type": "CR", "n_device_type": "Card Reader", "c_device": "card_reader_02", "c_project": "KCI", "n_number": "02" },
-        { "c_device_type": "PRINT", "n_device_type": "Printer", "c_device": "printer", "c_project": "KCI", "n_number": "01" },
-        { "c_device_type": "QRS", "n_device_type": "QR Scanner", "c_device": "qr_scanner_01", "c_project": "KCI", "n_number": "01" },
-        { "c_device_type": "BARCODE SCANNER", "n_device_type": "Barcode Scanner", "c_device": "0720301", "c_project": "KCI", "n_number": "01" },
-        { "c_device_type": "RP", "n_device_type": "READER PREPAID", "c_device": "reader_prepaid", "c_project": "KCI", "n_number": "01" },
-        { "c_device_type": "SAM", "n_device_type": "SAM Card", "c_device": "sam_mandiri_01", "c_project": "KCI", "n_number": "01" },
-        { "c_device_type": "SCAN", "n_device_type": "SCANNER", "c_device": "scan", "c_project": "KCI", "n_number": "01" },
-        { "c_device_type": "TRS", "n_device_type": "TURNSTILE", "c_device": "turnstile", "c_project": "KCI", "n_number": "01" }
-      ])
-    }, 500)
+    // Optional: Anda bisa menambahkan loading state khusus jika perlu
+    try {
+      const response = await axios.post(`${BASE_URL}/device/device-type`, {
+        c_project: "KCI"
+      }, {
+        headers: {
+          'Authorization': API_AUTH,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      // Sesuaikan dengan struktur response API Anda
+      // Biasanya response.data.data atau response.data
+      const data = response.data?.data || response.data;
+
+      if (Array.isArray(data)) {
+        setOptionDevice(data);
+      } else {
+        console.warn("Format data device options tidak valid (bukan array)");
+        setOptionDevice([]);
+      }
+    } catch (error) {
+      console.error("Error fetching option device:", error);
+      toast.error("Gagal mengambil data referensi device.");
+    }
   }
 
   // --- API 2: FETCH DETAIL (POST) ---
@@ -221,7 +239,7 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
         c_project: rowData.c_project || "KCI"
       }
 
-      const response = await axios.post(API_URL_MAPPING, payload, {
+      const response = await axios.post(`${BASE_URL}/terminal/get-data-mapping-terminal-sync`, payload, {
         headers: {
           'Authorization': API_AUTH,
           'Content-Type': 'application/json'

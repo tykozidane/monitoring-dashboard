@@ -26,7 +26,8 @@ const nextConfig: NextConfig = {
   },
   env: {
     APi_BACKEND_URL: process.env.APi_BACKEND_URL,
-    API_MONITORING_URL: process.env.API_MONITORING_URL
+    API_MONITORING_URL: process.env.API_MONITORING_URL,
+    API_AUTH: process.env.API_AUTH
   }
 }
 

@@ -23,8 +23,7 @@ import { DebouncedInput, fuzzyFilter } from '@/utils/helper'
 import SyncDetailView from './SyncDetailView'
 
 const BASE_URL = process.env.API_MONITORING_URL;
-const API_URL = `${BASE_URL}terminal/get-sync-terminal-status`;
-const API_AUTH = 'Basic aGlzbnV0ZWNoOm51dGVjaDEyMw==';
+const API_AUTH = process.env.API_AUTH;
 
 const columnHelper = createColumnHelper<SyncDataProps>()
 
@@ -45,7 +44,7 @@ const Sync = ({ onUpdateCount }: SyncProps) => {
     try {
       const response = await axios({
         method: 'GET',
-        url: API_URL,
+        url: `${BASE_URL}/terminal/get-sync-terminal-status`,
         headers: {
           'Authorization': API_AUTH,
           'Content-Type': 'application/json'
@@ -77,7 +76,9 @@ const Sync = ({ onUpdateCount }: SyncProps) => {
       toast.error("Gagal mengambil data terminal.")
       setData([])
     } finally {
-      setLoading(false)
+      setTimeout(() => {
+        setLoading(false)
+      }, 500);
     }
   }
 
@@ -150,7 +151,7 @@ const Sync = ({ onUpdateCount }: SyncProps) => {
               <i className={classnames("tabler-refresh text-xl", { "animate-spin": loading })}></i>
             </IconButton>
           </Tooltip>
-          {loading && <Typography variant="caption" color="text.secondary">Fetching API...</Typography>}
+          {loading && <Typography variant="caption" color="text.secondary">Refreshing...</Typography>}
         </div>
         <DebouncedInput value={globalFilter ?? ''} onChange={v => setGlobalFilter(String(v))} placeholder='Search Terminal...' className='is-full sm:is-auto' />
       </div>

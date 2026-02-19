@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, Fragment } from 'react'
 
 import axios from 'axios'
 import { toast } from 'react-toastify'
@@ -23,6 +23,9 @@ import { DebouncedInput, fuzzyFilter } from '@/utils/helper'
 
 const columnHelper = createColumnHelper<DataWithAction>()
 
+const BASE_URL = process.env.API_MONITORING_URL;
+const API_AUTH = process.env.API_AUTH;
+
 const Library = () => {
   const [data, setData] = useState<DataWithAction[]>([])
   const [loading, setLoading] = useState(false)
@@ -42,8 +45,14 @@ const Library = () => {
 
   useEffect(() => {
     setLoadingStation(true)
-    axios.post('http://192.168.62.90:4000/api/v1/output/all-station')
-      .then(res => setStationData(res.data.data?.code ? [] : res.data.data ?? []))
+    axios({
+      method: 'POST',
+      url: `${BASE_URL}/output/all-station`,
+      headers: {
+        'Authorization': API_AUTH,
+        'Content-Type': 'application/json'
+      }
+    }).then(res => setStationData(res.data.data?.code ? [] : res.data.data ?? []))
       .catch(err => { console.error(err); toast.error("Gagal terhubung ke server API") })
       .finally(() => setLoadingStation(false))
   }, [])
@@ -54,9 +63,17 @@ const Library = () => {
       const dataStation = stationData.find(s => s.c_station === stationActive)
 
       if (dataStation) {
-        axios.post(`${process.env.API_MONITORING_URL}output/terminal-by-station`, {
-          c_station: dataStation.c_station,
-          c_project: dataStation.n_project_name ?? 'KCI'
+        axios({
+          method: 'POST',
+          url: `${BASE_URL}/output/terminal-by-station`,
+          headers: {
+            'Authorization': API_AUTH,
+            'Content-Type': 'application/json'
+          },
+          data: {
+            c_station: dataStation.c_station,
+            c_project: dataStation.n_project_name ?? 'KCI'
+          }
         }).then(res => setData(res.data.data?.code ? [] : res.data.data ?? []))
           .catch(err => { console.error(err); toast.error("Gagal load terminal") })
           .finally(() => setLoading(false))
@@ -71,7 +88,7 @@ const Library = () => {
     setLoadingExpanded(prev => ({ ...prev, [sn]: true }));
 
     try {
-      const response = await axios.post(`${process.env.API_MONITORING_URL}output/device-by-station`, {
+      const response = await axios.post(`${process.env.API_MONITORING_URL}/output/device-by-station`, {
         c_station: row.c_station,
         c_project: row.n_project_name ?? 'KCI'
       })
@@ -147,7 +164,7 @@ const Library = () => {
             {loading ? <tr><td colSpan={columns.length} className="text-center py-4"><LinearProgress /></td></tr> :
               table.getRowModel().rows.length === 0 ? <tr><td colSpan={columns.length} className='text-center py-4'>No data available</td></tr> :
                 table.getRowModel().rows.map(row => (
-                  <>
+                  <Fragment key={row.id}>
                     <tr key={row.id} onClick={() => { row.toggleExpanded(); if (!row.getIsExpanded()) fetchTerminalDevices(row.original); }} className={classnames('cursor-pointer hover:bg-gray-50/10', { 'bg-gray-50/10': row.getIsExpanded() })}>
                       {row.getVisibleCells().map(cell => <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>)}
                     </tr>
@@ -162,7 +179,7 @@ const Library = () => {
                         </Box></Grow>
                       </td></tr>
                     )}
-                  </>
+                  </Fragment>
                 ))}
           </tbody>
         </table>
