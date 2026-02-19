@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev --turbopack --port 4003",
     "build": "next build",
-    "start": "next start",
+    "start": "next start --port 4003",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
