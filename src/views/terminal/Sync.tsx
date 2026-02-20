@@ -181,7 +181,7 @@ const Sync = ({ onUpdateCount }: SyncProps) => {
                         {/* Menghapus background color dan border samping */}
                         <div className="w-full">
                           <Grow in={true}>
-                            <div><SyncDetailView rowData={row.original} onClose={() => row.toggleExpanded(false)} /></div>
+                            <div><SyncDetailView rowData={row.original} onClose={(refresh) => { row.toggleExpanded(false); refresh && fetchSyncData() }} /></div>
                           </Grow>
                         </div>
                       </td>

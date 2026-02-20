@@ -47,7 +47,7 @@ interface TerminalProps {
   c_project?: string | null
   c_station?: string | null
   n_terminal_name: string
-  item: DeviceProps[]
+  devices: DeviceProps[]
 }
 
 export interface SyncSubItem {
@@ -103,7 +103,7 @@ interface SyncDetailViewProps {
     match_status: 'MATCH' | 'NOT_MATCH' | string
     signature_status: 'SIGNATURE_VALID' | 'SIGNATURE_INVALID' | 'SIGNATURE_NOT_IDENTIC' | null | string
   }
-  onClose: () => void
+  onClose: (refresh?: boolean) => void
 }
 
 const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
@@ -126,6 +126,7 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [editingItemId, setEditingItemId] = useState<string | null>(null)
   const [loadingConfig, setLoadingConfig] = useState(false)
+  const [loadingMapping, setLoadingMapping] = useState(false)
 
   // Mapping Store
   const [mappedDevices, setMappedDevices] = useState<Record<string, DeviceProps | null>>({})
@@ -312,9 +313,10 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
   }
 
   // --- API 3: SUBMIT / CONFIRM ---
-  const handleSyncSubmit = () => {
+  const handleSyncSubmit = async () => {
     if (!selectedTerminal) return toast.error("Please select a target terminal first!")
 
+    setLoadingMapping(true)
     let isAllMapped = true;
 
     parsedSyncItems.forEach((_, idx) => {
@@ -337,31 +339,12 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
           c_direction: mapping.c_direction ?? 0,
           n_device_name: mapping.n_device_name,
           c_project: mapping.c_project || "KCI",
-          c_terminal_sn: mapping.c_terminal_sn || "",
+          c_terminal_sn: detailData?.sync_terminal?.serial_number,
           b_active: mapping.b_active,
           sub_item_type: mapping.sub_item_type,
           sub_item_code: mapping.sub_item_code,
           sub_item_serial_code: mapping.sub_item_serial_code
         });
-      }
-    });
-
-    // 2. Devices existing (Unmatched)
-    selectedTerminal.item?.forEach((targetDev) => {
-      const manualMap = mappedDevices[targetDev.i_id];
-
-      if (manualMap) {
-        devicesPayload.push({
-          c_device: manualMap.c_device,
-          c_serial_number: targetDev.c_serial_number,
-          c_device_type: manualMap.c_device_type,
-          c_direction: manualMap.c_direction ?? 0,
-          n_device_name: manualMap.n_device_name,
-          c_project: manualMap.c_project || "KCI"
-
-        });
-      } else if (restoredItems.includes(targetDev.i_id)) {
-        devicesPayload.push({ ...targetDev, c_direction: 0 })
       }
     });
 
@@ -379,8 +362,30 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
       devices: devicesPayload
     };
 
-    console.log("=== PAYLOAD SUBMIT ===", payload);
-    toast.success(`Sync Confirmed (Check Console)`);
+    try {
+      const response = await axios.post(`${BASE_URL}/terminal/mapping-terminal`, {
+        ...payload
+      }, {
+        headers: {
+          'Authorization': API_AUTH,
+          'Content-Type': 'application/json'
+        },
+      });
+
+      const data = response.data;
+
+      if (data?.status === '00') {
+        toast.success(data?.message || "Terminal synchronization successful!");
+        onClose(true);
+      } else {
+        toast.error(data?.message?.eng || "Gagal melakukan sinkronisasi terminal.");
+      }
+    } catch (error: any) {
+      console.error("Error fetching free terminals:", error);
+      toast.error(error.message || "Gagal melakukan sinkronisasi terminal.");
+    } finally {
+      setLoadingMapping(false)
+    }
   }
 
   // --- LOGIC EDIT ---
@@ -408,7 +413,7 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
 
       setTempDirection(existingMap.c_direction ?? 0);
     } else {
-      const deviceRaw = selectedTerminal?.item?.find(d => d.i_id === id);
+      const deviceRaw = selectedTerminal?.devices?.find(d => d.i_id === id);
 
       if (deviceRaw) {
         const matchingOption = optionDevice.find(opt => opt.c_device === deviceRaw.c_device);
@@ -454,7 +459,7 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
         setMappedDevices(prev => ({ ...prev, [editingItemId]: newMapping }));
       }
     } else {
-      const originalDev = selectedTerminal?.item?.find(d => d.i_id === editingItemId);
+      const originalDev = selectedTerminal?.devices?.find(d => d.i_id === editingItemId);
       const targetSN = originalDev?.c_serial_number || "";
 
       if (tempFormOption) {
@@ -504,7 +509,7 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
       let borderColor = theme.palette.mode === 'dark' ? 'rgba(255, 167, 38, 0.5)' : '#fdba74';
 
       if (isMapped) {
-        const isExactMatch = selectedTerminal.item?.some(
+        const isExactMatch = selectedTerminal.devices?.some(
           t => t.c_serial_number === sourceItem.sub_serial_number && t.c_device === mapping.c_device
         );
 
@@ -562,7 +567,7 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
     })
 
     // UNMATCHED VIEW
-    const targetDeletedView = selectedTerminal.item?.map((dev, idx) => {
+    const targetDeletedView = selectedTerminal.devices?.map((dev, idx) => {
       const isRestored = restoredItems.includes(dev.i_id);
       const manualMap = mappedDevices[dev.i_id];
       const libraryInfo = optionDevice.find(opt => opt.c_device === dev.c_device);
@@ -621,7 +626,7 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
     return (
       <div className="max-h-80 overflow-y-auto pr-1">
         {mergedView}
-        {selectedTerminal.item?.length > 0 && <Divider className="my-4"><Typography variant="caption" className="font-bold" color="text.secondary">Unmatched Devices</Typography></Divider>}
+        {selectedTerminal.devices?.length > 0 && <Divider className="my-4"><Typography variant="caption" className="font-bold" color="text.secondary">Unmatched Devices</Typography></Divider>}
         {targetDeletedView}
       </div>
     )
@@ -631,7 +636,7 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
 
   const syncData = detailData?.sync_terminal;
 
-  if (!syncData) return (<Box sx={{ p: 4, textAlign: 'center' }}><Alert severity="error">Data not found.</Alert><Button onClick={onClose} sx={{ mt: 2 }}>Close</Button></Box>)
+  if (!syncData) return (<Box sx={{ p: 4, textAlign: 'center' }}><Alert severity="error">Data not found.</Alert><Button onClick={() => onClose(false)} sx={{ mt: 2 }}>Close</Button></Box>)
 
   return (
     <Box sx={{ p: 3, borderLeft: '4px solid', borderColor: 'primary.main', bgcolor: 'background.default' }}>
@@ -728,8 +733,8 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
       </Dialog>
 
       <div className="mt-6 flex justify-end gap-3 border-t pt-4">
-        <Button variant="outlined" color="secondary" onClick={onClose}>Cancel</Button>
-        <Button variant="contained" color="primary" startIcon={<i className="tabler-check" />} disabled={!selectedTerminal} onClick={handleSyncSubmit}>Confirm Sync & Map</Button>
+        <Button variant="outlined" color="secondary" onClick={() => onClose(false)}>Cancel</Button>
+        <Button variant="contained" color="primary" startIcon={<i className="tabler-check" />} loading={loadingMapping} disabled={!selectedTerminal} onClick={handleSyncSubmit}>Confirm Sync & Map</Button>
       </div>
     </Box>
   )
