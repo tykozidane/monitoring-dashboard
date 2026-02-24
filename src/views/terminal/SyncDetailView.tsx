@@ -647,8 +647,8 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
             <div className="flex items-center gap-2 mb-3"><Chip label="SOURCE" color="warning" size="small" className="font-bold" /><Typography variant="subtitle1" fontWeight="bold">Incoming Sync Data</Typography></div>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-2 text-sm">
-                <Typography variant="caption" color="text.secondary">Serial No (Short):</Typography><span className="font-mono font-bold text-primary">{syncData.serial_number}</span>
-                <Typography variant="caption" color="text.secondary">Item Serial (Long):</Typography><span className="font-mono text-xs">{syncData.item_serial_code}</span>
+                <Typography variant="caption" color="text.secondary">Serial No:</Typography><span className="font-mono font-bold text-primary">{syncData.serial_number}</span>
+                <Typography variant="caption" color="text.secondary">Item Serial:</Typography><span className="font-mono text-xs">{syncData.item_serial_code}</span>
                 <Typography variant="caption" color="text.secondary">Model:</Typography><span>{syncData.model_name}</span>
                 <Typography variant="caption" color="text.secondary">Station:</Typography><span>{syncData.station_name} ({syncData.station_code})</span>
               </div>
@@ -697,7 +697,7 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
                 )}
               />
             </div>
-            {selectedTerminal ? <div className="animate-in fade-in slide-in-from-bottom-2 duration-300"><Divider sx={{ my: 2 }} />{renderTargetComparison()}</div> : <div className="h-40 flex items-center justify-center border-2 border-dashed rounded opacity-50"><Typography variant="body2" color="text.secondary">Select a terminal first</Typography></div>}
+            {selectedTerminal ? <div className="animate-in fade-in slide-in-from-bottom-2 duration-300"><Divider sx={{ my: 2 }} />{renderTargetComparison()}</div> : <div className="h-82 flex items-center justify-center border-2 border-dashed rounded opacity-50"><Typography variant="body2" color="text.secondary">Select a terminal first</Typography></div>}
           </Paper>
         </Grid>
       </Grid>
@@ -734,7 +734,7 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
 
       <div className="mt-6 flex justify-end gap-3 border-t pt-4">
         <Button variant="outlined" color="secondary" onClick={() => onClose(false)}>Cancel</Button>
-        <Button variant="contained" color="primary" startIcon={<i className="tabler-check" />} loading={loadingMapping} disabled={!selectedTerminal} onClick={handleSyncSubmit}>Confirm Sync & Map</Button>
+        <Button variant="contained" color="primary" startIcon={<i className="tabler-check" />} disabled={!selectedTerminal} onClick={handleSyncSubmit}>Confirm Sync & Map</Button>
       </div>
     </Box>
   )

@@ -112,7 +112,7 @@ const Sync = ({ onUpdateCount }: SyncProps) => {
       )
     }),
     columnHelper.accessor('d_sync', {
-      header: 'Created / Sync',
+      header: 'Created',
       cell: ({ row }) => <Typography variant='body2' className='text-sm'>{new Date(row.original.d_sync).toLocaleString('id-ID')}</Typography>
     }),
     columnHelper.accessor('match_status', {

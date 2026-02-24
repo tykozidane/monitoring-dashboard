@@ -5,7 +5,7 @@ import { Grow, Grid } from '@mui/material';
 import ListTable from './ListTable'
 
 const List = () => {
-  const Subject = 'Terminal Monitoring';
+  const Subject = 'Terminal';
 
   return (
     <Grow in={true}>
