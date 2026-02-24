@@ -6,17 +6,15 @@ import {
   Card, Button, TextField, Typography, Grid, Box, Chip, IconButton,
   Tooltip, Divider, Paper, Dialog, DialogTitle, DialogContent,
   DialogActions, Autocomplete, CircularProgress, MenuItem, useTheme,
-  Alert
+  Alert, createFilterOptions
 } from '@mui/material'
 import classnames from 'classnames'
 import { toast } from 'react-toastify'
 import axios from 'axios'
 
-// --- KONFIGURASI API ---
 const BASE_URL = process.env.API_MONITORING_URL;
 const API_AUTH = process.env.API_AUTH;
 
-// --- 1. DEFINISI TIPE DATA ---
 interface DeviceProps {
   i_id: string
   c_device: string
@@ -32,12 +30,13 @@ interface DeviceProps {
   sub_item_serial_code: string | null
 }
 
-interface selectDevicesOption {
+export interface selectDevicesOption {
   c_device: string
   c_device_type: string
   n_device_type: string
   c_project: string
   n_number: string
+  inputValue?: string
 }
 
 interface TerminalProps {
@@ -93,18 +92,18 @@ interface SyncDetailViewProps {
     d_sync: string
     b_mapping: boolean
     b_active: boolean
-
     terminal_id: string | null
     c_terminal_sn: string | null
     c_project: string | null
     c_station: string | null
     c_terminal_type: string | null
-
     match_status: 'MATCH' | 'NOT_MATCH' | string
     signature_status: 'SIGNATURE_VALID' | 'SIGNATURE_INVALID' | 'SIGNATURE_NOT_IDENTIC' | null | string
   }
   onClose: (refresh?: boolean) => void
 }
+
+const filter = createFilterOptions<selectDevicesOption>();
 
 const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
   const theme = useTheme()
@@ -114,7 +113,6 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
   const [selectedTerminal, setSelectedTerminal] = useState<TerminalProps | null>(null)
   const [parsedSyncItems, setParsedSyncItems] = useState<SyncSubItem[]>([])
 
-  // State untuk Autocomplete
   const [isLocked, setIsLocked] = useState(false)
   const [terminalOptions, setTerminalOptions] = useState<TerminalProps[]>([])
   const [loadingOptions, setLoadingOptions] = useState(false)
@@ -122,25 +120,31 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
   const [restoredItems, setRestoredItems] = useState<string[]>([])
   const [optionDevice, setOptionDevice] = useState<selectDevicesOption[]>([])
 
-  // Edit & Mapping State
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [editingItemId, setEditingItemId] = useState<string | null>(null)
   const [loadingConfig, setLoadingConfig] = useState(false)
   const [loadingMapping, setLoadingMapping] = useState(false)
 
-  // Mapping Store
   const [mappedDevices, setMappedDevices] = useState<Record<string, DeviceProps | null>>({})
 
-  // Temp State untuk Dialog
   const [tempFormOption, setTempFormOption] = useState<selectDevicesOption | null>(null)
   const [tempDirection, setTempDirection] = useState<number>(0)
+
+  const [addDeviceDialogOpen, setAddDeviceDialogOpen] = useState(false);
+  const [loadingAddDevice, setLoadingAddDevice] = useState(false);
+
+  const [newDeviceForm, setNewDeviceForm] = useState({
+    c_device_type: '',
+    n_device_type: '',
+    c_device: '',
+    n_number: '1'
+  });
 
   useEffect(() => {
     fetchDetail()
     fecthOptionDevice()
   }, [])
 
-  // --- LOGIC AUTO MAPPING ---
   useEffect(() => {
     if (parsedSyncItems.length > 0 && optionDevice.length > 0) {
       const newMapping: Record<string, DeviceProps> = {};
@@ -178,23 +182,18 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
     }
   }, [parsedSyncItems, optionDevice, rowData.station_code]);
 
-  // --- API: FETCH OPTION TERMINAL (GET FREE TERMINAL) ---
   const fetchFreeTerminals = async () => {
     setLoadingOptions(true);
 
     try {
-      // PERUBAHAN: Menggunakan GET dan Params
       const response = await axios.get(`${BASE_URL}/terminal/get-free-terminal`, {
         headers: {
           'Authorization': API_AUTH,
           'Content-Type': 'application/json'
         },
-        params: {
-          c_project: "KCI" // Dikirim sebagai query param: ?c_project=KCI
-        }
+        params: { c_project: "KCI" }
       });
 
-      // Asumsi response: { status: ..., data: [TerminalProps, ...] }
       const data = response.data?.data;
 
       if (Array.isArray(data)) {
@@ -204,45 +203,36 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
       } else {
         setTerminalOptions([]);
       }
-
     } catch (error) {
       console.error("Error fetching free terminals:", error);
-      toast.error("Gagal memuat data terminal yang tersedia.");
+      toast.error("Failed to load available terminals.");
     } finally {
       setLoadingOptions(false);
     }
   };
 
-  // --- API 1: LOAD OPTION DEVICE (Static / Library) ---
   const fecthOptionDevice = async () => {
-    // Optional: Anda bisa menambahkan loading state khusus jika perlu
     try {
-      const response = await axios.post(`${BASE_URL}/device/device-type`, {
-        c_project: "KCI"
-      }, {
+      const response = await axios.post(`${BASE_URL}/device/device-type`, { c_project: "KCI" }, {
         headers: {
           'Authorization': API_AUTH,
           'Content-Type': 'application/json'
         }
       });
 
-      // Sesuaikan dengan struktur response API Anda
-      // Biasanya response.data.data atau response.data
       const data = response.data?.data || response.data;
 
       if (Array.isArray(data)) {
         setOptionDevice(data);
       } else {
-        console.warn("Format data device options tidak valid (bukan array)");
         setOptionDevice([]);
       }
     } catch (error) {
       console.error("Error fetching option device:", error);
-      toast.error("Gagal mengambil data referensi device.");
+      toast.error("Failed to fetch device references.");
     }
   }
 
-  // --- API 2: FETCH DETAIL (POST) ---
   const fetchDetail = async () => {
     setLoading(true)
 
@@ -261,9 +251,7 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
 
       const apiRes = response.data?.data;
 
-      if (!apiRes) {
-        throw new Error("Data not found");
-      }
+      if (!apiRes) throw new Error("Data not found");
 
       const formattedData: ApiResponse = {
         terminal: apiRes.terminal,
@@ -272,7 +260,6 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
 
       setDetailData(formattedData)
 
-      // 1. Parse Sync Item
       if (formattedData.sync_terminal?.item) {
         try {
           const rawItem = formattedData.sync_terminal.item;
@@ -280,28 +267,24 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
 
           setParsedSyncItems(items as SyncSubItem[]);
         } catch (e) {
-          console.error("JSON Parse Error:", e);
           setParsedSyncItems([]);
         }
       }
 
-      // 2. LOGIC PENENTUAN TARGET TERMINAL & LOCKING
       const existingTerminal: TerminalProps | null = formattedData.terminal;
 
       if (existingTerminal) {
-        // KASUS 1: Data Terminal SUDAH ADA (Mapping ditemukan)
         setSelectedTerminal(existingTerminal);
-        setTerminalOptions([existingTerminal]); // Masukkan ke opsi agar autocomplete terisi
-        setIsLocked(true); // DISABLE AUTOCOMPLETE
+        setTerminalOptions([existingTerminal]);
+        setIsLocked(true);
       } else {
-        // KASUS 2: Data Terminal BELUM ADA
         setSelectedTerminal(null);
-        setIsLocked(false); // ENABLE AUTOCOMPLETE
+        setIsLocked(false);
       }
 
     } catch (error) {
       console.error("Fetch Detail Error:", error);
-      toast.error("Gagal mengambil detail mapping terminal.");
+      toast.error("Failed to fetch terminal mapping details.");
       setDetailData(null);
     } finally {
       setLoading(false)
@@ -312,7 +295,6 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
     setRestoredItems(prev => prev.includes(deviceId) ? prev.filter(id => id !== deviceId) : [...prev, deviceId])
   }
 
-  // --- API 3: SUBMIT / CONFIRM ---
   const handleSyncSubmit = async () => {
     if (!selectedTerminal) return toast.error("Please select a target terminal first!")
 
@@ -327,7 +309,6 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
 
     const devicesPayload: any[] = [];
 
-    // 1. Devices dari Source (Mapped)
     parsedSyncItems.forEach((_, idx) => {
       const mapping = mappedDevices[`src-${idx}`];
 
@@ -363,9 +344,7 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
     };
 
     try {
-      const response = await axios.post(`${BASE_URL}/terminal/mapping-terminal`, {
-        ...payload
-      }, {
+      const response = await axios.post(`${BASE_URL}/terminal/mapping-terminal`, payload, {
         headers: {
           'Authorization': API_AUTH,
           'Content-Type': 'application/json'
@@ -378,17 +357,15 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
         toast.success(data?.message || "Terminal synchronization successful!");
         onClose(true);
       } else {
-        toast.error(data?.message?.eng || "Gagal melakukan sinkronisasi terminal.");
+        toast.error(data?.message?.eng || "Failed to synchronize terminal.");
       }
     } catch (error: any) {
-      console.error("Error fetching free terminals:", error);
-      toast.error(error.message || "Gagal melakukan sinkronisasi terminal.");
+      toast.error(error.message || "Failed to synchronize terminal.");
     } finally {
       setLoadingMapping(false)
     }
   }
 
-  // --- LOGIC EDIT ---
   const handleEditClick = (id: string) => {
     setEditingItemId(id)
     setEditDialogOpen(true)
@@ -429,11 +406,9 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
     setTimeout(() => setLoadingConfig(false), 300)
   }
 
-  // --- LOGIC SAVE MAPPING ---
   const handleSaveMapping = () => {
     if (!editingItemId) return;
 
-    // Logic Simpan Mapping
     if (editingItemId.startsWith('src-')) {
       const idx = parseInt(editingItemId.split('-')[1]);
       const sourceSN = parsedSyncItems[idx]?.sub_serial_number || "";
@@ -494,16 +469,55 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
     setTempDirection(0);
   }
 
+  const handleCreateNewDevice = async () => {
+    setLoadingAddDevice(true);
+
+    try {
+      const payload = {
+        ...newDeviceForm,
+        c_project: rowData.c_project || "KCI",
+      };
+
+      const response = await axios.post(`${BASE_URL}/device/create-device-type`, payload, {
+        headers: {
+          'Authorization': API_AUTH,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.data) {
+        toast.success("Successfully added a new Device Type!");
+        await fecthOptionDevice();
+        setTempFormOption(payload);
+        setAddDeviceDialogOpen(false);
+      } else {
+        toast.error("Failed to add a new Device Type.");
+      }
+    } catch (error: any) {
+      console.error("Create device type error:", error);
+      toast.error(error?.response?.data?.message || "Failed to create device type.");
+    } finally {
+      setLoadingAddDevice(false);
+    }
+  }
+
+  // Filter mapped device options to prevent duplicating mappings
+  const mappedDeviceCodes = Object.entries(mappedDevices)
+    .filter(([key, val]) => key !== editingItemId && val !== null)
+    .map(([_, val]) => val!.c_device);
+
+  const availableOptions = optionDevice.filter(
+    opt => !mappedDeviceCodes.includes(opt.c_device)
+  );
+
   const renderTargetComparison = () => {
     if (!selectedTerminal) return null
 
-    // SOURCE ITEMS
     const mergedView = parsedSyncItems.map((sourceItem, idx) => {
       const itemId = `src-${idx}`
       const mapping = mappedDevices[itemId]
       const isMapped = !!mapping;
 
-      // ... Style logic same as before
       let statusLabel = "UNMAPPED";
       let statusColor: "success" | "info" | "warning" = "warning";
       let borderColor = theme.palette.mode === 'dark' ? 'rgba(255, 167, 38, 0.5)' : '#fdba74';
@@ -566,7 +580,6 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
       )
     })
 
-    // UNMATCHED VIEW
     const targetDeletedView = selectedTerminal.devices?.map((dev, idx) => {
       const isRestored = restoredItems.includes(dev.i_id);
       const manualMap = mappedDevices[dev.i_id];
@@ -702,17 +715,75 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
         </Grid>
       </Grid>
 
-      {/* --- EDIT DIALOG --- */}
       <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle className='flex justify-between items-center'>Map to Device Definition<IconButton onClick={() => setEditDialogOpen(false)} size='small'><i className='tabler-x' /></IconButton></DialogTitle>
         <DialogContent dividers>
           {loadingConfig ? <div className="flex justify-center p-5"><CircularProgress /></div> : (
             <div className="flex flex-col gap-4 pt-1">
               <Autocomplete
-                options={optionDevice}
-                getOptionLabel={(o) => `${o.n_device_type} (${o.c_device})`}
+                options={availableOptions}
                 value={tempFormOption}
-                onChange={(_, v) => setTempFormOption(v)}
+                getOptionLabel={(option) => {
+                  if (typeof option === 'string') return option;
+                  if (option.inputValue) return option.inputValue;
+
+                  return option.n_device_type || '';
+                }}
+                filterOptions={(options, params) => {
+                  const filtered = filter(options, params);
+                  const { inputValue } = params;
+                  const isExisting = options.some((option) => inputValue.toLowerCase() === option.n_device_type.toLowerCase());
+
+                  if (inputValue !== '' && !isExisting) {
+                    filtered.push({
+                      inputValue,
+                      n_device_type: `Add "${inputValue}"`,
+                      c_device: `NEW-${inputValue}`,
+                      c_device_type: '',
+                      c_project: 'KCI',
+                      n_number: ''
+                    });
+                  }
+
+                  return filtered;
+                }}
+                onChange={(_, newValue) => {
+                  if (typeof newValue === 'string') {
+                    setNewDeviceForm(prev => ({ ...prev, n_device_type: newValue }));
+                    setAddDeviceDialogOpen(true);
+                  } else if (newValue && newValue.inputValue) {
+                    setNewDeviceForm(prev => ({ ...prev, n_device_type: newValue.inputValue || '' }));
+                    setAddDeviceDialogOpen(true);
+                  } else {
+                    setTempFormOption(newValue);
+                  }
+                }}
+                renderOption={(props, option) => {
+                  const { key, ...optionProps } = props;
+                  const uniqueKey = option.inputValue ? `add-${option.inputValue}` : `opt-${option.c_device}`;
+
+                  return (
+                    <li key={uniqueKey} {...optionProps} className={`${optionProps.className} flex items-center gap-2`}>
+                      {option.inputValue ? (
+                        <>
+                          <div className="flex items-center justify-center w-6 h-6 rounded bg-primary/10 text-primary">
+                            <i className="tabler-plus text-sm font-bold" />
+                          </div>
+                          <Typography color="primary" fontWeight="bold" variant="body2">
+                            Add &quot;{option.inputValue}&quot;
+                          </Typography>
+                        </>
+                      ) : (
+                        <div className="flex flex-col w-full">
+                          <Typography variant="body2">{option.n_device_type}</Typography>
+                          <Typography variant="caption" color="text.secondary" className="font-mono">
+                            {option.c_device}
+                          </Typography>
+                        </div>
+                      )}
+                    </li>
+                  );
+                }}
                 renderInput={(p) => <TextField {...p} label="Select Device Definition" />}
                 isOptionEqualToValue={(option, value) => option.c_device === value.c_device}
               />
@@ -721,15 +792,64 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
                 <MenuItem value={1}>IN</MenuItem>
                 <MenuItem value={2}>OUT</MenuItem>
               </TextField>
-              <TextField label="Device Type" value={tempFormOption?.c_device_type || ''} disabled variant="filled" size='small' />
+
+              <div className="flex gap-3 w-full">
+                <TextField label="Device Type" value={tempFormOption?.c_device_type || ''} disabled variant="filled" size='small' fullWidth />
+                <TextField label="Device Code" value={tempFormOption?.c_device || ''} disabled variant="filled" size='small' fullWidth />
+              </div>
+
               <Paper variant="outlined" sx={{ p: 1.5, bgcolor: 'action.hover', borderLeft: '4px solid', borderColor: 'info.main' }}>
                 <Typography variant="caption" color="text.secondary" component="div" className="flex items-center gap-1"><i className="tabler-info-circle"></i> Device Name Preview:</Typography>
-                <Typography variant="body2" fontWeight="bold">{tempFormOption ? `${tempFormOption.n_device_type} ${rowData.station_code} ${tempFormOption.n_number}` : 'Select definition to generate name'}</Typography>
+                <Typography variant="body2" fontWeight="bold">{tempFormOption?.n_device_type ? `${tempFormOption.n_device_type} ${rowData.station_code} ${tempFormOption.n_number || '00'}` : 'Select definition to generate name'}</Typography>
               </Paper>
             </div>
           )}
         </DialogContent>
         <DialogActions className='pt-3'><Button onClick={() => setEditDialogOpen(false)} color="secondary">Cancel</Button><Button onClick={handleSaveMapping} variant="contained" disabled={loadingConfig}>Save Mapping</Button></DialogActions>
+      </Dialog>
+
+      <Dialog open={addDeviceDialogOpen} onClose={() => setAddDeviceDialogOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Add New Device Type</DialogTitle>
+        <DialogContent dividers className="flex flex-col gap-5 pt-5">
+          <TextField
+            label="Name"
+            value={newDeviceForm.n_device_type}
+            onChange={(e) => setNewDeviceForm({ ...newDeviceForm, n_device_type: e.target.value })}
+            size="small"
+            fullWidth
+          />
+          <TextField
+            label="Type Code"
+            placeholder="e.g., CR"
+            value={newDeviceForm.c_device_type}
+            onChange={(e) => setNewDeviceForm({ ...newDeviceForm, c_device_type: e.target.value })}
+            size="small"
+            fullWidth
+          />
+          <TextField
+            label="Device Code"
+            placeholder="e.g., card_reader_01"
+            value={newDeviceForm.c_device}
+            onChange={(e) => setNewDeviceForm({ ...newDeviceForm, c_device: e.target.value })}
+            size="small"
+            fullWidth
+          />
+          <TextField
+            label="Number"
+            placeholder="e.g., 1"
+            value={newDeviceForm.n_number}
+            onChange={(e) => setNewDeviceForm({ ...newDeviceForm, n_number: e.target.value })}
+            size="small"
+            type="number"
+            fullWidth
+          />
+        </DialogContent>
+        <DialogActions className='mt-5'>
+          <Button onClick={() => setAddDeviceDialogOpen(false)} color="secondary">Cancel</Button>
+          <Button variant="contained" onClick={handleCreateNewDevice} disabled={loadingAddDevice}>
+            {loadingAddDevice ? <CircularProgress size={20} color="inherit" /> : 'Save Device Type'}
+          </Button>
+        </DialogActions>
       </Dialog>
 
       <div className="mt-6 flex justify-end gap-3 border-t pt-4">
