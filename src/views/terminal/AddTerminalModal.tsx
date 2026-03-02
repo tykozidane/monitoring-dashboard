@@ -42,11 +42,13 @@ const LocationPicker = ({ setPosition }: { setPosition: (lat: number, lng: numbe
 export const AddTerminalModal = ({
   isOpen,
   onClose,
-  onSuccess
+  onSuccess,
+  SpareGates
 }: {
   isOpen: boolean,
   onClose: () => void,
-  onSuccess: () => void
+  onSuccess: () => void,
+  SpareGates: { c_project: string, c_station: string, c_terminal_01: string, c_terminal_02: string, n_terminal_name: string }[]
 }) => {
 
   const initialFormState = {
@@ -111,7 +113,6 @@ export const AddTerminalModal = ({
       clearTimeout(delayDebounceFn);
     };
   }, [inputValue]);
-
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -224,67 +225,123 @@ export const AddTerminalModal = ({
         <DialogTitle sx={{ fontWeight: 'bold', pb: 1 }}>Add New Terminal</DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={3} sx={{ mt: 1 }}>
+            {/* 1. Terminal Type - Manual Select atau TextField */}
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
-                fullWidth label="Terminal 01 *" name="c_terminal_01"
-                value={formData.c_terminal_01} onChange={handleInputChange}
-                error={!!errors.c_terminal_01} helperText={errors.c_terminal_01}
+                fullWidth
+                label="Terminal Type *"
+                name="c_terminal_type"
+                value={formData.c_terminal_type}
+                onChange={handleInputChange}
+                error={!!errors.c_terminal_type}
+                helperText={errors.c_terminal_type}
+              />
+            </Grid>
+
+            {/* 2. Terminal Name - Sekarang menjadi SELECT (Autocomplete) */}
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Autocomplete
+                options={SpareGates}
+                getOptionLabel={(option) => option.n_terminal_name || ""}
+                value={SpareGates.find(s => s.n_terminal_name === formData.n_terminal_name) || null}
+                onChange={(_, newValue) => {
+                  if (newValue) {
+                    setFormData(prev => ({
+                      ...prev,
+                      n_terminal_name: newValue.n_terminal_name,
+                      c_terminal_01: newValue.c_terminal_01 || "",
+                      c_terminal_02: newValue.c_terminal_02 || "",
+                      c_station: newValue.c_station || prev.c_station,
+                      c_project: newValue.c_project || prev.c_project
+                    }));
+
+                    // Bersihkan error untuk field yang otomatis terisi
+                    setErrors(prev => ({
+                      ...prev,
+                      n_terminal_name: "",
+                      c_terminal_01: "",
+                      c_station: ""
+                    }));
+                  }
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Select Terminal Name *"
+                    error={!!errors.n_terminal_name}
+                    helperText={errors.n_terminal_name}
+                    placeholder="Search by name..."
+                  />
+                )}
+              />
+            </Grid>
+
+            {/* 3. Terminal 01 - Otomatis terisi & Read Only */}
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                fullWidth
+                label="Terminal 01"
+                value={formData.c_terminal_01}
+                InputProps={{ readOnly: true }}
+                variant="filled"
+                helperText="Auto-filled from selection"
+              />
+            </Grid>
+
+            {/* 4. Terminal 02 - Otomatis terisi & Read Only */}
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                fullWidth
+                label="Terminal 02"
+                value={formData.c_terminal_02 || "-"}
+                InputProps={{ readOnly: true }}
+                variant="filled"
+              />
+            </Grid>
+
+            {/* 5. Project & Station - Read Only */}
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                fullWidth
+                label="Project"
+                value={formData.c_project}
+                InputProps={{ readOnly: true }}
+                variant="filled"
               />
             </Grid>
 
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
-                fullWidth label="Terminal 02 (Optional)" name="c_terminal_02"
-                value={formData.c_terminal_02} onChange={handleInputChange}
+                fullWidth
+                label="Station"
+                value={formData.c_station}
+                InputProps={{ readOnly: true }}
+                variant="filled"
               />
             </Grid>
 
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                fullWidth label="Terminal Type *" name="c_terminal_type"
-                value={formData.c_terminal_type} onChange={handleInputChange}
-                error={!!errors.c_terminal_type} helperText={errors.c_terminal_type}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                fullWidth label="Project *" name="c_project"
-                value={formData.c_project} onChange={handleInputChange}
-                error={!!errors.c_project} helperText={errors.c_project}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                fullWidth label="Station *" name="c_station"
-                value={formData.c_station} onChange={handleInputChange}
-                error={!!errors.c_station} helperText={errors.c_station}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                fullWidth label="Terminal Name *" name="n_terminal_name"
-                value={formData.n_terminal_name} onChange={handleInputChange}
-                error={!!errors.n_terminal_name} helperText={errors.n_terminal_name}
-              />
-            </Grid>
-
-            {/* Coordinates Section with Map Button */}
+            {/* 6. Latitude & Longitude dengan Map Button */}
             <Grid size={{ xs: 12, sm: 5 }}>
               <TextField
-                fullWidth label="Latitude *" name="n_lat"
-                value={formData.n_lat} onChange={handleInputChange}
-                error={!!errors.n_lat} helperText={errors.n_lat}
+                fullWidth
+                label="Latitude *"
+                name="n_lat"
+                value={formData.n_lat}
+                onChange={handleInputChange}
+                error={!!errors.n_lat}
+                helperText={errors.n_lat}
               />
             </Grid>
 
             <Grid size={{ xs: 12, sm: 5 }}>
               <TextField
-                fullWidth label="Longitude *" name="n_lng"
-                value={formData.n_lng} onChange={handleInputChange}
-                error={!!errors.n_lng} helperText={errors.n_lng}
+                fullWidth
+                label="Longitude *"
+                name="n_lng"
+                value={formData.n_lng}
+                onChange={handleInputChange}
+                error={!!errors.n_lng}
+                helperText={errors.n_lng}
               />
             </Grid>
 
@@ -292,7 +349,7 @@ export const AddTerminalModal = ({
               <Button
                 variant="outlined"
                 fullWidth
-                sx={{ height: '56px' }} // Match TextField height
+                sx={{ height: '56px' }}
                 onClick={() => setIsMapOpen(true)}
               >
                 <i className="tabler-map-pin text-xl mr-2" /> Map

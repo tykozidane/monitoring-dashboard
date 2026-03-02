@@ -117,20 +117,7 @@ const Library = () => {
   const [expandedData, setExpandedData] = useState<Record<string, DeviceDetail[]>>({})
   const [loadingExpanded, setLoadingExpanded] = useState<Record<string, boolean>>({})
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
-
-
-  const initialFormState = {
-    c_terminal_01: "",
-    c_terminal_02: "",
-    c_terminal_type: "CVIM",
-    c_project: "KCI",
-    c_station: "",
-    n_terminal_name: "",
-    n_lat: "",
-    n_lng: ""
-  }
-
-  const [formData, setFormData] = useState(initialFormState)
+  const [SpareGates, setSpareGates] = useState<{ c_project: string, c_station: string, c_terminal_01: string, c_terminal_02: string, n_terminal_name: string }[]>([])
 
   useEffect(() => {
     let isMounted = true;
@@ -186,7 +173,7 @@ const Library = () => {
   useEffect(() => {
     let isMounted = true;
 
-    if (isMounted) fetchTerminalData();
+    if (isMounted) { fetchTerminalData(); fetchSpareGates(); };
 
     return () => { isMounted = false };
   }, [stationActive, stationData])
@@ -224,19 +211,74 @@ const Library = () => {
     }
   }
 
+
+  const fetchSpareGates = async () => {
+    const dataStation = stationActive ? stationActive : stationData[0]?.c_station
+
+    if (!dataStation) return;
+
+    try {
+      const response = await axios.get(
+        `${BASE_URL}/terminal/spare-gate?c_project=KCI&c_station=${dataStation}`,
+        {
+          headers: { 'Authorization': API_AUTH, 'Content-Type': 'application/json' }
+        }
+      );
+
+      console.log(response);
+
+
+      // Asumsi response.data.data adalah array of objects
+      setSpareGates(response.data.data || []);
+    } catch (error) {
+      console.error("Error fetch spare gates", error);
+      toast.error("Gagal memuat data spare gate");
+    }
+  };
+
   const columns = useMemo(() => [
     columnHelper.accessor('c_terminal_type', {
       header: 'Type',
       cell: ({ row }) => (
         <div className='flex items-center gap-3'>
           <div className='w-6 flex justify-center'>
-            <i className={classnames('tabler-chevron-right text-xl transition-transform text-text-secondary', { 'rotate-90': row.getIsExpanded() })} />
+            <i className={classnames('tabler-chevron-right text-xl transition-transform text-text-secondary', {
+              'rotate-90': row.getIsExpanded()
+            })} />
           </div>
           <div className='flex flex-col'>
-            <Typography color='text.primary' className='font-medium'>{row.original.c_terminal_type}</Typography>
-            <Typography variant='caption' color='text.secondary'>{row.original.c_terminal_sn}</Typography>
+            <Typography color='text.primary' className='font-medium'>
+              {row.original.c_terminal_type}
+            </Typography>
+            <Typography variant='caption' color='text.secondary'>
+              {row.original.c_station || '-'}
+            </Typography>
           </div>
         </div>
+      )
+    }),
+    columnHelper.accessor('c_terminal_sn', {
+      header: 'S/N',
+      cell: ({ row }) => (
+        <Typography variant="body2" className="font-mono">
+          {row.original.c_terminal_sn || '-'}
+        </Typography>
+      )
+    }),
+    columnHelper.accessor('c_terminal_01', {
+      header: 'Terminal 01',
+      cell: ({ row }) => (
+        <Typography variant="body2">
+          {row.original.c_terminal_01 || '-'}
+        </Typography>
+      )
+    }),
+    columnHelper.accessor('c_terminal_02', {
+      header: 'Terminal 02',
+      cell: ({ row }) => (
+        <Typography variant="body2">
+          {row.original.c_terminal_02 || '-'}
+        </Typography>
       )
     }),
     columnHelper.accessor('status', {
@@ -415,7 +457,7 @@ const Library = () => {
         onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
       />
 
-      <AddTerminalModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onSuccess={() => { fetchStationData(true); fetchTerminalData(); }} />
+      <AddTerminalModal SpareGates={SpareGates} isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onSuccess={() => { fetchStationData(true); fetchTerminalData(); }} />
     </>
   )
 }
