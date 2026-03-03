@@ -22,7 +22,7 @@ import {
   Paper,
   Tabs,
   Tab,
-  Autocomplete // IMPORT BARU
+  Autocomplete
 } from '@mui/material';
 import { useDropzone } from 'react-dropzone';
 import axios from 'axios';
@@ -67,6 +67,9 @@ interface TerminalTypeProps {
 const BASE_URL = process.env.API_MONITORING_URL;
 const API_AUTH = process.env.API_AUTH;
 
+// --- KONSTANTA UKURAN FILE (50 MB) ---
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB dalam Bytes
+
 export default function AppVersionManager() {
   // --- State Data ---
   const [historyData, setHistoryData] = useState<AppHistory[]>([]);
@@ -82,8 +85,8 @@ export default function AppVersionManager() {
 
   // --- Form State ---
   const [appName, setAppName] = useState('');
-  const [project, setProject] = useState(''); // Menyimpan c_project (string)
-  const [terminalType, setTerminalType] = useState(''); // Menyimpan c_terminal_type (string)
+  const [project, setProject] = useState('');
+  const [terminalType, setTerminalType] = useState('');
 
   // --- State untuk Dropdown (SELECT) ---
   const [projectsList, setProjectsList] = useState<ProjectProps[]>([]);
@@ -193,6 +196,13 @@ export default function AppVersionManager() {
     if (acceptedFiles?.length > 0) {
       const file = acceptedFiles[0];
 
+      // --- LOGIKA CEK UKURAN FILE (MAX 50MB) ---
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error("Ukuran file terlalu besar! Maksimal 50MB.");
+
+        return; // Hentikan proses jika file terlalu besar
+      }
+
       if (!file.name.endsWith('.zip')) {
         toast.warning("Disarankan mengupload file .zip");
       }
@@ -205,6 +215,8 @@ export default function AppVersionManager() {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     multiple: false,
+
+    // Kita handle size check manual di onDrop agar bisa custom alert toastify
     accept: {
       'application/zip': ['.zip'],
       'application/x-zip-compressed': ['.zip']
@@ -244,6 +256,13 @@ export default function AppVersionManager() {
   const handleUploadSubmit = async () => {
     if (!uploadFile || !appName || !project || !terminalType) {
       toast.error("Mohon lengkapi semua data wajib.");
+
+      return;
+    }
+
+    // Double check sebelum submit (optional, untuk keamanan extra)
+    if (uploadFile.size > MAX_FILE_SIZE) {
+      toast.error("Ukuran file melebihi 50MB.");
 
       return;
     }
@@ -329,7 +348,7 @@ export default function AppVersionManager() {
             {isDragActive ? "Drop file ZIP di sini..." : "Drag & Drop File Aplikasi"}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Support file <strong>.ZIP</strong>. Maksimal ukuran file 100MB.
+            Support file <strong>.ZIP</strong>. Maksimal ukuran file <strong>50MB</strong>.
           </Typography>
 
           <Button variant="contained" color="primary" sx={{ px: 4, borderRadius: 2, textTransform: 'none', fontWeight: 'bold' }}>
