@@ -117,7 +117,6 @@ const Library = () => {
   const [expandedData, setExpandedData] = useState<Record<string, DeviceDetail[]>>({})
   const [loadingExpanded, setLoadingExpanded] = useState<Record<string, boolean>>({})
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
-  const [SpareGates, setSpareGates] = useState<{ c_project: string, c_station: string, c_terminal_01: string, c_terminal_02: string, n_terminal_name: string }[]>([])
 
   useEffect(() => {
     let isMounted = true;
@@ -173,7 +172,7 @@ const Library = () => {
   useEffect(() => {
     let isMounted = true;
 
-    if (isMounted) { fetchTerminalData(); fetchSpareGates(); };
+    if (isMounted) { fetchTerminalData(); };
 
     return () => { isMounted = false };
   }, [stationActive, stationData])
@@ -210,31 +209,6 @@ const Library = () => {
       setLoadingExpanded(prev => ({ ...prev, [sn]: false }));
     }
   }
-
-
-  const fetchSpareGates = async () => {
-    const dataStation = stationActive ? stationActive : stationData[0]?.c_station
-
-    if (!dataStation) return;
-
-    try {
-      const response = await axios.get(
-        `${BASE_URL}/terminal/spare-gate?c_project=KCI&c_station=${dataStation}`,
-        {
-          headers: { 'Authorization': API_AUTH, 'Content-Type': 'application/json' }
-        }
-      );
-
-      console.log(response);
-
-
-      // Asumsi response.data.data adalah array of objects
-      setSpareGates(response.data.data || []);
-    } catch (error) {
-      console.error("Error fetch spare gates", error);
-      toast.error("Gagal memuat data spare gate");
-    }
-  };
 
   const columns = useMemo(() => [
     columnHelper.accessor('c_terminal_type', {
@@ -457,7 +431,7 @@ const Library = () => {
         onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
       />
 
-      <AddTerminalModal SpareGates={SpareGates} isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onSuccess={() => { fetchStationData(true); fetchTerminalData(); }} />
+      <AddTerminalModal stationData={stationData} isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onSuccess={() => { fetchStationData(true); fetchTerminalData(); }} />
     </>
   )
 }

@@ -43,12 +43,12 @@ export const AddTerminalModal = ({
   isOpen,
   onClose,
   onSuccess,
-  SpareGates
+  stationData
 }: {
   isOpen: boolean,
   onClose: () => void,
   onSuccess: () => void,
-  SpareGates: { c_project: string, c_station: string, c_terminal_01: string, c_terminal_02: string, n_terminal_name: string }[]
+  stationData: StationProps[]
 }) => {
 
   const initialFormState = {
@@ -75,6 +75,61 @@ export const AddTerminalModal = ({
   const [inputValue, setInputValue] = useState("");
   const [options, setOptions] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+
+  const [terminalTypes, setTerminalTypes] = useState<{ c_terminal_type: string }[]>([]);
+  const [loadingTypes, setLoadingTypes] = useState(false);
+  const [SpareGates, setSpareGates] = useState<{ c_project: string, c_station: string, c_terminal_01: string, c_terminal_02: string, n_terminal_name: string }[]>([])
+
+  const fetchSpareGates = async (stationActive: string, c_project: string) => {
+    if (!stationActive) return;
+
+    try {
+      const response = await axios.get(
+        `${BASE_URL}/terminal/spare-gate?c_project=${c_project}&c_station=${stationActive}`,
+        {
+          headers: { 'Authorization': API_AUTH, 'Content-Type': 'application/json' }
+        }
+      );
+
+      console.log(response);
+
+
+      // Asumsi response.data.data adalah array of objects
+      setSpareGates(response.data.data || []);
+    } catch (error) {
+      console.error("Error fetch spare gates", error);
+      toast.error("Gagal memuat data spare gate");
+    }
+  };
+
+  // Fetch Terminal Types dari API
+  useEffect(() => {
+    if (isOpen) {
+      const fetchTypes = async () => {
+        setLoadingTypes(true);
+
+        try {
+          const response = await axios.get(`${BASE_URL}/terminal/type?c_project=KCI`, {
+            headers: {
+              'Authorization': API_AUTH,
+              'Content-Type': 'application/json'
+            }
+          });
+
+
+          // Sesuaikan dengan struktur data response Anda
+          setTerminalTypes(response.data?.data || []);
+        } catch (error) {
+          console.error("Failed to fetch terminal types", error);
+          toast.error("Gagal memuat daftar tipe terminal");
+        } finally {
+          setLoadingTypes(false);
+        }
+      };
+
+      fetchTypes();
+    }
+  }, [isOpen]);
 
   // --- Effect untuk Autocomplete Search (Debounce) ---
   useEffect(() => {
@@ -225,16 +280,41 @@ export const AddTerminalModal = ({
         <DialogTitle sx={{ fontWeight: 'bold', pb: 1 }}>Add New Terminal</DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={3} sx={{ mt: 1 }}>
-            {/* 1. Terminal Type - Manual Select atau TextField */}
             <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                fullWidth
-                label="Terminal Type *"
-                name="c_terminal_type"
-                value={formData.c_terminal_type}
-                onChange={handleInputChange}
-                error={!!errors.c_terminal_type}
-                helperText={errors.c_terminal_type}
+              <Autocomplete
+                options={terminalTypes}
+                loading={loadingTypes}
+                getOptionLabel={(option) => option.c_terminal_type || ""}
+
+                // Mencari objek yang sesuai di terminalTypes berdasarkan formData
+                value={terminalTypes.find(t => t.c_terminal_type === formData.c_terminal_type) || null}
+                onChange={(_, newValue) => {
+                  setFormData(prev => ({
+                    ...prev,
+                    c_terminal_type: newValue?.c_terminal_type || ""
+                  }));
+
+                  if (errors.c_terminal_type) {
+                    setErrors(prev => ({ ...prev, c_terminal_type: "" }));
+                  }
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Terminal Type *"
+                    error={!!errors.c_terminal_type}
+                    helperText={errors.c_terminal_type}
+                    InputProps={{
+                      ...params.InputProps,
+                      endAdornment: (
+                        <>
+                          {loadingTypes ? <CircularProgress color="inherit" size={20} /> : null}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
+                    }}
+                  />
+                )}
               />
             </Grid>
 

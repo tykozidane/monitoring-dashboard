@@ -102,6 +102,10 @@ const Sync = ({ onUpdateCount }: SyncProps) => {
         </div>
       )
     }),
+    columnHelper.accessor('serial_number', {
+      header: 'S/N',
+      cell: ({ row }) => <Typography variant='body2' className='text-sm'>{row.original.serial_number}</Typography>
+    }),
     columnHelper.accessor('station_name', {
       header: 'Station',
       cell: ({ row }) => (

@@ -356,6 +356,12 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
       if (data?.status === '00') {
         toast.success(data?.message || "Terminal synchronization successful!");
         onClose(true);
+        setNewDeviceForm({
+          c_device_type: '',
+          n_device_type: '',
+          c_device: '',
+          n_number: '1'
+        })
       } else {
         toast.error(data?.message?.eng || "Failed to synchronize terminal.");
       }
@@ -821,16 +827,16 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
           <TextField
             label="Type Code"
             placeholder="e.g., CR"
-            value={newDeviceForm.c_device_type}
-            onChange={(e) => setNewDeviceForm({ ...newDeviceForm, c_device_type: e.target.value })}
+            value={newDeviceForm.c_device_type.toUpperCase()}
+            onChange={(e) => setNewDeviceForm({ ...newDeviceForm, c_device_type: e.target.value.toUpperCase() })}
             size="small"
             fullWidth
           />
           <TextField
             label="Device Code"
             placeholder="e.g., card_reader_01"
-            value={newDeviceForm.c_device}
-            onChange={(e) => setNewDeviceForm({ ...newDeviceForm, c_device: e.target.value })}
+            value={newDeviceForm.c_device.toLowerCase()}
+            onChange={(e) => setNewDeviceForm({ ...newDeviceForm, c_device: e.target.value.toLowerCase() })}
             size="small"
             fullWidth
           />
