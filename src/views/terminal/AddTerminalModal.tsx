@@ -6,7 +6,7 @@ import {
   Box, Tooltip, Autocomplete
 } from '@mui/material';
 
-// Map Components (Ensure you have installed: npm install leaflet react-leaflet)
+// Map Components
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -23,6 +23,17 @@ L.Icon.Default.mergeOptions({
 
 const BASE_URL = process.env.API_MONITORING_URL;
 const API_AUTH = process.env.API_AUTH;
+
+// Interface untuk data Project dan Station (Asumsi struktur data)
+interface ProjectProps {
+  c_project: string;
+  n_project: string;
+}
+
+interface StationProps {
+  c_station: string;
+  n_station: string;
+}
 
 // --- HELPER COMPONENT FOR MAP CLICK ---
 const LocationPicker = ({ setPosition }: { setPosition: (lat: number, lng: number) => void }) => {
@@ -54,9 +65,9 @@ export const AddTerminalModal = ({
   const initialFormState = {
     c_terminal_01: "",
     c_terminal_02: "",
-    c_terminal_type: "CVIM",
-    c_project: "KCI",
-    c_station: "",
+    c_terminal_type: "", // Default kosong agar user memilih
+    c_project: "",       // Default kosong
+    c_station: "",       // Default kosong
     n_terminal_name: "",
     n_lat: "",
     n_lng: ""
@@ -69,47 +80,31 @@ export const AddTerminalModal = ({
   // Map States
   const [isMapOpen, setIsMapOpen] = useState(false);
   const [tempLocation, setTempLocation] = useState<{ lat: number, lng: number } | null>(null);
-  const mapRef = useRef<L.Map | null>(null); // Reference to control the map (e.g., for flying to coordinates)
+  const mapRef = useRef<L.Map | null>(null);
 
-  // Autocomplete States
+  // Autocomplete States for Location Search
   const [inputValue, setInputValue] = useState("");
-  const [options, setOptions] = useState<any[]>([]);
+  const [locationOptions, setLocationOptions] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+
+  // Data Lists
+  const [projects, setProjects] = useState<ProjectProps[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState(false);
 
   const [terminalTypes, setTerminalTypes] = useState<{ c_terminal_type: string }[]>([]);
   const [loadingTypes, setLoadingTypes] = useState(false);
-  const [SpareGates, setSpareGates] = useState<{ c_project: string, c_station: string, c_terminal_01: string, c_terminal_02: string, n_terminal_name: string }[]>([])
 
-  const fetchSpareGates = async (stationActive: string, c_project: string) => {
-    if (!stationActive) return;
+  const [spareGates, setSpareGates] = useState<{ c_project: string, c_station: string, c_terminal_01: string, c_terminal_02: string, n_terminal_name: string }[]>([]);
+  const [loadingSpareGates, setLoadingSpareGates] = useState(false);
 
-    try {
-      const response = await axios.get(
-        `${BASE_URL}/terminal/spare-gate?c_project=${c_project}&c_station=${stationActive}`,
-        {
-          headers: { 'Authorization': API_AUTH, 'Content-Type': 'application/json' }
-        }
-      );
-
-      console.log(response);
-
-
-      // Asumsi response.data.data adalah array of objects
-      setSpareGates(response.data.data || []);
-    } catch (error) {
-      console.error("Error fetch spare gates", error);
-      toast.error("Gagal memuat data spare gate");
-    }
-  };
-
-  // Fetch Terminal Types dari API
+  // --- 1. FETCH PROJECTS ON OPEN ---
   useEffect(() => {
     if (isOpen) {
-      const fetchTypes = async () => {
-        setLoadingTypes(true);
+      const fetchProjects = async () => {
+        setLoadingProjects(true);
 
         try {
-          const response = await axios.get(`${BASE_URL}/terminal/type?c_project=KCI`, {
+          const response = await axios.get(`${BASE_URL}/project/get-all-project`, {
             headers: {
               'Authorization': API_AUTH,
               'Content-Type': 'application/json'
@@ -117,26 +112,86 @@ export const AddTerminalModal = ({
           });
 
 
-          // Sesuaikan dengan struktur data response Anda
+          // Asumsi struktur response: data.data adalah array project
+          setProjects(response.data?.data || []);
+        } catch (error) {
+          console.error("Error fetching projects", error);
+          toast.error("Gagal memuat data project");
+        } finally {
+          setLoadingProjects(false);
+        }
+      };
+
+      fetchProjects();
+    }
+  }, [isOpen]);
+
+  // --- 2. FETCH TERMINAL TYPES (Triggered when Project Selected) ---
+  useEffect(() => {
+    if (formData.c_project && isOpen) {
+      const fetchTypes = async () => {
+        setLoadingTypes(true);
+
+        try {
+          // Menggunakan c_project yang dipilih user
+          const response = await axios.get(`${BASE_URL}/terminal/type?c_project=${formData.c_project}`, {
+            headers: {
+              'Authorization': API_AUTH,
+              'Content-Type': 'application/json'
+            }
+          });
+
           setTerminalTypes(response.data?.data || []);
         } catch (error) {
           console.error("Failed to fetch terminal types", error);
-          toast.error("Gagal memuat daftar tipe terminal");
+
+          // Optional: toast.error("Gagal memuat tipe terminal");
         } finally {
           setLoadingTypes(false);
         }
       };
 
       fetchTypes();
+    } else {
+      setTerminalTypes([]);
     }
-  }, [isOpen]);
+  }, [formData.c_project, isOpen]);
 
-  // --- Effect untuk Autocomplete Search (Debounce) ---
+  // --- 3. FETCH SPARE GATES (Triggered ONLY if Type == GATET & Station/Project Selected) ---
+  useEffect(() => {
+    // Logic: fetchSpareGates hanya berjalan jika tipe adalah GATET, dan project + station sudah dipilih
+    if (formData.c_terminal_type === 'GATET' && formData.c_project && formData.c_station) {
+
+      const fetchSpareGatesData = async () => {
+        setLoadingSpareGates(true);
+
+        try {
+          const response = await axios.get(
+            `${BASE_URL}/terminal/spare-gate?c_project=${formData.c_project}&c_station=${formData.c_station}`,
+            {
+              headers: { 'Authorization': API_AUTH, 'Content-Type': 'application/json' }
+            }
+          );
+
+          setSpareGates(response.data.data || []);
+        } catch (error) {
+          console.error("Error fetch spare gates", error);
+          toast.error("Gagal memuat data spare gate");
+        } finally {
+          setLoadingSpareGates(false);
+        }
+      };
+
+      fetchSpareGatesData();
+    }
+  }, [formData.c_terminal_type, formData.c_project, formData.c_station]);
+
+  // --- Effect untuk Location Search (Nominatim) ---
   useEffect(() => {
     let active = true;
 
     if (inputValue.length < 4) {
-      setOptions([]);
+      setLocationOptions([]);
 
       return undefined;
     }
@@ -145,11 +200,10 @@ export const AddTerminalModal = ({
       setIsSearching(true);
 
       try {
-        // limit=5 agar dropdown tidak terlalu panjang
         const response = await axios.get(`https://nominatim.openstreetmap.org/search?format=json&q=${inputValue}&limit=5`);
 
         if (active && response.data) {
-          setOptions(response.data);
+          setLocationOptions(response.data);
         }
       } catch (error) {
         console.error("Search error", error);
@@ -158,7 +212,6 @@ export const AddTerminalModal = ({
       }
     };
 
-    // Timeout 600ms agar tidak spam API saat user sedang mengetik
     const delayDebounceFn = setTimeout(() => {
       fetchLocations();
     }, 600);
@@ -173,18 +226,13 @@ export const AddTerminalModal = ({
     const { name, value } = e.target;
 
     setFormData(prev => ({ ...prev, [name]: value }));
-
-    // Remove error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: "" }));
-    }
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
   };
 
-  // --- Validation Function ---
+  // --- Validation ---
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    // All fields are required except c_terminal_02
     if (!formData.c_terminal_01) newErrors.c_terminal_01 = "Terminal 01 is required";
     if (!formData.c_terminal_type) newErrors.c_terminal_type = "Terminal Type is required";
     if (!formData.c_project) newErrors.c_project = "Project is required";
@@ -195,13 +243,11 @@ export const AddTerminalModal = ({
 
     setErrors(newErrors);
 
-    return Object.keys(newErrors).length === 0; // Return true if no errors
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleAddTerminal = async () => {
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setAddLoading(true);
 
@@ -213,12 +259,12 @@ export const AddTerminalModal = ({
         }
       });
 
-      if (resp.data?.data?.status === '00') {
-        toast.success("Terminal successfully added!");
+      if (resp.data?.status === '00') {
+        toast.success(resp.data?.message);
         handleClose();
         onSuccess();
       } else {
-        toast.error(resp.data?.data?.msg || 'Failed to add terminal')
+        toast.error(resp.data?.data?.msg || 'Failed to add terminal');
       }
 
     } catch (error) {
@@ -235,7 +281,7 @@ export const AddTerminalModal = ({
     onClose();
   };
 
-  // --- Map Handlers ---
+  // --- Map & Location Helpers ---
   const handleConfirmLocation = () => {
     if (tempLocation) {
       setFormData(prev => ({
@@ -249,7 +295,6 @@ export const AddTerminalModal = ({
     setIsMapOpen(false);
   };
 
-  // Geolocation API to get current device location
   const handleGetCurrentLocation = () => {
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
@@ -257,46 +302,105 @@ export const AddTerminalModal = ({
           const { latitude, longitude } = position.coords;
 
           setTempLocation({ lat: latitude, lng: longitude });
-
-          if (mapRef.current) {
-            mapRef.current.flyTo([latitude, longitude], 18); // Zoom to 18 (very close)
-          }
+          if (mapRef.current) mapRef.current.flyTo([latitude, longitude], 18);
         },
         (error) => {
           console.error(error);
-          toast.error("Failed to get current location. Please check your browser permissions.");
+          toast.error("Failed to get location.");
         },
         { enableHighAccuracy: true }
       );
     } else {
-      toast.error("Geolocation is not supported by your browser.");
+      toast.error("Geolocation not supported.");
     }
   };
 
   return (
     <>
-      {/* --- ADD TERMINAL MODAL --- */}
       <Dialog open={isOpen} onClose={handleClose} maxWidth="md" fullWidth>
         <DialogTitle sx={{ fontWeight: 'bold', pb: 1 }}>Add New Terminal</DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={3} sx={{ mt: 1 }}>
+
+            {/* 1. Select Project (NEW) */}
+            <Grid size={{ xs: 12, sm: 6 }} >
+              <Autocomplete
+                options={projects}
+                loading={loadingProjects}
+                getOptionLabel={(option) => option.n_project || option.c_project || ""}
+                value={projects.find(p => p.c_project === formData.c_project) || null}
+                onChange={(_, newValue) => {
+                  setFormData(prev => ({
+                    ...prev,
+                    c_project: newValue?.c_project || "",
+                    c_terminal_type: "", // Reset type saat project berubah
+                    n_terminal_name: "", // Reset name
+                    c_terminal_01: ""
+                  }));
+                  if (errors.c_project) setErrors(prev => ({ ...prev, c_project: "" }));
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Project *"
+                    error={!!errors.c_project}
+                    helperText={errors.c_project}
+                    InputProps={{
+                      ...params.InputProps,
+                      endAdornment: (
+                        <>
+                          {loadingProjects ? <CircularProgress color="inherit" size={20} /> : null}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
+                    }}
+                  />
+                )}
+              />
+            </Grid>
+
+            {/* 2. Select Station (REQUIRED for GATET) */}
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Autocomplete
+                options={stationData}
+                getOptionLabel={(option) => option.n_station || option.c_station || ""}
+                value={stationData.find(s => s.c_station === formData.c_station) || null}
+                onChange={(_, newValue) => {
+                  setFormData(prev => ({
+                    ...prev,
+                    c_station: newValue?.c_station || "",
+                    n_terminal_name: "", // Reset jika stasiun berubah
+                    c_terminal_01: ""
+                  }));
+                  if (errors.c_station) setErrors(prev => ({ ...prev, c_station: "" }));
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Station *"
+                    error={!!errors.c_station}
+                    helperText={errors.c_station}
+                  />
+                )}
+              />
+            </Grid>
+
+            {/* 3. Terminal Type */}
             <Grid size={{ xs: 12, sm: 6 }}>
               <Autocomplete
                 options={terminalTypes}
                 loading={loadingTypes}
                 getOptionLabel={(option) => option.c_terminal_type || ""}
-
-                // Mencari objek yang sesuai di terminalTypes berdasarkan formData
                 value={terminalTypes.find(t => t.c_terminal_type === formData.c_terminal_type) || null}
+                disabled={!formData.c_project} // Disable jika project belum dipilih
                 onChange={(_, newValue) => {
                   setFormData(prev => ({
                     ...prev,
-                    c_terminal_type: newValue?.c_terminal_type || ""
+                    c_terminal_type: newValue?.c_terminal_type || "",
+                    n_terminal_name: "", // Reset name saat tipe berubah
+                    c_terminal_01: ""
                   }));
-
-                  if (errors.c_terminal_type) {
-                    setErrors(prev => ({ ...prev, c_terminal_type: "" }));
-                  }
+                  if (errors.c_terminal_type) setErrors(prev => ({ ...prev, c_terminal_type: "" }));
                 }}
                 renderInput={(params) => (
                   <TextField
@@ -318,89 +422,96 @@ export const AddTerminalModal = ({
               />
             </Grid>
 
-            {/* 2. Terminal Name - Sekarang menjadi SELECT (Autocomplete) */}
+            {/* 4. Terminal Name (CONDITIONAL LOGIC) */}
             <Grid size={{ xs: 12, sm: 6 }}>
-              <Autocomplete
-                options={SpareGates}
-                getOptionLabel={(option) => option.n_terminal_name || ""}
-                value={SpareGates.find(s => s.n_terminal_name === formData.n_terminal_name) || null}
-                onChange={(_, newValue) => {
-                  if (newValue) {
-                    setFormData(prev => ({
-                      ...prev,
-                      n_terminal_name: newValue.n_terminal_name,
-                      c_terminal_01: newValue.c_terminal_01 || "",
-                      c_terminal_02: newValue.c_terminal_02 || "",
-                      c_station: newValue.c_station || prev.c_station,
-                      c_project: newValue.c_project || prev.c_project
-                    }));
+              {formData.c_terminal_type === 'GATET' ? (
 
-                    // Bersihkan error untuk field yang otomatis terisi
-                    setErrors(prev => ({
-                      ...prev,
-                      n_terminal_name: "",
-                      c_terminal_01: "",
-                      c_station: ""
-                    }));
-                  }
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Select Terminal Name *"
-                    error={!!errors.n_terminal_name}
-                    helperText={errors.n_terminal_name}
-                    placeholder="Search by name..."
-                  />
-                )}
-              />
+                // --- JIKA GATET: TAMPILKAN AUTOCOMPLETE DARI SPARE GATES ---
+                <Autocomplete
+                  options={spareGates}
+                  loading={loadingSpareGates}
+                  getOptionLabel={(option) => option.n_terminal_name || ""}
+                  value={spareGates.find(s => s.n_terminal_name === formData.n_terminal_name) || null}
+
+                  // Disable jika Station belum dipilih karena fetch butuh station
+                  disabled={!formData.c_station}
+                  onChange={(_, newValue) => {
+                    if (newValue) {
+                      setFormData(prev => ({
+                        ...prev,
+                        n_terminal_name: newValue.n_terminal_name,
+                        c_terminal_01: newValue.c_terminal_01 || "",
+                        c_terminal_02: newValue.c_terminal_02 || "",
+
+                        // c_project & c_station sudah terset sebelumnya
+                      }));
+                      setErrors(prev => ({ ...prev, n_terminal_name: "", c_terminal_01: "" }));
+                    }
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Select Gate (Terminal Name) *"
+                      placeholder={!formData.c_station ? "Select Station first" : "Search Gate..."}
+                      error={!!errors.n_terminal_name}
+                      helperText={errors.n_terminal_name}
+                      InputProps={{
+                        ...params.InputProps,
+                        endAdornment: (
+                          <>
+                            {loadingSpareGates ? <CircularProgress color="inherit" size={20} /> : null}
+                            {params.InputProps.endAdornment}
+                          </>
+                        ),
+                      }}
+                    />
+                  )}
+                />
+              ) : (
+
+                // --- JIKA BUKAN GATET: TAMPILKAN INPUT TEXT BIASA ---
+                <TextField
+                  fullWidth
+                  label="Terminal Name *"
+                  name="n_terminal_name"
+                  value={formData.n_terminal_name}
+                  onChange={handleInputChange}
+                  error={!!errors.n_terminal_name}
+                  helperText={errors.n_terminal_name}
+                />
+              )}
             </Grid>
 
-            {/* 3. Terminal 01 - Otomatis terisi & Read Only */}
+            {/* 5. Terminal 01 (Auto-filled if GATET, Manual otherwise) */}
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
                 label="Terminal 01"
+                name="c_terminal_01"
                 value={formData.c_terminal_01}
-                InputProps={{ readOnly: true }}
+                onChange={handleInputChange}
+
+                // Readonly jika GATET (karena diambil dari API), bisa diketik jika tipe lain
+                InputProps={{ readOnly: formData.c_terminal_type === 'GATET' }}
                 variant="filled"
-                helperText="Auto-filled from selection"
+                error={!!errors.c_terminal_01}
               />
             </Grid>
 
-            {/* 4. Terminal 02 - Otomatis terisi & Read Only */}
+            {/* 6. Terminal 02 */}
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
                 label="Terminal 02"
-                value={formData.c_terminal_02 || "-"}
-                InputProps={{ readOnly: true }}
+                name="c_terminal_02"
+                value={formData.c_terminal_02 || ""}
+                onChange={handleInputChange}
+                InputProps={{ readOnly: formData.c_terminal_type === 'GATET' }}
                 variant="filled"
               />
             </Grid>
 
-            {/* 5. Project & Station - Read Only */}
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                fullWidth
-                label="Project"
-                value={formData.c_project}
-                InputProps={{ readOnly: true }}
-                variant="filled"
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                fullWidth
-                label="Station"
-                value={formData.c_station}
-                InputProps={{ readOnly: true }}
-                variant="filled"
-              />
-            </Grid>
-
-            {/* 6. Latitude & Longitude dengan Map Button */}
+            {/* 7. Latitude & Longitude */}
             <Grid size={{ xs: 12, sm: 5 }}>
               <TextField
                 fullWidth
@@ -432,7 +543,7 @@ export const AddTerminalModal = ({
                 sx={{ height: '56px' }}
                 onClick={() => setIsMapOpen(true)}
               >
-                <i className="tabler-map-pin text-xl mr-2" /> Map
+                Map
               </Button>
             </Grid>
           </Grid>
@@ -451,17 +562,13 @@ export const AddTerminalModal = ({
       <Dialog open={isMapOpen} onClose={() => setIsMapOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>Select Terminal Location</DialogTitle>
         <DialogContent dividers sx={{ p: 0, display: 'flex', flexDirection: 'column', height: '500px' }}>
-
-          {/* Map Controls: Search & Current Location */}
           <Box sx={{ p: 2, display: 'flex', gap: 2, alignItems: 'center' }}>
-
-            {/* Mengubah TextField menjadi Autocomplete MUI */}
             <Autocomplete
               fullWidth
               size="small"
-              options={options}
+              options={locationOptions}
               getOptionLabel={(option: any) => option.display_name || ""}
-              filterOptions={(x) => x} // Disable filter lokal, karena API Nominatim yang handle
+              filterOptions={(x) => x}
               noOptionsText={isSearching ? "Searching..." : inputValue.length < 4 ? "Type at least 4 characters..." : "Location not found"}
               onChange={(_, newValue: any) => {
                 if (newValue) {
@@ -469,24 +576,19 @@ export const AddTerminalModal = ({
                   const lng = parseFloat(newValue.lon);
 
                   setTempLocation({ lat, lng });
-
-                  if (mapRef.current) {
-                    mapRef.current.flyTo([lat, lng], 18);
-                  }
+                  if (mapRef.current) mapRef.current.flyTo([lat, lng], 18);
                 }
               }}
-              onInputChange={(_, newInputValue) => {
-                setInputValue(newInputValue);
-              }}
+              onInputChange={(_, newInputValue) => setInputValue(newInputValue)}
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  placeholder="Search location (e.g., Sudirman Station)"
+                  placeholder="Search location..."
                   InputProps={{
                     ...params.InputProps,
                     endAdornment: (
                       <>
-                        {isSearching ? <CircularProgress color="inherit" size={20} /> : <i className="tabler-search" />}
+                        {isSearching ? <CircularProgress color="inherit" size={20} /> : null}
                         {params.InputProps.endAdornment}
                       </>
                     ),
@@ -500,24 +602,24 @@ export const AddTerminalModal = ({
                 variant="contained"
                 color="secondary"
                 onClick={handleGetCurrentLocation}
-                sx={{ minWidth: '180px' }}
+                sx={{ minWidth: '160px' }}
               >
-                <i className="tabler-current-location mr-2" /> My Location
+                My Location
               </Button>
             </Tooltip>
           </Box>
 
           <Box sx={{ flexGrow: 1, position: 'relative' }} className="rounded overflow-hidden mx-5 mb-5 mt-3">
             <MapContainer
-              center={[-6.200000, 106.816666]} // Default center (Jakarta)
-              zoom={18} // Start with a very close zoom
+              center={[-6.200000, 106.816666]}
+              zoom={18}
               style={{ height: '100%', width: '100%' }}
               ref={mapRef}
             >
               <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+                attribution='&copy; OpenStreetMap contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                maxZoom={19} // OSM max zoom
+                maxZoom={19}
               />
               <LocationPicker setPosition={(lat, lng) => setTempLocation({ lat, lng })} />
               {tempLocation && <Marker position={[tempLocation.lat, tempLocation.lng]} />}
@@ -525,9 +627,9 @@ export const AddTerminalModal = ({
           </Box>
         </DialogContent>
         <DialogActions className='pt-3'>
-          <Grid container justifyContent="space-between" alignItems="center" sx={{ width: '100%', px: 2 }}>
+          <Box sx={{ width: '100%', px: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div className="text-sm text-gray-500">
-              {tempLocation ? `Lat: ${tempLocation.lat.toFixed(6)}, Lng: ${tempLocation.lng.toFixed(6)}` : 'Click on the map to pin a location'}
+              {tempLocation ? `Lat: ${tempLocation.lat.toFixed(6)}, Lng: ${tempLocation.lng.toFixed(6)}` : 'Click map to pin'}
             </div>
             <div>
               <Button onClick={() => setIsMapOpen(false)} color="inherit" sx={{ mr: 1 }}>Cancel</Button>
@@ -535,7 +637,7 @@ export const AddTerminalModal = ({
                 Confirm Location
               </Button>
             </div>
-          </Grid>
+          </Box>
         </DialogActions>
       </Dialog>
     </>

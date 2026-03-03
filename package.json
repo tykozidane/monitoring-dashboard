@@ -38,6 +38,7 @@
     "@mui/material": "7.3.5",
     "@mui/material-nextjs": "7.3.5",
     "@reduxjs/toolkit": "2.10.1",
+    "@tabler/icons-react": "^3.38.0",
     "@tanstack/match-sorter-utils": "8.19.4",
     "@tanstack/react-table": "8.21.3",
     "@tiptap/core": "3.11.0",

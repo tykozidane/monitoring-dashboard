@@ -22,6 +22,11 @@ import {
 import tableStyles from '@core/styles/table.module.css'
 import { DebouncedInput, fuzzyFilter } from '@/utils/helper'
 
+interface ProjectProps {
+  c_project: string;
+  n_project: string;
+}
+
 const AddTerminalModal = dynamic(
   () => import('./AddTerminalModal').then((mod) => mod.AddTerminalModal),
   {
@@ -118,21 +123,54 @@ const Library = () => {
   const [loadingExpanded, setLoadingExpanded] = useState<Record<string, boolean>>({})
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
 
+  const [projectsActive, setprojectsActive] = useState<string>()
+  const [projects, setProjects] = useState<ProjectProps[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState(false);
+
   useEffect(() => {
     let isMounted = true;
 
     setLoadingStation(true)
     fetchStationData(isMounted)
+    fetchProjects(isMounted);
 
     return () => { isMounted = false };
   }, [])
+
+  const fetchProjects = async (isMounted: boolean) => {
+    if (isMounted) setLoadingProjects(true);
+
+    try {
+      const response = await axios.get(`${BASE_URL}/project/get-all-project`, {
+        headers: {
+          'Authorization': API_AUTH,
+          'Content-Type': 'application/json'
+        }
+      });
+
+
+      // Asumsi struktur response: data.data adalah array project
+      if (isMounted) setProjects(response.data?.data || []);
+    } catch (error) {
+      console.error("Error fetching projects", error);
+      if (isMounted) toast.error("Gagal memuat data project");
+    } finally {
+      if (isMounted) setLoadingProjects(false);
+    }
+  };
 
   const fetchStationData = (isMounted: boolean) => {
     axios.get(`${BASE_URL}/station/mini?c_project=KCI`, {
       headers: { 'Authorization': API_AUTH, 'Content-Type': 'application/json' },
     })
       .then(res => {
-        if (isMounted) setStationData(res.data.data?.code ? [] : res.data.data ?? [])
+        const newStation = res.data.data ?? [];
+
+        if (isMounted) setStationData(res.data.data?.code ? [] : [{
+          "c_project": "ALL",
+          "c_station": "ALL",
+          "n_station": "ALL"
+        }, ...newStation])
       })
       .catch(err => {
         console.error(err);
@@ -172,10 +210,14 @@ const Library = () => {
   useEffect(() => {
     let isMounted = true;
 
-    if (isMounted) { fetchTerminalData(); };
+    if (isMounted) {
+      fetchTerminalData();
+    }
+
+    ;
 
     return () => { isMounted = false };
-  }, [stationActive, stationData])
+  }, [stationActive, stationData, projectsActive, projects])
 
   // FUNGSI FETCH DETAIL DEVICE YANG SUDAH DIREVISI
   const fetchTerminalDevices = async (row: DataWithAction) => {
@@ -289,6 +331,18 @@ const Library = () => {
     <>
       <div className='flex justify-between gap-4 p-5 flex-col items-start sm:flex-row sm:items-center'>
         <div className='text-left h3 flex flex-col sm:flex-row gap-4 w-1/2 max-sm:w-full'>
+          <Autocomplete
+            disablePortal
+            disableClearable
+            options={projects}
+            loading={loadingProjects}
+            getOptionLabel={(option) => option.n_project || option.c_project || ""}
+            renderInput={(params) => <TextField {...params} label="Project" />}
+            className='min-w-28'
+            size='small'
+            value={((projectsActive ? projects.find(s => s.c_project === projectsActive) : projects[0]) || null) as ProjectProps}
+            onChange={(_, v) => v && setprojectsActive(v.c_project)}
+          />
           <Autocomplete
             disablePortal
             disableClearable
