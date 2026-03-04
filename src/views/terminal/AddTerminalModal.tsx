@@ -2,8 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 
 import {
   Button, TextField, Dialog, DialogTitle, DialogContent,
-  DialogActions, Grid, CircularProgress, InputAdornment, IconButton,
-  Box, Tooltip, Autocomplete
+  DialogActions, Grid, CircularProgress, Autocomplete,
+  Box, Tooltip
 } from '@mui/material';
 
 // Map Components
@@ -24,13 +24,14 @@ L.Icon.Default.mergeOptions({
 const BASE_URL = process.env.API_MONITORING_URL;
 const API_AUTH = process.env.API_AUTH;
 
-// Interface untuk data Project dan Station (Asumsi struktur data)
+// Interface Data
 interface ProjectProps {
   c_project: string;
   n_project: string;
 }
 
 interface StationProps {
+  c_project: string;
   c_station: string;
   n_station: string;
 }
@@ -53,21 +54,19 @@ const LocationPicker = ({ setPosition }: { setPosition: (lat: number, lng: numbe
 export const AddTerminalModal = ({
   isOpen,
   onClose,
-  onSuccess,
-  stationData
+  onSuccess
 }: {
   isOpen: boolean,
   onClose: () => void,
-  onSuccess: () => void,
-  stationData: StationProps[]
+  onSuccess: () => void
 }) => {
 
   const initialFormState = {
     c_terminal_01: "",
     c_terminal_02: "",
-    c_terminal_type: "", // Default kosong agar user memilih
-    c_project: "",       // Default kosong
-    c_station: "",       // Default kosong
+    c_terminal_type: "",
+    c_project: "",
+    c_station: "",
     n_terminal_name: "",
     n_lat: "",
     n_lng: ""
@@ -82,20 +81,27 @@ export const AddTerminalModal = ({
   const [tempLocation, setTempLocation] = useState<{ lat: number, lng: number } | null>(null);
   const mapRef = useRef<L.Map | null>(null);
 
-  // Autocomplete States for Location Search
+  // Autocomplete Location Search States
   const [inputValue, setInputValue] = useState("");
   const [locationOptions, setLocationOptions] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  // Data Lists
+  // --- Data Lists States ---
   const [projects, setProjects] = useState<ProjectProps[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(false);
+
+  // Station State (Moved from props to local state)
+  const [stations, setStations] = useState<StationProps[]>([]);
+  const [loadingStations, setLoadingStations] = useState(false);
 
   const [terminalTypes, setTerminalTypes] = useState<{ c_terminal_type: string }[]>([]);
   const [loadingTypes, setLoadingTypes] = useState(false);
 
   const [spareGates, setSpareGates] = useState<{ c_project: string, c_station: string, c_terminal_01: string, c_terminal_02: string, n_terminal_name: string }[]>([]);
   const [loadingSpareGates, setLoadingSpareGates] = useState(false);
+
+  // Helper boolean to check if current type is GATE
+  const isGateType = formData.c_terminal_type.includes('GATE');
 
   // --- 1. FETCH PROJECTS ON OPEN ---
   useEffect(() => {
@@ -105,14 +111,9 @@ export const AddTerminalModal = ({
 
         try {
           const response = await axios.get(`${BASE_URL}/project/get-all-project`, {
-            headers: {
-              'Authorization': API_AUTH,
-              'Content-Type': 'application/json'
-            }
+            headers: { 'Authorization': API_AUTH, 'Content-Type': 'application/json' }
           });
 
-
-          // Asumsi struktur response: data.data adalah array project
           setProjects(response.data?.data || []);
         } catch (error) {
           console.error("Error fetching projects", error);
@@ -126,26 +127,55 @@ export const AddTerminalModal = ({
     }
   }, [isOpen]);
 
-  // --- 2. FETCH TERMINAL TYPES (Triggered when Project Selected) ---
+  // --- 2. FETCH STATIONS (Triggered when Project Selected) ---
+  useEffect(() => {
+    // Reset station dan terminal data jika project berubah
+    if (!formData.c_project) {
+      setStations([]);
+
+      return;
+    }
+
+    const fetchStations = async () => {
+      setLoadingStations(true);
+
+      try {
+        const response = await axios.get(`${BASE_URL}/station/mini?c_project=${formData.c_project}`, {
+          headers: { 'Authorization': API_AUTH, 'Content-Type': 'application/json' }
+        });
+
+        const newStation = response.data?.data || [];
+
+        setStations(newStation);
+
+      } catch (error) {
+        console.error("Error fetching stations", error);
+        toast.error("Gagal memuat data stasiun");
+      } finally {
+        setLoadingStations(false);
+      }
+    };
+
+    if (isOpen) {
+      fetchStations();
+    }
+  }, [formData.c_project, isOpen]);
+
+
+  // --- 3. FETCH TERMINAL TYPES (Triggered when Project Selected) ---
   useEffect(() => {
     if (formData.c_project && isOpen) {
       const fetchTypes = async () => {
         setLoadingTypes(true);
 
         try {
-          // Menggunakan c_project yang dipilih user
           const response = await axios.get(`${BASE_URL}/terminal/type?c_project=${formData.c_project}`, {
-            headers: {
-              'Authorization': API_AUTH,
-              'Content-Type': 'application/json'
-            }
+            headers: { 'Authorization': API_AUTH, 'Content-Type': 'application/json' }
           });
 
           setTerminalTypes(response.data?.data || []);
         } catch (error) {
           console.error("Failed to fetch terminal types", error);
-
-          // Optional: toast.error("Gagal memuat tipe terminal");
         } finally {
           setLoadingTypes(false);
         }
@@ -157,11 +187,9 @@ export const AddTerminalModal = ({
     }
   }, [formData.c_project, isOpen]);
 
-  // --- 3. FETCH SPARE GATES (Triggered ONLY if Type == GATET & Station/Project Selected) ---
+  // --- 4. FETCH SPARE GATES (Triggered ONLY if Type includes 'GATE' & Station Selected) ---
   useEffect(() => {
-    // Logic: fetchSpareGates hanya berjalan jika tipe adalah GATET, dan project + station sudah dipilih
-    if (formData.c_terminal_type === 'GATET' && formData.c_project && formData.c_station) {
-
+    if (isGateType && formData.c_project && formData.c_station) {
       const fetchSpareGatesData = async () => {
         setLoadingSpareGates(true);
 
@@ -176,7 +204,6 @@ export const AddTerminalModal = ({
           setSpareGates(response.data.data || []);
         } catch (error) {
           console.error("Error fetch spare gates", error);
-          toast.error("Gagal memuat data spare gate");
         } finally {
           setLoadingSpareGates(false);
         }
@@ -184,9 +211,9 @@ export const AddTerminalModal = ({
 
       fetchSpareGatesData();
     }
-  }, [formData.c_terminal_type, formData.c_project, formData.c_station]);
+  }, [isGateType, formData.c_project, formData.c_station]);
 
-  // --- Effect untuk Location Search (Nominatim) ---
+  // --- Effect for Location Search (Nominatim) ---
   useEffect(() => {
     let active = true;
 
@@ -216,12 +243,14 @@ export const AddTerminalModal = ({
       fetchLocations();
     }, 600);
 
+
     return () => {
       active = false;
       clearTimeout(delayDebounceFn);
     };
   }, [inputValue]);
 
+  // --- Handlers ---
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
@@ -229,7 +258,6 @@ export const AddTerminalModal = ({
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
   };
 
-  // --- Validation ---
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -248,7 +276,6 @@ export const AddTerminalModal = ({
 
   const handleAddTerminal = async () => {
     if (!validateForm()) return;
-
     setAddLoading(true);
 
     try {
@@ -266,7 +293,6 @@ export const AddTerminalModal = ({
       } else {
         toast.error(resp.data?.data?.msg || 'Failed to add terminal');
       }
-
     } catch (error) {
       console.error(error);
       toast.error("Failed to add terminal.");
@@ -281,7 +307,6 @@ export const AddTerminalModal = ({
     onClose();
   };
 
-  // --- Map & Location Helpers ---
   const handleConfirmLocation = () => {
     if (tempLocation) {
       setFormData(prev => ({
@@ -320,10 +345,12 @@ export const AddTerminalModal = ({
       <Dialog open={isOpen} onClose={handleClose} maxWidth="md" fullWidth>
         <DialogTitle sx={{ fontWeight: 'bold', pb: 1 }}>Add New Terminal</DialogTitle>
         <DialogContent dividers>
+
+          {/* UPDATED GRID CONTAINER */}
           <Grid container spacing={3} sx={{ mt: 1 }}>
 
-            {/* 1. Select Project (NEW) */}
-            <Grid size={{ xs: 12, sm: 6 }} >
+            {/* 1. Select Project */}
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Autocomplete
                 options={projects}
                 loading={loadingProjects}
@@ -333,9 +360,11 @@ export const AddTerminalModal = ({
                   setFormData(prev => ({
                     ...prev,
                     c_project: newValue?.c_project || "",
-                    c_terminal_type: "", // Reset type saat project berubah
-                    n_terminal_name: "", // Reset name
-                    c_terminal_01: ""
+                    c_station: "",       // Reset Station
+                    c_terminal_type: "", // Reset Type
+                    n_terminal_name: "",
+                    c_terminal_01: "",
+                    c_terminal_02: ""
                   }));
                   if (errors.c_project) setErrors(prev => ({ ...prev, c_project: "" }));
                 }}
@@ -359,18 +388,21 @@ export const AddTerminalModal = ({
               />
             </Grid>
 
-            {/* 2. Select Station (REQUIRED for GATET) */}
+            {/* 2. Select Station */}
             <Grid size={{ xs: 12, sm: 6 }}>
               <Autocomplete
-                options={stationData}
+                options={stations}
+                loading={loadingStations}
                 getOptionLabel={(option) => option.n_station || option.c_station || ""}
-                value={stationData.find(s => s.c_station === formData.c_station) || null}
+                value={stations.find(s => s.c_station === formData.c_station) || null}
+                disabled={!formData.c_project}
                 onChange={(_, newValue) => {
                   setFormData(prev => ({
                     ...prev,
                     c_station: newValue?.c_station || "",
-                    n_terminal_name: "", // Reset jika stasiun berubah
-                    c_terminal_01: ""
+                    n_terminal_name: "",
+                    c_terminal_01: "",
+                    c_terminal_02: ""
                   }));
                   if (errors.c_station) setErrors(prev => ({ ...prev, c_station: "" }));
                 }}
@@ -378,8 +410,18 @@ export const AddTerminalModal = ({
                   <TextField
                     {...params}
                     label="Station *"
+                    placeholder={!formData.c_project ? "Select Project First" : ""}
                     error={!!errors.c_station}
                     helperText={errors.c_station}
+                    InputProps={{
+                      ...params.InputProps,
+                      endAdornment: (
+                        <>
+                          {loadingStations ? <CircularProgress color="inherit" size={20} /> : null}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
+                    }}
                   />
                 )}
               />
@@ -392,13 +434,16 @@ export const AddTerminalModal = ({
                 loading={loadingTypes}
                 getOptionLabel={(option) => option.c_terminal_type || ""}
                 value={terminalTypes.find(t => t.c_terminal_type === formData.c_terminal_type) || null}
-                disabled={!formData.c_project} // Disable jika project belum dipilih
+                disabled={!formData.c_project}
                 onChange={(_, newValue) => {
+                  const newType = newValue?.c_terminal_type || "";
+
                   setFormData(prev => ({
                     ...prev,
-                    c_terminal_type: newValue?.c_terminal_type || "",
-                    n_terminal_name: "", // Reset name saat tipe berubah
-                    c_terminal_01: ""
+                    c_terminal_type: newType,
+                    n_terminal_name: "",
+                    c_terminal_01: "",
+                    c_terminal_02: ""
                   }));
                   if (errors.c_terminal_type) setErrors(prev => ({ ...prev, c_terminal_type: "" }));
                 }}
@@ -422,18 +467,14 @@ export const AddTerminalModal = ({
               />
             </Grid>
 
-            {/* 4. Terminal Name (CONDITIONAL LOGIC) */}
+            {/* 4. Terminal Name */}
             <Grid size={{ xs: 12, sm: 6 }}>
-              {formData.c_terminal_type === 'GATET' ? (
-
-                // --- JIKA GATET: TAMPILKAN AUTOCOMPLETE DARI SPARE GATES ---
+              {isGateType ? (
                 <Autocomplete
                   options={spareGates}
                   loading={loadingSpareGates}
                   getOptionLabel={(option) => option.n_terminal_name || ""}
                   value={spareGates.find(s => s.n_terminal_name === formData.n_terminal_name) || null}
-
-                  // Disable jika Station belum dipilih karena fetch butuh station
                   disabled={!formData.c_station}
                   onChange={(_, newValue) => {
                     if (newValue) {
@@ -442,8 +483,6 @@ export const AddTerminalModal = ({
                         n_terminal_name: newValue.n_terminal_name,
                         c_terminal_01: newValue.c_terminal_01 || "",
                         c_terminal_02: newValue.c_terminal_02 || "",
-
-                        // c_project & c_station sudah terset sebelumnya
                       }));
                       setErrors(prev => ({ ...prev, n_terminal_name: "", c_terminal_01: "" }));
                     }
@@ -468,8 +507,6 @@ export const AddTerminalModal = ({
                   )}
                 />
               ) : (
-
-                // --- JIKA BUKAN GATET: TAMPILKAN INPUT TEXT BIASA ---
                 <TextField
                   fullWidth
                   label="Terminal Name *"
@@ -482,7 +519,7 @@ export const AddTerminalModal = ({
               )}
             </Grid>
 
-            {/* 5. Terminal 01 (Auto-filled if GATET, Manual otherwise) */}
+            {/* 5. Terminal 01 */}
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
@@ -490,11 +527,10 @@ export const AddTerminalModal = ({
                 name="c_terminal_01"
                 value={formData.c_terminal_01}
                 onChange={handleInputChange}
-
-                // Readonly jika GATET (karena diambil dari API), bisa diketik jika tipe lain
-                InputProps={{ readOnly: formData.c_terminal_type === 'GATET' }}
-                variant="filled"
+                InputProps={{ readOnly: isGateType }}
+                variant={isGateType ? "filled" : "outlined"}
                 error={!!errors.c_terminal_01}
+                helperText={errors.c_terminal_01}
               />
             </Grid>
 
@@ -506,12 +542,12 @@ export const AddTerminalModal = ({
                 name="c_terminal_02"
                 value={formData.c_terminal_02 || ""}
                 onChange={handleInputChange}
-                InputProps={{ readOnly: formData.c_terminal_type === 'GATET' }}
-                variant="filled"
+                InputProps={{ readOnly: isGateType }}
+                variant={isGateType ? "filled" : "outlined"}
               />
             </Grid>
 
-            {/* 7. Latitude & Longitude */}
+            {/* 7. Latitude */}
             <Grid size={{ xs: 12, sm: 5 }}>
               <TextField
                 fullWidth
@@ -524,6 +560,7 @@ export const AddTerminalModal = ({
               />
             </Grid>
 
+            {/* 8. Longitude */}
             <Grid size={{ xs: 12, sm: 5 }}>
               <TextField
                 fullWidth
@@ -536,6 +573,7 @@ export const AddTerminalModal = ({
               />
             </Grid>
 
+            {/* 9. Map Button */}
             <Grid size={{ xs: 12, sm: 2 }} sx={{ display: 'flex', alignItems: 'flex-start' }}>
               <Button
                 variant="outlined"
@@ -548,6 +586,7 @@ export const AddTerminalModal = ({
             </Grid>
           </Grid>
         </DialogContent>
+
         <DialogActions sx={{ p: 3 }} className='pt-3'>
           <Button onClick={handleClose} color="inherit" disabled={addLoading} variant='text'>
             Cancel

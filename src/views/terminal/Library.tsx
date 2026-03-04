@@ -22,19 +22,31 @@ import {
 import tableStyles from '@core/styles/table.module.css'
 import { DebouncedInput, fuzzyFilter } from '@/utils/helper'
 
+// Definisi Interface (Disesuaikan agar tidak error TS)
 interface ProjectProps {
   c_project: string;
   n_project: string;
 }
 
-const AddTerminalModal = dynamic(
-  () => import('./AddTerminalModal').then((mod) => mod.AddTerminalModal),
-  {
-    ssr: false,
-  }
-);
+interface StationProps {
+  c_project: string;
+  c_station: string;
+  n_station: string;
+  n_project_name?: string;
+}
 
-// Pastikan tipe data ini sesuai dengan global types Anda, atau biarkan jika sudah ada di file terpisah
+interface DataWithAction {
+  c_project: string;
+  c_station: string;
+  c_terminal_sn: string;
+  c_terminal_type: string;
+  c_terminal_01?: string;
+  c_terminal_02?: string;
+  status?: string;
+
+  // Tambahkan field lain sesuai kebutuhan
+}
+
 interface DeviceDetail {
   c_device: string;
   c_serial_number: string;
@@ -49,6 +61,13 @@ interface DeviceDetail {
   sub_item_serial_code: string;
   n_device_type: string;
 }
+
+const AddTerminalModal = dynamic(
+  () => import('./AddTerminalModal').then((mod) => mod.AddTerminalModal),
+  {
+    ssr: false,
+  }
+);
 
 const columnHelper = createColumnHelper<DataWithAction>()
 
@@ -127,11 +146,10 @@ const Library = () => {
   const [projects, setProjects] = useState<ProjectProps[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(false);
 
+  // Initial load: Fetch Projects only
   useEffect(() => {
     let isMounted = true;
 
-    setLoadingStation(true)
-    fetchStationData(isMounted)
     fetchProjects(isMounted);
 
     return () => { isMounted = false };
@@ -148,9 +166,17 @@ const Library = () => {
         }
       });
 
+      if (isMounted) {
+        const projectData = response.data?.data || [];
 
-      // Asumsi struktur response: data.data adalah array project
-      if (isMounted) setProjects(response.data?.data || []);
+        setProjects(projectData);
+
+
+        // Opsional: Set default project active jika belum ada
+        if (projectData.length > 0 && !projectsActive) {
+          setprojectsActive(projectData[0].c_project);
+        }
+      }
     } catch (error) {
       console.error("Error fetching projects", error);
       if (isMounted) toast.error("Gagal memuat data project");
@@ -159,22 +185,54 @@ const Library = () => {
     }
   };
 
+  // ----------------------------------------------------------------
+  // PERBAIKAN DI SINI: Fetch Station Data
+  // ----------------------------------------------------------------
   const fetchStationData = (isMounted: boolean) => {
-    axios.get(`${BASE_URL}/station/mini?c_project=KCI`, {
+    // 1. Trigger loading state DI SINI agar UI langsung update saat ganti project
+    if (isMounted) setLoadingStation(true);
+
+    const currentProject = projectsActive ?? projects[0]?.c_project;
+
+    // Guard clause jika project belum terload
+    if (!currentProject) {
+      if (isMounted) setLoadingStation(false);
+
+      return;
+    }
+
+    axios.get(`${BASE_URL}/station/mini?c_project=${currentProject}`, {
       headers: { 'Authorization': API_AUTH, 'Content-Type': 'application/json' },
     })
       .then(res => {
-        const newStation = res.data.data ?? [];
+        if (!isMounted) return;
 
-        if (isMounted) setStationData(res.data.data?.code ? [] : [{
-          "c_project": "ALL",
-          "c_station": "ALL",
-          "n_station": "ALL"
-        }, ...newStation])
+        const newStation = res.data.data ?? [];
+        const isErrorOrEmpty = res.data.data?.code; // Cek logic error API spesifik Anda
+
+        if (isErrorOrEmpty) {
+          setStationData([]);
+        } else {
+          const formattedStations = [{
+            "c_project": "ALL",
+            "c_station": "ALL",
+            "n_station": "ALL"
+          }, ...newStation];
+
+          setStationData(formattedStations);
+
+          // 2. Reset station active ke "ALL" ketika project berubah
+          // Ini mencegah query terminal menggunakan station ID dari project sebelumnya
+          setStationActive("ALL");
+        }
       })
       .catch(err => {
         console.error(err);
-        if (isMounted) toast.error("Gagal terhubung ke server API")
+
+        if (isMounted) {
+          toast.error("Gagal terhubung ke server API");
+          setStationData([]);
+        }
       })
       .finally(() => {
         if (isMounted) setLoadingStation(false)
@@ -182,53 +240,68 @@ const Library = () => {
   }
 
   const fetchTerminalData = () => {
+    // Jangan fetch jika stationActive belum diset (misal saat switching project)
     if (!stationActive) return;
 
     setLoading(true)
     const dataStation = stationData.find(s => s.c_station === stationActive)
 
-    if (dataStation) {
-      axios.post(`${BASE_URL}/output/terminal-by-station`, {
-        c_station: dataStation.c_station,
-        c_project: dataStation.n_project_name ?? 'KCI'
-      }, {
-        headers: { 'Authorization': API_AUTH, 'Content-Type': 'application/json' }
+    // Jika user memilih "ALL", kita mungkin perlu logic khusus atau ambil project name dari state projects
+    const projectName = dataStation?.n_project_name ??
+      projects.find(p => p.c_project === projectsActive)?.n_project ??
+      'KCI';
+
+    const payload = {
+      c_station: stationActive, // Bisa 'ALL' atau kode station
+      c_project: projectName
+    };
+
+    axios.post(`${BASE_URL}/output/terminal-by-station`, payload, {
+      headers: { 'Authorization': API_AUTH, 'Content-Type': 'application/json' }
+    })
+      .then(res => {
+        setData(res.data.data?.code ? [] : res.data.data ?? [])
       })
-        .then(res => {
-          setData(res.data.data?.code ? [] : res.data.data ?? [])
-        })
-        .catch(err => {
-          console.error(err);
-          toast.error("Gagal load terminal")
-        })
-        .finally(() => {
-          setLoading(false)
-        })
-    }
+      .catch(err => {
+        console.error(err);
+        toast.error("Gagal load terminal")
+      })
+      .finally(() => {
+        setLoading(false)
+      })
   }
 
+  // Effect untuk Fetch Station saat Project berubah
   useEffect(() => {
     let isMounted = true;
 
-    if (isMounted) {
+    // Hanya fetch jika ada project yang aktif/tersedia
+    if (projectsActive || projects.length > 0) {
+      fetchStationData(isMounted)
+    }
+
+    return () => { isMounted = false };
+  }, [projectsActive, projects]) // Dependency array sudah benar
+
+  // Effect untuk Fetch Terminal saat Station berubah
+  useEffect(() => {
+    let isMounted = true;
+
+    if (isMounted && stationActive) {
       fetchTerminalData();
     }
 
-    ;
-
     return () => { isMounted = false };
-  }, [stationActive, stationData, projectsActive, projects])
+  }, [stationActive]) // Cukup stationActive sebagai trigger utama fetch data terminal
 
-  // FUNGSI FETCH DETAIL DEVICE YANG SUDAH DIREVISI
   const fetchTerminalDevices = async (row: DataWithAction) => {
     const sn = row.c_terminal_sn;
 
-    if (expandedData[sn]) return; // Cegah hit API berkali-kali jika data sudah ada
+    if (expandedData[sn]) return;
 
     setLoadingExpanded(prev => ({ ...prev, [sn]: true }));
 
     try {
-      // Perhatikan penggunaan params untuk method GET
       const response = await axios.get(`${BASE_URL}/device/get-device-by-terminal`, {
         params: {
           c_terminal_sn: sn,
@@ -333,27 +406,59 @@ const Library = () => {
         <div className='text-left h3 flex flex-col sm:flex-row gap-4 w-1/2 max-sm:w-full'>
           <Autocomplete
             disablePortal
-            disableClearable
+
+            // PERBAIKAN 1: disableClearable hanya aktif jika ada nilai yang terpilih
+            // Ini mencegah error TypeScript saat value masih null
+            disableClearable={!!projectsActive}
             options={projects}
             loading={loadingProjects}
             getOptionLabel={(option) => option.n_project || option.c_project || ""}
             renderInput={(params) => <TextField {...params} label="Project" />}
             className='min-w-28'
             size='small'
-            value={((projectsActive ? projects.find(s => s.c_project === projectsActive) : projects[0]) || null) as ProjectProps}
-            onChange={(_, v) => v && setprojectsActive(v.c_project)}
+
+            // PERBAIKAN 2: Gunakan "?? null". Jika find() return undefined, paksa jadi null.
+            // Ini mencegah error "uncontrolled to controlled" di Console.
+            value={projects.find(p => p.c_project === projectsActive) ?? null}
+            onChange={(_, v) => {
+              if (v) {
+                setprojectsActive(v.c_project)
+                setData([]);
+              }
+            }}
+            isOptionEqualToValue={(option, value) => option.c_project === value.c_project}
           />
           <Autocomplete
             disablePortal
-            disableClearable
-            value={((stationActive ? stationData.find(s => s.c_station === stationActive) : stationData[0]) || null) as StationProps}
+
+            // PERBAIKAN 1: disableClearable dinamis
+            disableClearable={!!stationActive && stationActive !== 'ALL'}
+
+            // PERBAIKAN 2: Gunakan "?? null"
+            value={stationData.find(s => s.c_station === stationActive) ?? null}
             options={stationData}
             onChange={(_, v) => v && setStationActive(v.c_station)}
             loading={loadingStation}
-            renderInput={(params) => <TextField {...params} label="Station" />}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Station"
+                InputProps={{
+                  ...params.InputProps,
+                  endAdornment: (
+                    <Fragment>
+                      {loadingStation ? <CircularProgress color="inherit" size={20} /> : null}
+                      {params.InputProps.endAdornment}
+                    </Fragment>
+                  ),
+                }}
+              />
+            )}
             getOptionLabel={(o) => o?.n_station ?? ''}
             className='min-w-60'
             size='small'
+            isOptionEqualToValue={(option, value) => option.c_station === value.c_station}
+            disabled={loadingProjects || loadingStation}
           />
         </div>
 
@@ -485,7 +590,7 @@ const Library = () => {
         onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
       />
 
-      <AddTerminalModal stationData={stationData} isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onSuccess={() => { fetchStationData(true); fetchTerminalData(); }} />
+      <AddTerminalModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onSuccess={() => { fetchStationData(true); fetchTerminalData(); }} />
     </>
   )
 }
