@@ -19,6 +19,8 @@ import {
   TableCell, TableHead, TableRow
 } from '@mui/material'
 
+import { getSession } from 'next-auth/react'
+
 import tableStyles from '@core/styles/table.module.css'
 import { DebouncedInput, fuzzyFilter } from '@/utils/helper'
 
@@ -72,7 +74,7 @@ const AddTerminalModal = dynamic(
 const columnHelper = createColumnHelper<DataWithAction>()
 
 const BASE_URL = process.env.API_MONITORING_URL;
-const API_AUTH = process.env.API_AUTH;
+const API_AUTH = process.env.NEXT_PUBLIC_API_AUTH_JWT;
 
 const ActionButton = ({ terminal }: { terminal: DataWithAction }) => {
   const [isDownloading, setIsDownloading] = useState(false);
@@ -157,11 +159,12 @@ const Library = () => {
 
   const fetchProjects = async (isMounted: boolean) => {
     if (isMounted) setLoadingProjects(true);
+    const session = await getSession();
 
     try {
       const response = await axios.get(`${BASE_URL}/project/get-all-project`, {
         headers: {
-          'Authorization': API_AUTH,
+          'Authorization': `Barer ${session?.user.accessToken}`,
           'Content-Type': 'application/json'
         }
       });
@@ -188,7 +191,7 @@ const Library = () => {
   // ----------------------------------------------------------------
   // PERBAIKAN DI SINI: Fetch Station Data
   // ----------------------------------------------------------------
-  const fetchStationData = (isMounted: boolean) => {
+  const fetchStationData = async (isMounted: boolean) => {
     // 1. Trigger loading state DI SINI agar UI langsung update saat ganti project
     if (isMounted) setLoadingStation(true);
 
@@ -201,8 +204,11 @@ const Library = () => {
       return;
     }
 
+    const session = await getSession();
+
+
     axios.get(`${BASE_URL}/station/mini?c_project=${currentProject}`, {
-      headers: { 'Authorization': API_AUTH, 'Content-Type': 'application/json' },
+      headers: { 'Authorization': `Barer ${session?.user.accessToken}`, 'Content-Type': 'application/json' },
     })
       .then(res => {
         if (!isMounted) return;
@@ -239,7 +245,7 @@ const Library = () => {
       })
   }
 
-  const fetchTerminalData = () => {
+  const fetchTerminalData = async () => {
     // Jangan fetch jika stationActive belum diset (misal saat switching project)
     if (!stationActive) return;
 
@@ -256,8 +262,10 @@ const Library = () => {
       c_project: projectName
     };
 
+    const session = await getSession();
+
     axios.post(`${BASE_URL}/output/terminal-by-station`, payload, {
-      headers: { 'Authorization': API_AUTH, 'Content-Type': 'application/json' }
+      headers: { 'Authorization': `Barer ${session?.user.accessToken}`, 'Content-Type': 'application/json' }
     })
       .then(res => {
         setData(res.data.data?.code ? [] : res.data.data ?? [])
@@ -302,13 +310,15 @@ const Library = () => {
     setLoadingExpanded(prev => ({ ...prev, [sn]: true }));
 
     try {
+      const session = await getSession();
+
       const response = await axios.get(`${BASE_URL}/device/get-device-by-terminal`, {
         params: {
           c_terminal_sn: sn,
           c_project: row.c_project ?? 'KCI'
         },
         headers: {
-          'Authorization': API_AUTH,
+          'Authorization': `Barer ${session?.user.accessToken}`,
           'Content-Type': 'application/json'
         }
       })

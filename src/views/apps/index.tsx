@@ -41,6 +41,7 @@ import {
   IconCalendar
 } from '@tabler/icons-react';
 import { format } from 'date-fns';
+import { getSession } from 'next-auth/react';
 
 // --- Tipe Data Sesuai Response API ---
 interface AppHistory {
@@ -65,7 +66,7 @@ interface TerminalTypeProps {
 }
 
 const BASE_URL = process.env.API_MONITORING_URL;
-const API_AUTH = process.env.API_AUTH;
+const API_AUTH = process.env.NEXT_PUBLIC_API_AUTH_JWT;
 
 // --- KONSTANTA UKURAN FILE (50 MB) ---
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB dalam Bytes
@@ -104,8 +105,10 @@ export default function AppVersionManager() {
     setLoadingHistory(true);
 
     try {
+      const session = await getSession();
+
       const response = await axios.get(`${BASE_URL}/app/list-app-update`, {
-        headers: { 'Authorization': API_AUTH, 'Content-Type': 'application/json' },
+        headers: { 'Authorization': `Barer ${session?.user.accessToken}`, 'Content-Type': 'application/json' },
       });
 
       setHistoryData(response.data?.data || []);
@@ -127,10 +130,12 @@ export default function AppVersionManager() {
       const fetchProjects = async () => {
         setLoadingProjects(true);
 
+        const session = await getSession();
+
         try {
           const response = await axios.get(`${BASE_URL}/project/get-all-project`, {
             headers: {
-              'Authorization': API_AUTH,
+              'Authorization': `Barer ${session?.user.accessToken}`,
               'Content-Type': 'application/json'
             }
           });
@@ -155,9 +160,11 @@ export default function AppVersionManager() {
         setLoadingTypes(true);
 
         try {
+          const session = await getSession();
+
           const response = await axios.get(`${BASE_URL}/terminal/type?c_project=${project}`, {
             headers: {
-              'Authorization': API_AUTH,
+              'Authorization': `Barer ${session?.user.accessToken}`,
               'Content-Type': 'application/json'
             }
           });
@@ -279,8 +286,10 @@ export default function AppVersionManager() {
     formData.append('file', uploadFile);
 
     try {
+      const session = await getSession();
+
       const response = await axios.post(`${BASE_URL}/app/upload`, formData, {
-        headers: { 'Authorization': API_AUTH, 'Content-Type': 'multipart/form-data' },
+        headers: { 'Authorization': `Barer ${session?.user.accessToken}`, 'Content-Type': 'multipart/form-data' },
       });
 
       if (response.status === 200 || response.data?.status === '00') {

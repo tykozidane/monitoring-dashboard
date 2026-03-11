@@ -1,5 +1,6 @@
 {
   "navigation": {
+    "appsAdmin": "Administrator",
     "dashboards": "Dashboards",
     "crm": "CRM",
     "monitoring": "Monitoring",

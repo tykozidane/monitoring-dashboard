@@ -20,6 +20,22 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
     ]
   },
   {
+    label: dictionary['navigation'].appsAdmin,
+    icon: 'tabler-adjustments',
+    children: [
+      {
+        label: dictionary['navigation'].user,
+        icon: 'tabler-users-group',
+        href: '/users'
+      },
+      {
+        label: dictionary['navigation'].roles,
+        icon: 'tabler-lock',
+        href: '/roles'
+      },
+    ]
+  },
+  {
     label: dictionary['navigation'].terminal,
     icon: 'tabler-layout-sidebar-right-expand',
     href: '/terminal'

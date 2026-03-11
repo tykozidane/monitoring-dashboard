@@ -155,6 +155,28 @@ declare global {
     c_device_type: string
     n_device_name: string
   }
+
+  interface MenuItem {
+    href?: string
+    icon?: string
+    label: string
+    action?: string[]
+    isSection?: boolean
+    children?: MenuItem[]
+  }
+
+  interface MenuSection {
+    label: string
+    icon?: string
+    isSection?: boolean
+    children?: MenuItem[]
+  }
+
+  type NavigationItem = MenuItem | MenuSection
+
+  interface NavigationProps {
+    items: NavigationItem[]
+  }
 }
 
 // File ini harus dianggap sebagai module agar 'declare global' bekerja

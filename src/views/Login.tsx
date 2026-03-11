@@ -23,7 +23,7 @@ import Alert from '@mui/material/Alert'
 import { signIn } from 'next-auth/react'
 import { Controller, useForm } from 'react-hook-form'
 import { valibotResolver } from '@hookform/resolvers/valibot'
-import { email, object, minLength, string, pipe, nonEmpty } from 'valibot'
+import { email, object, minLength, string, pipe, nonEmpty, boolean } from 'valibot'
 import type { SubmitHandler } from 'react-hook-form'
 import type { InferInput } from 'valibot'
 import classnames from 'classnames'
@@ -77,12 +77,13 @@ type ErrorType = {
 type FormData = InferInput<typeof schema>
 
 const schema = object({
-  email: pipe(string(), minLength(1, 'This field is required'), email('Email is invalid')),
+  username: pipe(string(), minLength(1, 'This field is required')),
   password: pipe(
     string(),
     nonEmpty('This field is required'),
     minLength(5, 'Password must be at least 5 characters long')
-  )
+  ),
+  remember: boolean()
 })
 
 const Login = ({ mode }: { mode: SystemMode }) => {
@@ -114,8 +115,9 @@ const Login = ({ mode }: { mode: SystemMode }) => {
   } = useForm<FormData>({
     resolver: valibotResolver(schema),
     defaultValues: {
-      email: 'admin@admin.com',
-      password: 'admin'
+      username: '',
+      password: '',
+      remember: true
     }
   })
 
@@ -131,8 +133,9 @@ const Login = ({ mode }: { mode: SystemMode }) => {
 
   const onSubmit: SubmitHandler<FormData> = async (data: FormData) => {
     const res = await signIn('credentials', {
-      email: data.email,
+      username: data.username,
       password: data.password,
+      remember: data.remember,
       redirect: false
     })
 
@@ -143,9 +146,7 @@ const Login = ({ mode }: { mode: SystemMode }) => {
       router.replace(getLocalizedUrl(redirectURL, locale as Locale))
     } else {
       if (res?.error) {
-        const error = JSON.parse(res.error)
-
-        setErrorState(error)
+        setErrorState({ message: [res?.error] })
       }
     }
   }
@@ -179,7 +180,7 @@ const Login = ({ mode }: { mode: SystemMode }) => {
             className='flex flex-col gap-6'
           >
             <Controller
-              name='email'
+              name='username'
               control={control}
               rules={{ required: true }}
               render={({ field }) => (
@@ -187,16 +188,16 @@ const Login = ({ mode }: { mode: SystemMode }) => {
                   {...field}
                   autoFocus
                   fullWidth
-                  type='email'
-                  label='Email'
-                  placeholder='Enter your email'
+                  type='username'
+                  label='Username'
+                  placeholder='Enter your username'
                   onChange={e => {
                     field.onChange(e.target.value)
                     errorState !== null && setErrorState(null)
                   }}
-                  {...((errors.email || errorState !== null) && {
+                  {...((errors.username || errorState !== null) && {
                     error: true,
-                    helperText: errors?.email?.message || errorState?.message[0]
+                    helperText: errors?.username?.message || errorState?.message[0]
                   })}
                 />
               )}
@@ -237,34 +238,24 @@ const Login = ({ mode }: { mode: SystemMode }) => {
               )}
             />
             <div className='flex justify-between items-center gap-x-3 gap-y-1 flex-wrap'>
-              <FormControlLabel control={<Checkbox defaultChecked />} label='Remember me' />
-              <Typography
-                className='text-end'
-                color='primary.main'
-                component={Link}
-                href={getLocalizedUrl('/forgot-password', locale as Locale)}
-              >
-                Forgot password?
-              </Typography>
+              <Controller
+                name="remember"
+                control={control}
+                render={({ field }) => (
+                  <FormControlLabel
+                    label="Remember me"
+                    control={
+                      <Checkbox
+                        checked={field.value === true}
+                        onChange={(_, checked) => field.onChange(checked)}
+                      />
+                    }
+                  />
+                )}
+              />
             </div>
             <Button fullWidth variant='contained' type='submit'>
               Login
-            </Button>
-            <div className='flex justify-center items-center flex-wrap gap-2'>
-              <Typography>New on our platform?</Typography>
-              <Typography component={Link} href={getLocalizedUrl('/register', locale as Locale)} color='primary.main'>
-                Create an account
-              </Typography>
-            </div>
-            <Divider className='gap-2'>or</Divider>
-            <Button
-              color='secondary'
-              className='self-center text-textPrimary'
-              startIcon={<img src='/images/logos/google.png' alt='Google' width={22} />}
-              sx={{ '& .MuiButton-startIcon': { marginInlineEnd: 3 } }}
-              onClick={() => signIn('google')}
-            >
-              Sign in with Google
             </Button>
           </form>
         </div>

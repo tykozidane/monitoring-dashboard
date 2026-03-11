@@ -1,0 +1,72 @@
+datasource db {
+  provider = "postgresql"
+  schemas  = ["auth"]
+}
+
+generator client {
+  provider        = "prisma-client"
+  output          = "./generated"
+  previewFeatures = ["driverAdapters", "multiSchema"]
+}
+
+// ================= ENUMS =================
+
+enum View {
+  all
+  user
+
+  @@schema("auth")
+}
+
+// ================= MODELS =================
+
+model Role {
+  id         String    @id @default(uuid()) @map("id")
+  name       String    @unique
+  permission Json
+  view       View      @default(user)
+  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime  @updatedAt @db.Timestamptz(3)
+  deletedAt  DateTime? @db.Timestamptz(3)
+  deletedBy  String?
+  users      User[]
+
+  // Index untuk mencari role yang aktif/terhapus
+  @@index([deletedAt])
+  @@map("roles")
+  @@schema("auth")
+}
+
+model Session {
+  id           String   @id @default(uuid()) @map("id")
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime @db.Timestamptz(3)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId]) // Index FK
+  @@map("sessions")
+  @@schema("auth")
+}
+
+model User {
+  id        String    @id @default(uuid()) @map("id")
+  name      String?
+  username  String    @unique
+  password  String?
+  image     String?
+  role      Role?     @relation(fields: [roleId], references: [id])
+  roleId    String?
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @db.Timestamptz(3)
+  deletedAt DateTime? @db.Timestamptz(3)
+  deletedBy String?
+
+  sessions Session[]
+
+  // Index untuk login dan soft delete user
+  @@index([deletedAt])
+  @@index([roleId])
+  @@map("users")
+  @@schema("auth")
+}

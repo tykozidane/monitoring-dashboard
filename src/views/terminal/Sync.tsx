@@ -18,12 +18,14 @@ import classnames from 'classnames'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 
+import { getSession } from 'next-auth/react';
+
 import tableStyles from '@core/styles/table.module.css'
 import { DebouncedInput, fuzzyFilter } from '@/utils/helper'
 import SyncDetailView from './SyncDetailView'
 
 const BASE_URL = process.env.API_MONITORING_URL;
-const API_AUTH = process.env.API_AUTH;
+const API_AUTH = process.env.NEXT_PUBLIC_API_AUTH_JWT;
 
 const columnHelper = createColumnHelper<SyncDataProps>()
 
@@ -41,12 +43,14 @@ const Sync = ({ onUpdateCount }: SyncProps) => {
   const fetchSyncData = async () => {
     setLoading(true)
 
+    const session = await getSession();
+
     try {
       const response = await axios({
         method: 'GET',
         url: `${BASE_URL}/terminal/get-sync-terminal-status`,
         headers: {
-          'Authorization': API_AUTH,
+          'Authorization': `Barer ${session?.user.accessToken}`,
           'Content-Type': 'application/json'
         },
         data: {

@@ -12,6 +12,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { getSession } from 'next-auth/react';
 
 // Fix for default Leaflet icon in React
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -22,7 +23,7 @@ L.Icon.Default.mergeOptions({
 });
 
 const BASE_URL = process.env.API_MONITORING_URL;
-const API_AUTH = process.env.API_AUTH;
+const API_AUTH = process.env.NEXT_PUBLIC_API_AUTH_JWT;
 
 // Interface Data
 interface ProjectProps {
@@ -110,8 +111,10 @@ export const AddTerminalModal = ({
         setLoadingProjects(true);
 
         try {
+          const session = await getSession();
+
           const response = await axios.get(`${BASE_URL}/project/get-all-project`, {
-            headers: { 'Authorization': API_AUTH, 'Content-Type': 'application/json' }
+            headers: { 'Authorization': `Barer ${session?.user.accessToken}`, 'Content-Type': 'application/json' }
           });
 
           setProjects(response.data?.data || []);
@@ -140,8 +143,10 @@ export const AddTerminalModal = ({
       setLoadingStations(true);
 
       try {
+        const session = await getSession();
+
         const response = await axios.get(`${BASE_URL}/station/mini?c_project=${formData.c_project}`, {
-          headers: { 'Authorization': API_AUTH, 'Content-Type': 'application/json' }
+          headers: { 'Authorization': `Barer ${session?.user.accessToken}`, 'Content-Type': 'application/json' }
         });
 
         const newStation = response.data?.data || [];
@@ -169,8 +174,10 @@ export const AddTerminalModal = ({
         setLoadingTypes(true);
 
         try {
+          const session = await getSession();
+
           const response = await axios.get(`${BASE_URL}/terminal/type?c_project=${formData.c_project}`, {
-            headers: { 'Authorization': API_AUTH, 'Content-Type': 'application/json' }
+            headers: { 'Authorization': `Barer ${session?.user.accessToken}`, 'Content-Type': 'application/json' }
           });
 
           setTerminalTypes(response.data?.data || []);
@@ -194,10 +201,12 @@ export const AddTerminalModal = ({
         setLoadingSpareGates(true);
 
         try {
+          const session = await getSession();
+
           const response = await axios.get(
             `${BASE_URL}/terminal/spare-gate?c_project=${formData.c_project}&c_station=${formData.c_station}`,
             {
-              headers: { 'Authorization': API_AUTH, 'Content-Type': 'application/json' }
+              headers: { 'Authorization': `Barer ${session?.user.accessToken}`, 'Content-Type': 'application/json' }
             }
           );
 
@@ -279,9 +288,11 @@ export const AddTerminalModal = ({
     setAddLoading(true);
 
     try {
+      const session = await getSession();
+
       const resp = await axios.post(`${BASE_URL}/terminal/add-terminal`, formData, {
         headers: {
-          'Authorization': API_AUTH,
+          'Authorization': `Barer ${session?.user.accessToken}`,
           'Content-Type': 'application/json'
         }
       });

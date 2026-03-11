@@ -2,6 +2,7 @@
 import CredentialProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
 import type { NextAuthOptions } from 'next-auth'
+import axios from 'axios'
 
 export const authOptions: NextAuthOptions = {
   // ** Configure one or more authentication providers
@@ -25,31 +26,33 @@ export const authOptions: NextAuthOptions = {
          * For e.g. return { id: 1, name: 'J Smith', email: 'jsmith@example.com' }
          * You can also use the `req` object to obtain additional parameters (i.e., the request IP address)
          */
-        const { email, password } = credentials as { email: string; password: string }
+        const { username, password, remember } = credentials as { username: string; password: string; remember: string }
 
         try {
           // ** Login API Call to match the user credentials and receive user data in response along with his role
-          const res = await fetch(`${process.env.API_URL}/login`, {
+          const res = await axios({
             method: 'POST',
+            url: `${process.env.API_URL}/login`,
             headers: {
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ email, password })
+            data: { username, password, remember }
           })
 
-          const data = await res.json()
+          const data = await res.data
 
-          if (res.status === 401) {
-            throw new Error(JSON.stringify(data))
+          if (data.status === 401) {
+            throw new Error(data?.message)
           }
 
-          if (res.status === 200) {
+          if (data.status === 200) {
             /*
              * Please unset all the sensitive information of the user either from API response or before returning
              * user data below. Below return statement will set the user object in the token and the same is set in
              * the session which will be accessible all over the app.
              */
-            return data
+
+            return data.data
           }
 
           return null
@@ -97,21 +100,31 @@ export const authOptions: NextAuthOptions = {
      * the `session()` callback. So we have to add custom parameters in `token`
      * via `jwt()` callback to make them accessible in the `session()` callback
      */
-    async jwt({ token, user }) {
+    async jwt({ token, user }: any) {
       if (user) {
         /*
          * For adding custom parameters to user in session, we first need to add those parameters
          * in token which then will be available in the `session()` callback
          */
-        token.name = user.name
+        token.id = user.id
+        token.username = user.username
+        token.accessToken = user.accessToken
+        token.refreshToken = user.refreshToken
+        token.roleId = user.roleId
+        token.image = user.image
       }
 
       return token
     },
-    async session({ session, token }) {
+    async session({ session, token }: any) {
       if (session.user) {
         // ** Add custom params to user in session which are added in `jwt()` callback via `token` parameter
-        session.user.name = token.name
+        session.user.id = token.id
+        session.user.username = token.username
+        session.user.accessToken = token.accessToken
+        session.user.refreshToken = token.refreshToken
+        session.user.roleId = token.roleId
+        session.user.image = token.image
       }
 
       return session

@@ -11,9 +11,10 @@ import {
 import classnames from 'classnames'
 import { toast } from 'react-toastify'
 import axios from 'axios'
+import { getSession } from 'next-auth/react'
 
 const BASE_URL = process.env.API_MONITORING_URL;
-const API_AUTH = process.env.API_AUTH;
+const API_AUTH = process.env.NEXT_PUBLIC_API_AUTH_JWT;
 
 interface DeviceProps {
   i_id: string
@@ -186,9 +187,11 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
     setLoadingOptions(true);
 
     try {
+      const session = await getSession();
+
       const response = await axios.get(`${BASE_URL}/terminal/get-free-terminal`, {
         headers: {
-          'Authorization': API_AUTH,
+          'Authorization': `Barer ${session?.user.accessToken}`,
           'Content-Type': 'application/json'
         },
         params: { c_project: "KCI" }
@@ -213,9 +216,11 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
 
   const fecthOptionDevice = async () => {
     try {
+      const session = await getSession();
+
       const response = await axios.post(`${BASE_URL}/device/device-type`, { c_project: "KCI" }, {
         headers: {
-          'Authorization': API_AUTH,
+          'Authorization': `Barer ${session?.user.accessToken}`,
           'Content-Type': 'application/json'
         }
       });
@@ -242,9 +247,11 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
         c_project: rowData.c_project || "KCI"
       }
 
+      const session = await getSession();
+
       const response = await axios.post(`${BASE_URL}/terminal/get-data-mapping-terminal-sync`, payload, {
         headers: {
-          'Authorization': API_AUTH,
+          'Authorization': `Barer ${session?.user.accessToken}`,
           'Content-Type': 'application/json'
         }
       });
@@ -344,9 +351,11 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
     };
 
     try {
+      const session = await getSession();
+
       const response = await axios.post(`${BASE_URL}/terminal/mapping-terminal`, payload, {
         headers: {
-          'Authorization': API_AUTH,
+          'Authorization': `Barer ${session?.user.accessToken}`,
           'Content-Type': 'application/json'
         },
       });
@@ -484,9 +493,12 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
         c_project: rowData.c_project || "KCI",
       };
 
+
+      const session = await getSession();
+
       const response = await axios.post(`${BASE_URL}/device/create-device-type`, payload, {
         headers: {
-          'Authorization': API_AUTH,
+          'Authorization': `Barer ${session?.user.accessToken}`,
           'Content-Type': 'application/json'
         }
       });
@@ -689,6 +701,7 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
             <div className="mb-4 pt-3">
               <Autocomplete
                 options={terminalOptions}
+                getOptionKey={(o) => o.i_id}
                 getOptionLabel={(o) => `${o.n_terminal_name} ${o.c_terminal_sn ? `(${o.c_terminal_sn})` : '(No SN)'}`}
                 value={selectedTerminal}
                 onChange={(_, v) => setSelectedTerminal(v)}
