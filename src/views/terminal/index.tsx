@@ -4,7 +4,7 @@ import { Grow, Grid } from '@mui/material';
 // Component Imports
 import ListTable from './ListTable'
 
-const List = () => {
+const List = ({ permission }: { permission: string[] }) => {
   const Subject = 'Terminal';
 
   return (
@@ -16,7 +16,7 @@ const List = () => {
           </div>
         </Grid>
         <Grid size={12}>
-          <ListTable />
+          <ListTable permission={permission} />
         </Grid>
       </Grid>
     </Grow>

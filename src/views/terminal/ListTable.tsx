@@ -7,7 +7,7 @@ import { Card, Grid, Tab, Tabs, Chip, Grow } from '@mui/material'
 import Sync from './Sync'
 import Library from './Library'
 
-const ListTable = () => {
+const ListTable = (props: { permission: string[] }) => {
   const [activeTab, setActiveTab] = useState('sync')
   const [unsyncedCount, setUnsyncedCount] = useState(0)
 
@@ -41,8 +41,8 @@ const ListTable = () => {
             </Tabs>
           </div>
 
-          {activeTab === 'library' && <Library />}
-          {activeTab === 'sync' && <Sync onUpdateCount={setUnsyncedCount} />}
+          {activeTab === 'library' && <Library {...props} />}
+          {activeTab === 'sync' && <Sync onUpdateCount={setUnsyncedCount} {...props} />}
         </Card>
       </Grid>
     </Grow>

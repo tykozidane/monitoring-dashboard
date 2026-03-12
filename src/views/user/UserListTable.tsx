@@ -365,11 +365,11 @@ const UserListTable = ({
                 placeholder='Search User'
                 className='is-full sm:is-auto'
               />
-              {/* {permission?.includes('create') && ( */}
-              <Button variant='contained' onClick={() => setAddUserOpen(true)} className='is-full sm:is-auto'>
-                Add User
-              </Button>
-              {/* )} */}
+              {permission?.includes('create') && (
+                <Button variant='contained' onClick={() => setAddUserOpen(true)} className='is-full sm:is-auto'>
+                  Add User
+                </Button>
+              )}
             </div>
           </div>
 

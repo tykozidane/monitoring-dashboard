@@ -66,12 +66,11 @@ interface TerminalTypeProps {
 }
 
 const BASE_URL = process.env.API_MONITORING_URL;
-const API_AUTH = process.env.NEXT_PUBLIC_API_AUTH_JWT;
 
 // --- KONSTANTA UKURAN FILE (50 MB) ---
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB dalam Bytes
 
-export default function AppVersionManager() {
+export default function AppVersionManager({ permission }: { permission: string[] }) {
   // --- State Data ---
   const [historyData, setHistoryData] = useState<AppHistory[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
@@ -315,13 +314,10 @@ export default function AppVersionManager() {
         <Typography variant="h4" fontWeight="bold" color="text.primary">
           App Version Control
         </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Upload versi aplikasi terbaru dan kelola riwayat pembaruan perangkat.
-        </Typography>
       </Box>
 
       {/* --- SECTION 1: DRAG & DROP UPLOAD --- */}
-      <Paper
+      {permission?.includes('create') && (<Paper
         elevation={0}
         sx={{
           p: 0,
@@ -364,7 +360,7 @@ export default function AppVersionManager() {
             Pilih File
           </Button>
         </div>
-      </Paper>
+      </Paper>)}
 
 
       {/* --- SECTION 2: HISTORY & TABS --- */}

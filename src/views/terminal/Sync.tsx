@@ -25,15 +25,15 @@ import { DebouncedInput, fuzzyFilter } from '@/utils/helper'
 import SyncDetailView from './SyncDetailView'
 
 const BASE_URL = process.env.API_MONITORING_URL;
-const API_AUTH = process.env.NEXT_PUBLIC_API_AUTH_JWT;
 
 const columnHelper = createColumnHelper<SyncDataProps>()
 
 interface SyncProps {
   onUpdateCount: (count: number) => void
+  permission: string[]
 }
 
-const Sync = ({ onUpdateCount }: SyncProps) => {
+const Sync = ({ onUpdateCount, permission }: SyncProps) => {
   const [data, setData] = useState<SyncDataProps[]>([])
   const [loading, setLoading] = useState(false)
   const [globalFilter, setGlobalFilter] = useState('')
@@ -189,7 +189,7 @@ const Sync = ({ onUpdateCount }: SyncProps) => {
                         {/* Menghapus background color dan border samping */}
                         <div className="w-full">
                           <Grow in={true}>
-                            <div><SyncDetailView rowData={row.original} onClose={(refresh) => { row.toggleExpanded(false); refresh && fetchSyncData() }} /></div>
+                            <div><SyncDetailView permission={permission} rowData={row.original} onClose={(refresh) => { row.toggleExpanded(false); refresh && fetchSyncData() }} /></div>
                           </Grow>
                         </div>
                       </td>

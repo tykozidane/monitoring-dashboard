@@ -129,7 +129,7 @@ const ActionButton = ({ terminal }: { terminal: DataWithAction }) => {
 }
 
 
-const Library = () => {
+const Library = (props: { permission: string[] }) => {
   const [data, setData] = useState<DataWithAction[]>([])
   const [loading, setLoading] = useState(false)
   const [globalFilter, setGlobalFilter] = useState('')
@@ -479,14 +479,15 @@ const Library = () => {
             placeholder='Search Library...'
             className='is-full sm:is-auto'
           />
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => setIsAddModalOpen(true)}
-            className="whitespace-nowrap"
-          >
-            Add Terminal
-          </Button>
+          {props.permission?.includes('create') &&
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => setIsAddModalOpen(true)}
+              className="whitespace-nowrap"
+            >
+              Add Terminal
+            </Button>}
         </div>
       </div>
 

@@ -102,11 +102,12 @@ interface SyncDetailViewProps {
     signature_status: 'SIGNATURE_VALID' | 'SIGNATURE_INVALID' | 'SIGNATURE_NOT_IDENTIC' | null | string
   }
   onClose: (refresh?: boolean) => void
+  permission: string[]
 }
 
 const filter = createFilterOptions<selectDevicesOption>();
 
-const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
+const SyncDetailView = ({ rowData, onClose, permission }: SyncDetailViewProps) => {
   const theme = useTheme()
   const [loading, setLoading] = useState(true)
   const [detailData, setDetailData] = useState<ApiResponse | null>(null)
@@ -873,7 +874,7 @@ const SyncDetailView = ({ rowData, onClose }: SyncDetailViewProps) => {
 
       <div className="mt-6 flex justify-end gap-3 border-t pt-4">
         <Button variant="outlined" color="secondary" onClick={() => onClose(false)}>Cancel</Button>
-        <Button variant="contained" color="primary" startIcon={<i className="tabler-check" />} disabled={!selectedTerminal} onClick={handleSyncSubmit}>Confirm Sync & Map</Button>
+        {permission?.includes('create') && <Button variant="contained" color="primary" startIcon={<i className="tabler-check" />} disabled={!selectedTerminal} onClick={handleSyncSubmit}>Confirm Sync & Map</Button>}
       </div>
     </Box>
   )
