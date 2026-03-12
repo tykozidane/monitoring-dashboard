@@ -14,7 +14,7 @@ import Typography from '@mui/material/Typography'
 import classnames from 'classnames'
 
 // Type Imports
-import type { SystemMode } from '@core/types'
+import type { Mode, SystemMode } from '@core/types'
 import type { Locale } from '@/configs/i18n'
 
 // Hook Imports
@@ -33,7 +33,7 @@ const MaskImg = styled('img')({
   zIndex: -1
 })
 
-const NotAuthorized = ({ mode }: { mode: SystemMode }) => {
+const NotAuthorized = ({ mode }: { mode: Mode }) => {
   // Vars
   const darkImg = '/images/pages/misc-mask-dark.png'
   const lightImg = '/images/pages/misc-mask-light.png'

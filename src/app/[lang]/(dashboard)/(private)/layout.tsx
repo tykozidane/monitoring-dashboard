@@ -2,6 +2,8 @@
 import Button from '@mui/material/Button'
 
 // Type Imports
+import { getServerSession } from 'next-auth'
+
 import type { ChildrenType } from '@core/types'
 import type { Locale } from '@configs/i18n'
 
@@ -27,9 +29,33 @@ import { i18n } from '@configs/i18n'
 // Util Imports
 import { getDictionary } from '@/utils/getDictionary'
 import { getMode, getSystemMode } from '@core/utils/serverHelpers'
+import { authOptions } from '@/libs/auth'
+import { prisma } from '@/libs/prisma'
+import { defaultUserProps } from '@/libs/prisma-selects'
+
+import Permission from '@/views/Permission'
+
+
+const getData = async () => {
+  const session = await getServerSession(authOptions)
+
+  const userbyId = await prisma.user.findFirstOrThrow({
+    where: {
+      AND: [{ id: session?.user.id }, { deletedAt: null }]
+    },
+    select: defaultUserProps
+  })
+
+  return {
+    user: userbyId,
+    permission: userbyId?.role?.permission as unknown as NavigationItem[] ?? []
+  }
+}
+
 
 const Layout = async (props: ChildrenType & { params: Promise<{ lang: string }> }) => {
   const params = await props.params
+  const { permission, user } = await getData()
 
   const { children } = props
 
@@ -45,32 +71,34 @@ const Layout = async (props: ChildrenType & { params: Promise<{ lang: string }> 
   return (
     <Providers direction={direction}>
       <AuthGuard locale={lang}>
-        <LayoutWrapper
-          systemMode={systemMode}
-          verticalLayout={
-            <VerticalLayout
-              navigation={<Navigation dictionary={dictionary} mode={mode} />}
-              navbar={<Navbar />}
-              footer={<VerticalFooter />}
+        <Permission lang={params.lang} mode={mode} systemMode={systemMode} permission={permission} >
+          <LayoutWrapper
+            systemMode={systemMode}
+            verticalLayout={
+              <VerticalLayout
+                navigation={<Navigation permission={permission} dictionary={dictionary} mode={mode} />}
+                navbar={<Navbar dictionary={dictionary} permission={permission} user={user} />}
+                footer={<VerticalFooter />}
+              >
+                {children}
+              </VerticalLayout>
+            }
+            horizontalLayout={
+              <HorizontalLayout header={<Header dictionary={dictionary} />} footer={<HorizontalFooter />}>
+                {children}
+              </HorizontalLayout>
+            }
+          />
+          <ScrollToTop className='mui-fixed'>
+            <Button
+              variant='contained'
+              className='is-10 bs-10 rounded-full p-0 min-is-0 flex items-center justify-center'
             >
-              {children}
-            </VerticalLayout>
-          }
-          horizontalLayout={
-            <HorizontalLayout header={<Header dictionary={dictionary} />} footer={<HorizontalFooter />}>
-              {children}
-            </HorizontalLayout>
-          }
-        />
-        <ScrollToTop className='mui-fixed'>
-          <Button
-            variant='contained'
-            className='is-10 bs-10 rounded-full p-0 min-is-0 flex items-center justify-center'
-          >
-            <i className='tabler-arrow-up' />
-          </Button>
-        </ScrollToTop>
-        <Customizer dir={direction} />
+              <i className='tabler-arrow-up' />
+            </Button>
+          </ScrollToTop>
+          <Customizer dir={direction} />
+        </Permission>
       </AuthGuard>
     </Providers>
   )

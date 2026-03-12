@@ -22,7 +22,7 @@ import MenuItem from '@mui/material/MenuItem'
 import Button from '@mui/material/Button'
 
 // Third-party Imports
-import { signOut, useSession } from 'next-auth/react'
+import { signOut } from 'next-auth/react'
 
 // Type Imports
 import type { Locale } from '@configs/i18n'
@@ -32,6 +32,7 @@ import { useSettings } from '@core/hooks/useSettings'
 
 // Util Imports
 import { getLocalizedUrl } from '@/utils/i18n'
+import type { UserDefaultProps } from '@/libs/prisma-selects'
 
 // Styled component for badge content
 const BadgeContentSpan = styled('span')({
@@ -43,16 +44,16 @@ const BadgeContentSpan = styled('span')({
   boxShadow: '0 0 0 2px var(--mui-palette-background-paper)'
 })
 
-const UserDropdown = () => {
+const UserDropdown = ({ user }: { user?: UserDefaultProps }) => {
   // States
   const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   // Refs
   const anchorRef = useRef<HTMLDivElement>(null)
 
   // Hooks
   const router = useRouter()
-  const { data: session } = useSession()
   const { settings } = useSettings()
   const { lang: locale } = useParams()
 
@@ -73,9 +74,18 @@ const UserDropdown = () => {
   }
 
   const handleUserLogout = async () => {
+    setLoading(true)
+
     try {
       // Sign out from the app
-      await signOut({ callbackUrl: process.env.NEXT_PUBLIC_APP_URL })
+      await signOut({ redirect: false })
+
+      localStorage.clear();
+
+      // Redirect to login page
+      router.push(getLocalizedUrl('/login', locale as Locale))
+
+      // window.location.href = getLocalizedUrl('/login', locale as Locale)
     } catch (error) {
       console.error(error)
 
@@ -95,10 +105,10 @@ const UserDropdown = () => {
       >
         <Avatar
           ref={anchorRef}
-          alt={session?.user?.name || ''}
-          src={session?.user?.image || ''}
+          alt={user?.name || '-'}
+          src={user?.image || '-'}
           onClick={handleDropdownOpen}
-          className='cursor-pointer bs-[38px] is-[38px]'
+          className='cursor-pointer block-9.5 inline-9.5'
         />
       </Badge>
       <Popper
@@ -107,7 +117,7 @@ const UserDropdown = () => {
         disablePortal
         placement='bottom-end'
         anchorEl={anchorRef.current}
-        className='min-is-[240px] !mbs-3 z-[1]'
+        className='min-is-60 mbs-4! z-1'
       >
         {({ TransitionProps, placement }) => (
           <Fade
@@ -116,44 +126,48 @@ const UserDropdown = () => {
               transformOrigin: placement === 'bottom-end' ? 'right top' : 'left top'
             }}
           >
-            <Paper className={settings.skin === 'bordered' ? 'border shadow-none' : 'shadow-lg'}>
+            <Paper
+              elevation={settings.skin === 'bordered' ? 0 : 8}
+              {...(settings.skin === 'bordered' && { className: 'border' })}
+            >
               <ClickAwayListener onClickAway={e => handleDropdownClose(e as MouseEvent | TouchEvent)}>
                 <MenuList>
-                  <div className='flex items-center plb-2 pli-6 gap-2' tabIndex={-1}>
-                    <Avatar alt={session?.user?.name || ''} src={session?.user?.image || ''} />
+                  <div className='flex items-center plb-2 pli-4 gap-2' tabIndex={-1}>
+                    <Avatar alt={user?.name || '-'} src={user?.image || '-'} />
                     <div className='flex items-start flex-col'>
-                      <Typography className='font-medium' color='text.primary'>
-                        {session?.user?.name || ''}
+                      <Typography variant='body2' className='font-medium' color='text.primary'>
+                        {user?.name || '-'}
                       </Typography>
-                      <Typography variant='caption'>{session?.user?.email || ''}</Typography>
+                      <Typography variant='caption'>{user?.username || '-'} </Typography>
                     </div>
                   </div>
                   <Divider className='mlb-1' />
-                  <MenuItem className='mli-2 gap-3' onClick={e => handleDropdownClose(e, '/pages/user-profile')}>
+                  {/* <MenuItem className='gap-3 pli-4' onClick={e => handleDropdownClose(e, '/accounts')}>
                     <i className='tabler-user' />
                     <Typography color='text.primary'>My Profile</Typography>
-                  </MenuItem>
-                  <MenuItem className='mli-2 gap-3' onClick={e => handleDropdownClose(e, '/pages/account-settings')}>
-                    <i className='tabler-settings' />
+                  </MenuItem> */}
+                  {/* <MenuItem className='gap-3 pli-4' onClick={e => handleDropdownClose(e, '/pages/account-settings')}>
+                    <i className='ri-settings-4-line' />
                     <Typography color='text.primary'>Settings</Typography>
                   </MenuItem>
-                  <MenuItem className='mli-2 gap-3' onClick={e => handleDropdownClose(e, '/pages/pricing')}>
-                    <i className='tabler-currency-dollar' />
+                  <MenuItem className='gap-3 pli-4' onClick={e => handleDropdownClose(e, '/pages/pricing')}>
+                    <i className='ri-money-dollar-circle-line' />
                     <Typography color='text.primary'>Pricing</Typography>
                   </MenuItem>
-                  <MenuItem className='mli-2 gap-3' onClick={e => handleDropdownClose(e, '/pages/faq')}>
-                    <i className='tabler-help-circle' />
+                  <MenuItem className='gap-3 pli-4' onClick={e => handleDropdownClose(e, '/pages/faq')}>
+                    <i className='ri-question-line' />
                     <Typography color='text.primary'>FAQ</Typography>
-                  </MenuItem>
-                  <div className='flex items-center plb-2 pli-3'>
+                  </MenuItem> */}
+                  <div className='flex items-center plb-1.5 pli-4'>
                     <Button
                       fullWidth
                       variant='contained'
                       color='error'
                       size='small'
-                      endIcon={<i className='tabler-logout' />}
+                      endIcon={<i className='ri-logout-box-r-line' />}
+                      disabled={loading}
+                      loadingPosition='end'
                       onClick={handleUserLogout}
-                      sx={{ '& .MuiButton-endIcon': { marginInlineStart: 1.5 } }}
                     >
                       Logout
                     </Button>

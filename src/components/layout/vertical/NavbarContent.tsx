@@ -16,6 +16,7 @@ import UserDropdown from '@components/layout/shared/UserDropdown'
 
 // Util Imports
 import { verticalLayoutClasses } from '@layouts/utils/layoutClasses'
+import type { NavbarProps } from './Navbar'
 
 // Vars
 const shortcuts: ShortcutsType[] = [
@@ -105,19 +106,19 @@ const notifications: NotificationsType[] = [
   }
 ]
 
-const NavbarContent = () => {
+const NavbarContent = ({ dictionary, permission, user }: NavbarProps) => {
   return (
     <div className={classnames(verticalLayoutClasses.navbarContent, 'flex items-center justify-between gap-4 is-full')}>
       <div className='flex items-center gap-4'>
         <NavToggle />
-        <NavSearch />
+        <NavSearch dictionary={dictionary} permission={permission} />
       </div>
       <div className='flex items-center'>
         <LanguageDropdown />
         <ModeDropdown />
-        <ShortcutsDropdown shortcuts={shortcuts} />
-        <NotificationsDropdown notifications={notifications} />
-        <UserDropdown />
+        {/* <ShortcutsDropdown shortcuts={shortcuts} />
+        <NotificationsDropdown notifications={notifications} /> */}
+        <UserDropdown user={user} />
       </div>
     </div>
   )
