@@ -166,16 +166,16 @@ const NavSearch = ({ dictionary, permission }: NavbarProps) => {
       <div cmdk-footer=''>
         <div className='flex items-center gap-1'>
           <kbd>
-            <i className='ri-arrow-up-line text-base' />
+            <i className='tabler-arrow-up text-base' />
           </kbd>
           <kbd>
-            <i className='ri-arrow-down-line text-base' />
+            <i className='tabler-arrow-down text-base' />
           </kbd>
           <span>to navigate</span>
         </div>
         <div className='flex items-center gap-1'>
           <kbd>
-            <i className='ri-corner-down-left-line text-base' />
+            <i className='tabler-corner-down-left text-base' />
           </kbd>
           <span>to open</span>
         </div>
@@ -186,6 +186,7 @@ const NavSearch = ({ dictionary, permission }: NavbarProps) => {
       </div>
     )
   }
+
 
   // States
   const [open, setOpen] = useState(false)
@@ -261,12 +262,12 @@ const NavSearch = ({ dictionary, permission }: NavbarProps) => {
     <>
       {isBreakpointReached || settings.layout === 'horizontal' ? (
         <IconButton className='text-textPrimary' onClick={() => setOpen(true)}>
-          <i className='ri-search-line' />
+          <i className='tabler-search' />
         </IconButton>
       ) : (
         <div className='flex items-center gap-2 cursor-pointer' onClick={() => setOpen(true)}>
           <IconButton className='text-textPrimary' onClick={() => setOpen(true)}>
-            <i className='ri-search-line' />
+            <i className='tabler-search' />
           </IconButton>
           <div className='whitespace-nowrap select-none text-textDisabled'>Search ⌘K</div>
         </div>
@@ -275,10 +276,10 @@ const NavSearch = ({ dictionary, permission }: NavbarProps) => {
         <div className='flex items-center justify-between border-be pli-4 plb-3 gap-2'>
           <Title hidden />
           <Description hidden />
-          <i className='ri-search-line' />
+          <i className='tabler-search' />
           <CommandInput value={searchValue} onValueChange={setSearchValue} />
           <span className='text-textDisabled'>[esc]</span>
-          <i className='ri-close-line cursor-pointer' onClick={() => setOpen(false)} />
+          <i className='tabler-x cursor-pointer' onClick={() => setOpen(false)} />
         </div>
         <CommandList>
           {searchValue ? (
