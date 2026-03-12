@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 
 // MUI Imports
-import router from 'next/router'
+import { useRouter } from 'next/router'
 
 import useMediaQuery from '@mui/material/useMediaQuery'
 import { styled, useTheme } from '@mui/material/styles'
@@ -43,6 +43,7 @@ const NotAuthorized = ({ mode }: { mode: Mode }) => {
   const lightImg = '/images/pages/misc-mask-light.png'
 
   // Hooks
+  const router = useRouter()
   const theme = useTheme()
   const { lang: locale } = useParams()
   const hidden = useMediaQuery(theme.breakpoints.down('md'))
