@@ -194,8 +194,6 @@ export async function DELETE(req: NextRequest) {
             id: true,
             username: true,
             name: true,
-            email: true,
-            contact: true,
             image: true,
             role: true,
             createdAt: true,
@@ -206,13 +204,7 @@ export async function DELETE(req: NextRequest) {
     })
 
     if (role) {
-      if (
-        role.id != 'clxctojzb0000bhly4wy_role' &&
-        role.id != 'clxctojzb0000guest_role' &&
-        role.id != 'clxctojzb0000cashier_role' &&
-        role.id != 'clxctojzb0000stock_keeper_role' &&
-        role.id != 'clxctojzb0000delivery_role'
-      ) {
+      if (role.id != 'clxctojzb0000bhly4wy_role') {
         if (!role.users.length) {
           const deleteRole = await prisma.role.update({
             where: { id },
