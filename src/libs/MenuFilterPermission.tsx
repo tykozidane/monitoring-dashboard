@@ -54,7 +54,7 @@ export const MenuFilterPermission = (permission: MenuItem[], dictionary: Awaited
 
   if (!permission) return []
 
-  const menuSource: MenuItem[] = menuData(dictionary)
+  const menuSource: any[] = menuData(dictionary)
 
   return filterMenu(menuSource)
 }
