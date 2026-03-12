@@ -96,10 +96,10 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const res = await MiddlewareApi(req, async request => {
-    const { name, username, password, contact, email, status, roleId, image } = request
+    const { name, username, password, roleId, image } = request
 
     const cekDuplicate = await prisma.user.findFirst({
-      where: { OR: [{ username }, { email }, { contact }], AND: { deletedAt: null } }
+      where: { OR: [{ username }], AND: { deletedAt: null } }
     })
 
     if (cekDuplicate) {
@@ -127,14 +127,12 @@ export async function POST(req: NextRequest) {
           name: string
           username: string
           password: string
-          email: string
           roleId: string
           image?: string
         } = {
           name,
           username,
           password: bcryptjs.hashSync(password, 9),
-          email,
           roleId,
           image: pathFile?.path
         }
@@ -223,22 +221,7 @@ export async function DELETE(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   const res = await MiddlewareApi(req, async request => {
-    const {
-      id,
-      name,
-      username,
-      password,
-      contact,
-      email,
-      status,
-      roleId,
-      emailVerified,
-      changePassword,
-      newPassword,
-      companyActiveId,
-      image,
-      image_del
-    } = request
+    const { id, name, username, password, roleId, changePassword, newPassword, image, image_del } = request
 
     if (!id) {
       return {
