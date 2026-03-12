@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 
 // MUI Imports
+import router from 'next/router'
+
 import useMediaQuery from '@mui/material/useMediaQuery'
 import { styled, useTheme } from '@mui/material/styles'
 import Button from '@mui/material/Button'
@@ -14,6 +16,8 @@ import Typography from '@mui/material/Typography'
 import classnames from 'classnames'
 
 // Type Imports
+import { signOut } from 'next-auth/react'
+
 import type { Mode, SystemMode } from '@core/types'
 import type { Locale } from '@/configs/i18n'
 
@@ -44,6 +48,21 @@ const NotAuthorized = ({ mode }: { mode: Mode }) => {
   const hidden = useMediaQuery(theme.breakpoints.down('md'))
   const miscBackground = useImageVariant(mode, lightImg, darkImg)
 
+  const handleUserLogout = async () => {
+    try {
+      // Sign out from the app
+      await signOut({ redirect: false })
+
+      // Redirect to login page
+      router.push(getLocalizedUrl('/login', locale as Locale))
+    } catch (error) {
+      console.error(error)
+
+      // Show above error in a toast like following
+      // toastService.error((err as Error).message)
+    }
+  }
+
   return (
     <div className='flex items-center justify-center min-bs-[100dvh] relative p-6 overflow-x-hidden'>
       <div className='flex items-center flex-col text-center'>
@@ -56,6 +75,14 @@ const NotAuthorized = ({ mode }: { mode: Mode }) => {
         </div>
         <Button href={getLocalizedUrl('/', locale as Locale)} component={Link} variant='contained'>
           Back To Home
+        </Button>
+        <Button
+          variant='contained'
+          color='error'
+          endIcon={<i className='ri-logout-box-r-line' />}
+          onClick={handleUserLogout}
+        >
+          Logout
         </Button>
         <img
           alt='error-401-illustration'
