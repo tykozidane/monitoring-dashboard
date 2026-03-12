@@ -24,7 +24,6 @@ const getData = async (id?: string | null) => {
             username: true,
             name: true,
             image: true,
-            status: true,
             role: true,
             createdAt: true,
             updatedAt: true
@@ -198,7 +197,6 @@ export async function DELETE(req: NextRequest) {
             email: true,
             contact: true,
             image: true,
-            status: true,
             role: true,
             createdAt: true,
             updatedAt: true
