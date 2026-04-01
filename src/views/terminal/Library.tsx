@@ -396,7 +396,7 @@ const Library = (props: { permission: string[] }) => {
       header: () => <div className="text-right w-full pe-4">Action</div>,
       cell: ({ row }) => (
         <div className="flex justify-end pe-4">
-          <ActionButton terminal={row.original} />
+          {row.original.c_terminal_sn ? <ActionButton terminal={row.original} /> : '-'}
         </div>
       )
     })
