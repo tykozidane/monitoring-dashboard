@@ -10,8 +10,9 @@ import {
 } from '@mui/material'
 import classnames from 'classnames'
 import { toast } from 'react-toastify'
-import axios from 'axios'
 import { getSession } from 'next-auth/react'
+
+import { ApiAxios } from '@/libs/ApiAxios'
 
 const BASE_URL = process.env.API_MONITORING_URL;
 const API_AUTH = process.env.NEXT_PUBLIC_API_AUTH_JWT;
@@ -190,7 +191,7 @@ const SyncDetailView = ({ rowData, onClose, permission }: SyncDetailViewProps) =
     try {
       const session = await getSession();
 
-      const response = await axios.get(`${BASE_URL}/terminal/get-free-terminal`, {
+      const response = await ApiAxios.get(`${BASE_URL}/terminal/get-free-terminal`, {
         headers: {
           'Authorization': `Barer ${session?.user.accessToken}`,
           'Content-Type': 'application/json'
@@ -219,7 +220,7 @@ const SyncDetailView = ({ rowData, onClose, permission }: SyncDetailViewProps) =
     try {
       const session = await getSession();
 
-      const response = await axios.post(`${BASE_URL}/device/device-type`, { c_project: "KCI" }, {
+      const response = await ApiAxios.post(`${BASE_URL}/device/device-type`, { c_project: "KCI" }, {
         headers: {
           'Authorization': `Barer ${session?.user.accessToken}`,
           'Content-Type': 'application/json'
@@ -250,7 +251,7 @@ const SyncDetailView = ({ rowData, onClose, permission }: SyncDetailViewProps) =
 
       const session = await getSession();
 
-      const response = await axios.post(`${BASE_URL}/terminal/get-data-mapping-terminal-sync`, payload, {
+      const response = await ApiAxios.post(`${BASE_URL}/terminal/get-data-mapping-terminal-sync`, payload, {
         headers: {
           'Authorization': `Barer ${session?.user.accessToken}`,
           'Content-Type': 'application/json'
@@ -354,7 +355,7 @@ const SyncDetailView = ({ rowData, onClose, permission }: SyncDetailViewProps) =
     try {
       const session = await getSession();
 
-      const response = await axios.post(`${BASE_URL}/terminal/mapping-terminal`, payload, {
+      const response = await ApiAxios.post(`${BASE_URL}/terminal/mapping-terminal`, payload, {
         headers: {
           'Authorization': `Barer ${session?.user.accessToken}`,
           'Content-Type': 'application/json'
@@ -497,7 +498,7 @@ const SyncDetailView = ({ rowData, onClose, permission }: SyncDetailViewProps) =
 
       const session = await getSession();
 
-      const response = await axios.post(`${BASE_URL}/device/create-device-type`, payload, {
+      const response = await ApiAxios.post(`${BASE_URL}/device/create-device-type`, payload, {
         headers: {
           'Authorization': `Barer ${session?.user.accessToken}`,
           'Content-Type': 'application/json'

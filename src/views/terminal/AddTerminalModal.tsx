@@ -10,9 +10,10 @@ import {
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import axios from 'axios';
 import { toast } from 'react-toastify';
 import { getSession } from 'next-auth/react';
+
+import { ApiAxios } from '@/libs/ApiAxios';
 
 // Fix for default Leaflet icon in React
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -113,7 +114,7 @@ export const AddTerminalModal = ({
         try {
           const session = await getSession();
 
-          const response = await axios.get(`${BASE_URL}/project/get-all-project`, {
+          const response = await ApiAxios.get(`${BASE_URL}/project/get-all-project`, {
             headers: { 'Authorization': `Barer ${session?.user.accessToken}`, 'Content-Type': 'application/json' }
           });
 
@@ -145,7 +146,7 @@ export const AddTerminalModal = ({
       try {
         const session = await getSession();
 
-        const response = await axios.get(`${BASE_URL}/station/mini?c_project=${formData.c_project}`, {
+        const response = await ApiAxios.get(`${BASE_URL}/station/mini?c_project=${formData.c_project}`, {
           headers: { 'Authorization': `Barer ${session?.user.accessToken}`, 'Content-Type': 'application/json' }
         });
 
@@ -176,7 +177,7 @@ export const AddTerminalModal = ({
         try {
           const session = await getSession();
 
-          const response = await axios.get(`${BASE_URL}/terminal/type?c_project=${formData.c_project}`, {
+          const response = await ApiAxios.get(`${BASE_URL}/terminal/type?c_project=${formData.c_project}`, {
             headers: { 'Authorization': `Barer ${session?.user.accessToken}`, 'Content-Type': 'application/json' }
           });
 
@@ -203,7 +204,7 @@ export const AddTerminalModal = ({
         try {
           const session = await getSession();
 
-          const response = await axios.get(
+          const response = await ApiAxios.get(
             `${BASE_URL}/terminal/spare-gate?c_project=${formData.c_project}&c_station=${formData.c_station}`,
             {
               headers: { 'Authorization': `Barer ${session?.user.accessToken}`, 'Content-Type': 'application/json' }
@@ -236,7 +237,7 @@ export const AddTerminalModal = ({
       setIsSearching(true);
 
       try {
-        const response = await axios.get(`https://nominatim.openstreetmap.org/search?format=json&q=${inputValue}&limit=5`);
+        const response = await ApiAxios.get(`https://nominatim.openstreetmap.org/search?format=json&q=${inputValue}&limit=5`);
 
         if (active && response.data) {
           setLocationOptions(response.data);
@@ -290,7 +291,7 @@ export const AddTerminalModal = ({
     try {
       const session = await getSession();
 
-      const resp = await axios.post(`${BASE_URL}/terminal/add-terminal`, formData, {
+      const resp = await ApiAxios.post(`${BASE_URL}/terminal/add-terminal`, formData, {
         headers: {
           'Authorization': `Barer ${session?.user.accessToken}`,
           'Content-Type': 'application/json'

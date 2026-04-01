@@ -25,7 +25,6 @@ import {
   Autocomplete
 } from '@mui/material';
 import { useDropzone } from 'react-dropzone';
-import axios from 'axios';
 import { toast } from 'react-toastify';
 import {
   IconCloudUpload,
@@ -42,6 +41,8 @@ import {
 } from '@tabler/icons-react';
 import { format } from 'date-fns';
 import { getSession } from 'next-auth/react';
+
+import { ApiAxios } from '@/libs/ApiAxios';
 
 // --- Tipe Data Sesuai Response API ---
 interface AppHistory {
@@ -106,7 +107,7 @@ export default function AppVersionManager({ permission }: { permission: string[]
     try {
       const session = await getSession();
 
-      const response = await axios.get(`${BASE_URL}/app/list-app-update`, {
+      const response = await ApiAxios.get(`${BASE_URL}/app/list-app-update`, {
         headers: { 'Authorization': `Barer ${session?.user.accessToken}`, 'Content-Type': 'application/json' },
       });
 
@@ -132,7 +133,7 @@ export default function AppVersionManager({ permission }: { permission: string[]
         const session = await getSession();
 
         try {
-          const response = await axios.get(`${BASE_URL}/project/get-all-project`, {
+          const response = await ApiAxios.get(`${BASE_URL}/project/get-all-project`, {
             headers: {
               'Authorization': `Barer ${session?.user.accessToken}`,
               'Content-Type': 'application/json'
@@ -161,7 +162,7 @@ export default function AppVersionManager({ permission }: { permission: string[]
         try {
           const session = await getSession();
 
-          const response = await axios.get(`${BASE_URL}/terminal/type?c_project=${project}`, {
+          const response = await ApiAxios.get(`${BASE_URL}/terminal/type?c_project=${project}`, {
             headers: {
               'Authorization': `Barer ${session?.user.accessToken}`,
               'Content-Type': 'application/json'
@@ -287,7 +288,7 @@ export default function AppVersionManager({ permission }: { permission: string[]
     try {
       const session = await getSession();
 
-      const response = await axios.post(`${BASE_URL}/app/upload`, formData, {
+      const response = await ApiAxios.post(`${BASE_URL}/app/upload`, formData, {
         headers: { 'Authorization': `Barer ${session?.user.accessToken}`, 'Content-Type': 'multipart/form-data' },
       });
 

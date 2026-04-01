@@ -15,7 +15,6 @@ import {
   Grow, LinearProgress, Chip, IconButton, Tooltip
 } from '@mui/material'
 import classnames from 'classnames'
-import axios from 'axios'
 import { toast } from 'react-toastify'
 
 import { getSession } from 'next-auth/react';
@@ -23,6 +22,7 @@ import { getSession } from 'next-auth/react';
 import tableStyles from '@core/styles/table.module.css'
 import { DebouncedInput, fuzzyFilter } from '@/utils/helper'
 import SyncDetailView from './SyncDetailView'
+import { ApiAxios } from '@/libs/ApiAxios';
 
 const BASE_URL = process.env.API_MONITORING_URL;
 
@@ -46,7 +46,7 @@ const Sync = ({ onUpdateCount, permission }: SyncProps) => {
     const session = await getSession();
 
     try {
-      const response = await axios({
+      const response = await ApiAxios({
         method: 'GET',
         url: `${BASE_URL}/terminal/get-sync-terminal-status`,
         headers: {

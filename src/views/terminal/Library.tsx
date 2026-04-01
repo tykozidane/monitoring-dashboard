@@ -4,7 +4,6 @@ import { useEffect, useState, useMemo, Fragment } from 'react'
 
 import dynamic from 'next/dynamic'
 
-import axios from 'axios'
 import { toast } from 'react-toastify'
 import classnames from 'classnames'
 import type { ExpandedState } from '@tanstack/react-table';
@@ -23,6 +22,7 @@ import { getSession } from 'next-auth/react'
 
 import tableStyles from '@core/styles/table.module.css'
 import { DebouncedInput, fuzzyFilter } from '@/utils/helper'
+import { ApiAxios } from '@/libs/ApiAxios'
 
 // Definisi Interface (Disesuaikan agar tidak error TS)
 interface ProjectProps {
@@ -84,7 +84,7 @@ const ActionButton = ({ terminal }: { terminal: DataWithAction }) => {
     setIsDownloading(true);
 
     try {
-      const response = await axios.post(`${BASE_URL}/terminal/get-terminal-config`, {
+      const response = await ApiAxios.post(`${BASE_URL}/terminal/get-terminal-config`, {
         c_project: terminal.c_project,
         c_terminal_sn: terminal.c_terminal_sn
       }, {
@@ -162,7 +162,7 @@ const Library = (props: { permission: string[] }) => {
     const session = await getSession();
 
     try {
-      const response = await axios.get(`${BASE_URL}/project/get-all-project`, {
+      const response = await ApiAxios.get(`${BASE_URL}/project/get-all-project`, {
         headers: {
           'Authorization': `Barer ${session?.user.accessToken}`,
           'Content-Type': 'application/json'
@@ -207,7 +207,7 @@ const Library = (props: { permission: string[] }) => {
     const session = await getSession();
 
 
-    axios.get(`${BASE_URL}/station/mini?c_project=${currentProject}`, {
+    ApiAxios.get(`${BASE_URL}/station/mini?c_project=${currentProject}`, {
       headers: { 'Authorization': `Barer ${session?.user.accessToken}`, 'Content-Type': 'application/json' },
     })
       .then(res => {
@@ -264,7 +264,7 @@ const Library = (props: { permission: string[] }) => {
 
     const session = await getSession();
 
-    axios.post(`${BASE_URL}/output/terminal-by-station`, payload, {
+    ApiAxios.post(`${BASE_URL}/output/terminal-by-station`, payload, {
       headers: { 'Authorization': `Barer ${session?.user.accessToken}`, 'Content-Type': 'application/json' }
     })
       .then(res => {
@@ -312,7 +312,7 @@ const Library = (props: { permission: string[] }) => {
     try {
       const session = await getSession();
 
-      const response = await axios.get(`${BASE_URL}/device/get-device-by-terminal`, {
+      const response = await ApiAxios.get(`${BASE_URL}/device/get-device-by-terminal`, {
         params: {
           c_terminal_sn: sn,
           c_project: row.c_project ?? 'KCI'

@@ -28,10 +28,9 @@ import PerfectScrollbar from 'react-perfect-scrollbar'
 // Types Imports
 import { CircularProgress } from '@mui/material'
 
-import axios from 'axios'
-
 // Components Imports
 import CustomAvatar from '@core/components/mui/Avatar'
+import { ApiAxios } from '@/libs/ApiAxios'
 
 type Props = {
   backdropOpen: boolean
@@ -162,7 +161,7 @@ const VehicleTracking = ({
     try {
       setloading(true);
 
-      const response = await axios.post('http://192.168.62.90:4000/api/v1/terminal/get-terminal-config', {
+      const response = await ApiAxios.post('http://192.168.62.90:4000/api/v1/terminal/get-terminal-config', {
         "c_project": Terminal.c_project,
         "c_terminal_sn": Terminal.c_terminal_sn
       }, {

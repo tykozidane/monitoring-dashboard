@@ -17,8 +17,6 @@ import 'react-leaflet-cluster/dist/assets/MarkerCluster.css'
 // @ts-ignore
 import 'react-leaflet-cluster/dist/assets/MarkerCluster.Default.css'
 
-import axios from 'axios';
-
 import L from 'leaflet';
 
 // @ts-ignore
@@ -36,6 +34,7 @@ import FullscreenModal from './FullscreenModal';
 import SearchControl from './SearchControl';
 import MapWithPlane from './MapWithPlane';
 import BoundsHandler from './BoundsHandler';
+import { ApiAxios } from '@/libs/ApiAxios';
 
 const MeasureControl = dynamic(() => import('./MeasureControl'), { ssr: false });
 
@@ -294,7 +293,7 @@ const MapComponent = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/pages/monit/station');
+        const response = await ApiAxios.get('http://localhost:3000/api/pages/monit/station');
 
         setData(response.data.data);
       } catch (error) {
@@ -315,7 +314,7 @@ const MapComponent = () => {
     console.log("Handle", item)
 
     try {
-      const response = await axios.post('/api/v1/output/detail-device', {
+      const response = await ApiAxios.post('/api/v1/output/detail-device', {
         c_device: item.c_device,
         c_project: item.c_project
       });
@@ -370,7 +369,7 @@ const MapComponent = () => {
 
       const fetchData = async () => {
         try {
-          const response = await axios.post('http://localhost:3000/api/pages/monit/alat', {
+          const response = await ApiAxios.post('http://localhost:3000/api/pages/monit/alat', {
             c_station: dataFilter.find((item) => item.c_station)?.c_station
           });
 
