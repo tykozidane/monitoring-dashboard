@@ -40,6 +40,7 @@ interface StationProps {
 interface DataWithAction {
   c_project: string;
   c_station: string;
+  n_station: string;
   c_terminal_sn: string;
   c_terminal_type: string;
   c_terminal_01?: string;
@@ -354,6 +355,14 @@ const Library = (props: { permission: string[] }) => {
             </Typography>
           </div>
         </div>
+      )
+    }),
+    columnHelper.accessor('n_station', {
+      header: 'Station',
+      cell: ({ row }) => (
+        <Typography variant="body2">
+          {row.original.n_station || '-'}
+        </Typography>
       )
     }),
     columnHelper.accessor('c_terminal_sn', {

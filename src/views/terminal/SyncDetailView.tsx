@@ -49,6 +49,7 @@ interface TerminalProps {
   c_station?: string | null
   n_terminal_name: string
   devices: DeviceProps[]
+  n_station: string
 }
 
 export interface SyncSubItem {
@@ -130,6 +131,7 @@ const SyncDetailView = ({ rowData, onClose, permission }: SyncDetailViewProps) =
 
   const [mappedDevices, setMappedDevices] = useState<Record<string, DeviceProps | null>>({})
 
+  const [selectMapping, setselectMapping] = useState<SyncSubItem>()
   const [tempFormOption, setTempFormOption] = useState<selectDevicesOption | null>(null)
   const [tempDirection, setTempDirection] = useState<number>(0)
 
@@ -383,12 +385,14 @@ const SyncDetailView = ({ rowData, onClose, permission }: SyncDetailViewProps) =
     }
   }
 
-  const handleEditClick = (id: string) => {
+  const handleEditClick = (id: string, sub_serial_number: string | null) => {
     setEditingItemId(id)
     setEditDialogOpen(true)
     setLoadingConfig(true)
 
     const existingMap = mappedDevices[id];
+
+    setselectMapping(parsedSyncItems.find(item => item.sub_serial_number === sub_serial_number));
 
     if (existingMap) {
       const matchingOption = optionDevice.find(opt => opt.c_device === existingMap.c_device);
@@ -590,7 +594,7 @@ const SyncDetailView = ({ rowData, onClose, permission }: SyncDetailViewProps) =
             </div>
             <div className="absolute top-3.5 right-2 group-hover:opacity-100 transition-opacity">
               <Tooltip title="Edit Mapping">
-                <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); handleEditClick(itemId); }} sx={{ bgcolor: 'background.paper', boxShadow: 1 }}>
+                <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); handleEditClick(itemId, sourceItem.sub_serial_number); }} sx={{ bgcolor: 'background.paper', boxShadow: 1 }}>
                   <i className="tabler-pencil text-lg" />
                 </IconButton>
               </Tooltip>
@@ -639,7 +643,7 @@ const SyncDetailView = ({ rowData, onClose, permission }: SyncDetailViewProps) =
             </div>
             <div className="absolute top-2 right-2 z-20">
               <Tooltip title="Edit this existing device mapping">
-                <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); handleEditClick(dev.i_id); }} sx={{ bgcolor: 'background.paper', boxShadow: 1 }}>
+                <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); handleEditClick(dev.i_id, dev.sub_item_serial_code); }} sx={{ bgcolor: 'background.paper', boxShadow: 1 }}>
                   <i className="tabler-pencil text-sm" />
                 </IconButton>
               </Tooltip>
@@ -704,7 +708,7 @@ const SyncDetailView = ({ rowData, onClose, permission }: SyncDetailViewProps) =
               <Autocomplete
                 options={terminalOptions}
                 getOptionKey={(o) => o.i_id}
-                getOptionLabel={(o) => `${o.n_terminal_name} ${o.c_terminal_sn ? `(${o.c_terminal_sn})` : '(No SN)'}`}
+                getOptionLabel={(o) => `${o.n_terminal_name} ${o.n_station} ${o.c_terminal_sn ? `(${o.c_terminal_sn})` : ''}`}
                 value={selectedTerminal}
                 onChange={(_, v) => setSelectedTerminal(v)}
                 disabled={isLocked}
@@ -737,7 +741,7 @@ const SyncDetailView = ({ rowData, onClose, permission }: SyncDetailViewProps) =
       </Grid>
 
       <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle className='flex justify-between items-center'>Map to Device Definition<IconButton onClick={() => setEditDialogOpen(false)} size='small'><i className='tabler-x' /></IconButton></DialogTitle>
+        <DialogTitle className='flex justify-between items-center'>MAP FOR {selectMapping?.sub_item_type} ({selectMapping?.sub_serial_number})<IconButton onClick={() => setEditDialogOpen(false)} size='small'><i className='tabler-x' /></IconButton></DialogTitle>
         <DialogContent dividers>
           {loadingConfig ? <div className="flex justify-center p-5"><CircularProgress /></div> : (
             <div className="flex flex-col gap-4 pt-1">
@@ -804,9 +808,54 @@ const SyncDetailView = ({ rowData, onClose, permission }: SyncDetailViewProps) =
                       )}
                     </li>
                   );
+                }} renderInput={(params) => {
+                  const isSelected = tempFormOption && !tempFormOption.inputValue && tempFormOption.c_device;
+
+                  return (
+                    <TextField
+                      {...params}
+                      label="Select Device Definition"
+                      placeholder="Select Device Definition..."
+                      InputProps={{
+                        ...params.InputProps,
+                        startAdornment: (
+                          <>
+                            {!isSelected && (
+                              <div className="flex items-center justify-center w-8 h-8 ml-1 text-gray-400">
+                                <i className="tabler-search text-lg" />
+                              </div>
+                            )}
+
+                            {params.InputProps.startAdornment}
+
+                            {isSelected && (
+                              <div className="absolute left-[14px] top-1/2 -translate-y-1/2 flex flex-col pointer-events-none z-10 w-[calc(100%-60px)]">
+                                <Typography variant="body2" className="truncate leading-tight">
+                                  {tempFormOption.n_device_type}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary" className="font-mono leading-none truncate">
+                                  {tempFormOption.c_device}
+                                </Typography>
+                              </div>
+                            )}
+                          </>
+                        ),
+                      }}
+                      sx={{
+                        '& .MuiAutocomplete-input': {
+                          paddingLeft: !isSelected ? '4px !important' : 'inherit',
+                          color: isSelected ? 'transparent' : 'inherit',
+                          '&::selection': {
+                            backgroundColor: isSelected ? 'transparent' : 'auto',
+                            color: isSelected ? 'transparent' : 'auto',
+                          }
+                        }
+                      }}
+                    />
+                  );
                 }}
-                renderInput={(p) => <TextField {...p} label="Select Device Definition" />}
                 isOptionEqualToValue={(option, value) => option.c_device === value.c_device}
+
               />
               <TextField select label="Direction" value={tempDirection} onChange={(e) => setTempDirection(Number(e.target.value))} size="small" variant="outlined">
                 <MenuItem value={0}>No Direction</MenuItem>

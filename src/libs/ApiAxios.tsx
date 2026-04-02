@@ -5,7 +5,7 @@ import axios from 'axios'
 import { signOut } from 'next-auth/react';
 
 export const ApiAxios = axios.create({
-  baseURL: process.env.API_MONITORING_URL,
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
 })
 
 /* RESPONSE */
