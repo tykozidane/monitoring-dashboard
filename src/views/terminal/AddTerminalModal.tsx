@@ -276,6 +276,7 @@ export const AddTerminalModal = ({
     if (!formData.c_project) newErrors.c_project = "Project is required";
     if (!formData.c_station) newErrors.c_station = "Station is required";
     if (!formData.n_terminal_name) newErrors.n_terminal_name = "Terminal Name is required";
+    if (!formData.c_terminal_01) newErrors.c_terminal_01 = "Terminal 01 is required";
     if (!formData.n_lat) newErrors.n_lat = "Latitude is required";
     if (!formData.n_lng) newErrors.n_lng = "Longitude is required";
 
@@ -481,7 +482,7 @@ export const AddTerminalModal = ({
 
             {/* 4. Terminal Name */}
             <Grid size={{ xs: 12, sm: 6 }}>
-              {isGateType ? (
+              {isGateType && spareGates.length ? (
                 <Autocomplete
                   options={spareGates}
                   loading={loadingSpareGates}
@@ -535,11 +536,11 @@ export const AddTerminalModal = ({
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
-                label="Terminal 01"
+                label="Terminal 01 *"
                 name="c_terminal_01"
                 value={formData.c_terminal_01}
                 onChange={handleInputChange}
-                InputProps={{ readOnly: isGateType }}
+                InputProps={{ readOnly: isGateType && !!spareGates.length }}
                 variant={isGateType ? "filled" : "outlined"}
                 error={!!errors.c_terminal_01}
                 helperText={errors.c_terminal_01}
@@ -554,7 +555,7 @@ export const AddTerminalModal = ({
                 name="c_terminal_02"
                 value={formData.c_terminal_02 || ""}
                 onChange={handleInputChange}
-                InputProps={{ readOnly: isGateType }}
+                InputProps={{ readOnly: isGateType && !!spareGates.length }}
                 variant={isGateType ? "filled" : "outlined"}
               />
             </Grid>

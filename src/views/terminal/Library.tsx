@@ -46,6 +46,7 @@ interface DataWithAction {
   c_terminal_01?: string;
   c_terminal_02?: string;
   status?: string;
+  n_terminal_name?: string
 
   // Tambahkan field lain sesuai kebutuhan
 }
@@ -370,6 +371,14 @@ const Library = (props: { permission: string[] }) => {
       cell: ({ row }) => (
         <Typography variant="body2" className="font-mono">
           {row.original.c_terminal_sn || '-'}
+        </Typography>
+      )
+    }),
+    columnHelper.accessor('n_terminal_name', {
+      header: 'Terminal name',
+      cell: ({ row }) => (
+        <Typography variant="body2">
+          {row.original.n_terminal_name || '-'}
         </Typography>
       )
     }),
