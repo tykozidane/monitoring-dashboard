@@ -2,6 +2,8 @@ services:
   monitoring-dashboard:
     build: .
     container_name: monitoring-dashboard
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "4003:4003"
     restart: always
