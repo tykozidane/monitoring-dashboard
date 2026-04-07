@@ -6,7 +6,7 @@ RUN npm install -g pnpm
 
 COPY package.json pnpm-lock.yaml* ./
 # Copy prisma schema agar bisa generate client
-COPY prisma ./prisma/
+COPY prisma ./src/prisma/
 
 RUN pnpm config set node-linker hoisted
 RUN pnpm install --frozen-lockfile --ignore-scripts
