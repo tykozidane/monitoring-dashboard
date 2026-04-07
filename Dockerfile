@@ -2,32 +2,21 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 
-# Instal pnpm di dalam container
 RUN npm install -g pnpm
 
-# Copy file konfigurasi pnpm
 COPY package.json pnpm-lock.yaml* ./
-
-# Instal dependencies menggunakan pnpm
-RUN pnpm install --frozen-lockfile
 
 # Stage 2: Build aplikasi
 FROM node:20-alpine AS builder
 WORKDIR /app
 RUN npm install -g pnpm
+
+# Ambil node_modules dari stage deps
 COPY --from=deps /app/node_modules ./node_modules
+# Sekarang copy SEMUA file (termasuk folder src)
 COPY . .
-ENV NEXT_TELEMETRY_DISABLED 1
+
+# Sekarang jalankan build icons secara manual karena tadi di-ignore
+# atau biarkan pnpm run build yang mengurusnya jika sudah masuk di script build
+RUN pnpm run build:icons
 RUN pnpm run build
-
-# Stage 3: Runner (Tetap sama seperti sebelumnya)
-FROM node:20-alpine AS runner
-WORKDIR /app
-ENV NODE_ENV production
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-
-EXPOSE 4003
-CMD ["npm", "start"]
