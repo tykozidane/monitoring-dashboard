@@ -1,0 +1,9 @@
+services:
+  monitoring-dashboard:
+    build: .
+    container_name: monitoring-dashboard
+    ports:
+      - "4003:4003"
+    restart: always
+    environment:
+      - NODE_ENV=production
