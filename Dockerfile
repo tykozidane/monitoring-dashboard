@@ -45,4 +45,4 @@ COPY --from=builder /app/package.json ./package.json
 # Expose port sesuai script "start" di package.json
 EXPOSE 4003
 
-CMD ["pnpm", "start"]
+CMD ["npm", "start"]
