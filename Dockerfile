@@ -6,7 +6,7 @@ RUN npm install -g pnpm
 
 COPY package.json pnpm-lock.yaml* ./
 # Copy prisma schema agar bisa generate client
-COPY prisma ./src/prisma/
+COPY src/prisma ./prisma/
 
 RUN pnpm config set node-linker hoisted
 RUN pnpm install --frozen-lockfile --ignore-scripts
@@ -45,4 +45,4 @@ COPY --from=builder /app/package.json ./package.json
 # Expose port sesuai script "start" di package.json
 EXPOSE 4003
 
-CMD ["npx", "pnpm", "start"]
+CMD ["pnpm", "start"]
