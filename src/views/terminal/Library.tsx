@@ -15,7 +15,8 @@ import {
 import {
   Button, TextField, Typography, TablePagination, CircularProgress,
   Grow, LinearProgress, Box, Autocomplete, Chip, Table, TableBody,
-  TableCell, TableHead, TableRow
+  TableCell, TableHead, TableRow, Dialog, DialogTitle, DialogContent,
+  DialogContentText, DialogActions
 } from '@mui/material'
 
 import { getSession } from 'next-auth/react'
@@ -24,7 +25,7 @@ import tableStyles from '@core/styles/table.module.css'
 import { DebouncedInput, fuzzyFilter } from '@/utils/helper'
 import { ApiAxios } from '@/libs/ApiAxios'
 
-// Definisi Interface (Disesuaikan agar tidak error TS)
+// Interface Definitions
 interface ProjectProps {
   c_project: string;
   n_project: string;
@@ -46,9 +47,7 @@ interface DataWithAction {
   c_terminal_01?: string;
   c_terminal_02?: string;
   status?: string;
-  n_terminal_name?: string
-
-  // Tambahkan field lain sesuai kebutuhan
+  n_terminal_name?: string;
 }
 
 interface DeviceDetail {
@@ -78,8 +77,10 @@ const columnHelper = createColumnHelper<DataWithAction>()
 const BASE_URL = process.env.API_MONITORING_URL;
 const API_AUTH = process.env.NEXT_PUBLIC_API_AUTH_JWT;
 
-const ActionButton = ({ terminal }: { terminal: DataWithAction }) => {
+const ActionButton = ({ terminal, onSuccess }: { terminal: DataWithAction, onSuccess: () => void }) => {
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isReleasing, setIsReleasing] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const handleDownload = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -110,26 +111,99 @@ const ActionButton = ({ terminal }: { terminal: DataWithAction }) => {
       a.remove();
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      toast.error("Gagal mengunduh config");
+      toast.error("Failed to download config");
     } finally {
       setIsDownloading(false);
     }
   }
 
+  const handleRelease = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsReleasing(true);
+
+    try {
+      const session = await getSession();
+
+      await ApiAxios.post(`${BASE_URL}/terminal/release-terminal`, {
+        c_project: terminal.c_project,
+        c_terminal_sn: terminal.c_terminal_sn
+      }, {
+        headers: {
+          'Authorization': `Bearer ${session?.user?.accessToken}`,
+          'Content-Type': 'application/json'
+        },
+      });
+
+      toast.success(`Terminal ${terminal.c_terminal_sn} released successfully.`);
+      setIsConfirmOpen(false);
+      onSuccess(); // Trigger refresh table
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to release terminal.");
+    } finally {
+      setIsReleasing(false);
+    }
+  }
+
   return (
-    <Button
-      variant='outlined'
-      size='small'
-      color='primary'
-      disabled={isDownloading}
-      onClick={handleDownload}
-      className="action-btn"
-    >
-      {isDownloading ? <CircularProgress size={16} color="inherit" /> : 'Config'}
-    </Button>
+    <div className="flex gap-2 justify-end">
+      <Button
+        variant='outlined'
+        size='small'
+        color='primary'
+        disabled={isDownloading || isReleasing}
+        onClick={handleDownload}
+        className="action-btn"
+      >
+        {isDownloading ? <CircularProgress size={16} color="inherit" /> : 'Config'}
+      </Button>
+
+      <Button
+        variant='outlined'
+        size='small'
+        color='error'
+        disabled={isReleasing || isDownloading}
+        onClick={(e) => { e.stopPropagation(); setIsConfirmOpen(true); }}
+        className="action-btn"
+      >
+        {isReleasing ? <CircularProgress size={16} color="inherit" /> : 'Release'}
+      </Button>
+
+      {/* Confirmation Modal for S/N Release */}
+      <Dialog
+        open={isConfirmOpen}
+        onClose={(e: React.MouseEvent) => { e.stopPropagation(); setIsConfirmOpen(false); }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <DialogTitle>Confirm Terminal Release</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to release the terminal with S/N <strong>{terminal.c_terminal_sn}</strong>?
+            This action cannot be undone and will permanently remove the S/N.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={(e) => { e.stopPropagation(); setIsConfirmOpen(false); }}
+            color="inherit"
+            disabled={isReleasing}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleRelease}
+            color="error"
+            variant="contained"
+            disabled={isReleasing}
+            autoFocus
+          >
+            {isReleasing ? <CircularProgress size={20} color="inherit" /> : 'Yes, Release'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </div>
   )
 }
-
 
 const Library = (props: { permission: string[] }) => {
   const [data, setData] = useState<DataWithAction[]>([])
@@ -150,7 +224,6 @@ const Library = (props: { permission: string[] }) => {
   const [projects, setProjects] = useState<ProjectProps[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(false);
 
-  // Initial load: Fetch Projects only
   useEffect(() => {
     let isMounted = true;
 
@@ -166,7 +239,7 @@ const Library = (props: { permission: string[] }) => {
     try {
       const response = await ApiAxios.get(`${BASE_URL}/project/get-all-project`, {
         headers: {
-          'Authorization': `Barer ${session?.user.accessToken}`,
+          'Authorization': `Bearer ${session?.user.accessToken}`,
           'Content-Type': 'application/json'
         }
       });
@@ -176,30 +249,23 @@ const Library = (props: { permission: string[] }) => {
 
         setProjects(projectData);
 
-
-        // Opsional: Set default project active jika belum ada
         if (projectData.length > 0 && !projectsActive) {
           setprojectsActive(projectData[0].c_project);
         }
       }
     } catch (error) {
       console.error("Error fetching projects", error);
-      if (isMounted) toast.error("Gagal memuat data project");
+      if (isMounted) toast.error("Failed to load project data");
     } finally {
       if (isMounted) setLoadingProjects(false);
     }
   };
 
-  // ----------------------------------------------------------------
-  // PERBAIKAN DI SINI: Fetch Station Data
-  // ----------------------------------------------------------------
   const fetchStationData = async (isMounted: boolean) => {
-    // 1. Trigger loading state DI SINI agar UI langsung update saat ganti project
     if (isMounted) setLoadingStation(true);
 
     const currentProject = projectsActive ?? projects[0]?.c_project;
 
-    // Guard clause jika project belum terload
     if (!currentProject) {
       if (isMounted) setLoadingStation(false);
 
@@ -208,15 +274,14 @@ const Library = (props: { permission: string[] }) => {
 
     const session = await getSession();
 
-
     ApiAxios.get(`${BASE_URL}/station/mini?c_project=${currentProject}`, {
-      headers: { 'Authorization': `Barer ${session?.user.accessToken}`, 'Content-Type': 'application/json' },
+      headers: { 'Authorization': `Bearer ${session?.user.accessToken}`, 'Content-Type': 'application/json' },
     })
       .then(res => {
         if (!isMounted) return;
 
         const newStation = res.data.data ?? [];
-        const isErrorOrEmpty = res.data.data?.code; // Cek logic error API spesifik Anda
+        const isErrorOrEmpty = res.data.data?.code;
 
         if (isErrorOrEmpty) {
           setStationData([]);
@@ -228,9 +293,6 @@ const Library = (props: { permission: string[] }) => {
           }, ...newStation];
 
           setStationData(formattedStations);
-
-          // 2. Reset station active ke "ALL" ketika project berubah
-          // Ini mencegah query terminal menggunakan station ID dari project sebelumnya
           setStationActive("ALL");
         }
       })
@@ -238,7 +300,7 @@ const Library = (props: { permission: string[] }) => {
         console.error(err);
 
         if (isMounted) {
-          toast.error("Gagal terhubung ke server API");
+          toast.error("Failed to connect to API server");
           setStationData([]);
         }
       })
@@ -248,52 +310,48 @@ const Library = (props: { permission: string[] }) => {
   }
 
   const fetchTerminalData = async () => {
-    // Jangan fetch jika stationActive belum diset (misal saat switching project)
     if (!stationActive) return;
 
     setLoading(true)
     const dataStation = stationData.find(s => s.c_station === stationActive)
 
-    // Jika user memilih "ALL", kita mungkin perlu logic khusus atau ambil project name dari state projects
     const projectName = dataStation?.n_project_name ??
       projects.find(p => p.c_project === projectsActive)?.n_project ??
       'KCI';
 
     const payload = {
-      c_station: stationActive, // Bisa 'ALL' atau kode station
+      c_station: stationActive,
       c_project: projectName
     };
 
     const session = await getSession();
 
     ApiAxios.post(`${BASE_URL}/output/terminal-by-station`, payload, {
-      headers: { 'Authorization': `Barer ${session?.user.accessToken}`, 'Content-Type': 'application/json' }
+      headers: { 'Authorization': `Bearer ${session?.user.accessToken}`, 'Content-Type': 'application/json' }
     })
       .then(res => {
         setData(res.data.data?.code ? [] : res.data.data ?? [])
       })
       .catch(err => {
         console.error(err);
-        toast.error("Gagal load terminal")
+        toast.error("Failed to load terminals")
       })
       .finally(() => {
         setLoading(false)
       })
   }
 
-  // Effect untuk Fetch Station saat Project berubah
   useEffect(() => {
     let isMounted = true;
 
-    // Hanya fetch jika ada project yang aktif/tersedia
     if (projectsActive || projects.length > 0) {
       fetchStationData(isMounted)
     }
 
-    return () => { isMounted = false };
-  }, [projectsActive, projects]) // Dependency array sudah benar
 
-  // Effect untuk Fetch Terminal saat Station berubah
+    return () => { isMounted = false };
+  }, [projectsActive, projects])
+
   useEffect(() => {
     let isMounted = true;
 
@@ -301,8 +359,9 @@ const Library = (props: { permission: string[] }) => {
       fetchTerminalData();
     }
 
+
     return () => { isMounted = false };
-  }, [stationActive]) // Cukup stationActive sebagai trigger utama fetch data terminal
+  }, [stationActive])
 
   const fetchTerminalDevices = async (row: DataWithAction) => {
     const sn = row.c_terminal_sn;
@@ -320,7 +379,7 @@ const Library = (props: { permission: string[] }) => {
           c_project: row.c_project ?? 'KCI'
         },
         headers: {
-          'Authorization': `Barer ${session?.user.accessToken}`,
+          'Authorization': `Bearer ${session?.user.accessToken}`,
           'Content-Type': 'application/json'
         }
       })
@@ -414,11 +473,16 @@ const Library = (props: { permission: string[] }) => {
       header: () => <div className="text-right w-full pe-4">Action</div>,
       cell: ({ row }) => (
         <div className="flex justify-end pe-4">
-          {row.original.c_terminal_sn ? <ActionButton terminal={row.original} /> : '-'}
+          {row.original.c_terminal_sn ?
+            <ActionButton
+              terminal={row.original}
+              onSuccess={() => fetchTerminalData()}
+            /> : '-'}
         </div>
       )
     })
-  ], [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [stationActive, stationData, projectsActive, projects])
 
   const table = useReactTable({
     data, columns, state: { rowSelection, globalFilter, expanded },
@@ -434,9 +498,6 @@ const Library = (props: { permission: string[] }) => {
         <div className='text-left h3 flex flex-col sm:flex-row gap-4 w-1/2 max-sm:w-full'>
           <Autocomplete
             disablePortal
-
-            // PERBAIKAN 1: disableClearable hanya aktif jika ada nilai yang terpilih
-            // Ini mencegah error TypeScript saat value masih null
             disableClearable={!!projectsActive}
             options={projects}
             loading={loadingProjects}
@@ -444,9 +505,6 @@ const Library = (props: { permission: string[] }) => {
             renderInput={(params) => <TextField {...params} label="Project" />}
             className='min-w-28'
             size='small'
-
-            // PERBAIKAN 2: Gunakan "?? null". Jika find() return undefined, paksa jadi null.
-            // Ini mencegah error "uncontrolled to controlled" di Console.
             value={projects.find(p => p.c_project === projectsActive) ?? null}
             onChange={(_, v) => {
               if (v) {
@@ -458,11 +516,7 @@ const Library = (props: { permission: string[] }) => {
           />
           <Autocomplete
             disablePortal
-
-            // PERBAIKAN 1: disableClearable dinamis
             disableClearable={!!stationActive && stationActive !== 'ALL'}
-
-            // PERBAIKAN 2: Gunakan "?? null"
             value={stationData.find(s => s.c_station === stationActive) ?? null}
             options={stationData}
             onChange={(_, v) => v && setStationActive(v.c_station)}
@@ -546,7 +600,6 @@ const Library = (props: { permission: string[] }) => {
                     ))}
                   </tr>
 
-                  {/* BAGIAN EXPANDED ROW UNTUK TABLE DEVICE DETAIL */}
                   {row.getIsExpanded() && (
                     <tr key={row.id + '-det'}>
                       <td colSpan={columns.length} className='p-0 border-b-2'>
