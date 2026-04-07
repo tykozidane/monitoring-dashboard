@@ -541,7 +541,7 @@ export const AddTerminalModal = ({
                 value={formData.c_terminal_01}
                 onChange={handleInputChange}
                 InputProps={{ readOnly: isGateType && !!spareGates.length }}
-                variant={isGateType ? "filled" : "outlined"}
+                variant={isGateType && !!spareGates.length ? "filled" : "outlined"}
                 error={!!errors.c_terminal_01}
                 helperText={errors.c_terminal_01}
               />
@@ -556,7 +556,7 @@ export const AddTerminalModal = ({
                 value={formData.c_terminal_02 || ""}
                 onChange={handleInputChange}
                 InputProps={{ readOnly: isGateType && !!spareGates.length }}
-                variant={isGateType ? "filled" : "outlined"}
+                variant={isGateType && !!spareGates.length ? "filled" : "outlined"}
               />
             </Grid>
 
