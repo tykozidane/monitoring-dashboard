@@ -123,30 +123,48 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
   }, [activeProject]);
 
   useEffect(() => {
+    // 1. Update Status Stasiun (Raw Stations)
     setRawStations((prev) => prev.map((m) => {
       const find = dashboardData?.list_danger.find((f) => f.c_station === m.c_station)
 
-      if (find) return { ...m, ...find }
+      if (find) {
+        // Jika stasiun ada di list_danger, timpa dengan data terbaru
+        return { ...m, ...find }
+      }
 
-      return m
+      // PERBAIKAN: Jika TIDAK ADA di list_danger, pastikan status dikembalikan ke 'normal'
+      // dan reset array terminal agar tidak ada sisa data bahaya sebelumnya.
+      return {
+        ...m,
+        status: 'normal',
+        terminal: [] // Reset daftar terminal yang rusak
+      }
     }))
 
+    // 2. Update Detail Terminal (Expanded Data)
     setExpandedData((prev) => {
       const newExpandedData = prev.map((m) => {
-        const find = dashboardData?.list_danger.find((f) => f.c_station === m.c_station)?.terminal.find((f) => f.c_terminal_sn === m.c_terminal_sn)
+        // Cari apakah terminal ini masih ada di list_danger
+        const findStation = dashboardData?.list_danger.find((f) => f.c_station === m.c_station);
+        const findTerminal = findStation?.terminal.find((f) => f.c_terminal_sn === m.c_terminal_sn);
 
-        if (find) return { ...m, ...find }
+        if (findTerminal) {
+          // Update jika masih bahaya
+          return { ...m, ...findTerminal }
+        }
 
-        return m
+        // PERBAIKAN: Kembalikan status terminal ke 'normal' jika sudah tidak ada di list_danger
+        return {
+          ...m,
+          status: 'normal'
+        }
       });
 
-      // PERBAIKAN: Sinkronisasi data popupInfo jika tooltip sedang terbuka
+      // 3. Sinkronisasi data popupInfo jika tooltip sedang terbuka (Kode yang sebelumnya sudah kita buat)
       setPopupInfo((currentPopup) => {
         if (currentPopup) {
           const updatedPopupData = newExpandedData.find(t => t.c_terminal_sn === currentPopup.c_terminal_sn);
 
-
-          // Jika ada pembaruan data untuk terminal ini, timpa dengan data yang baru
           if (updatedPopupData) return { ...currentPopup, ...updatedPopupData };
         }
 
