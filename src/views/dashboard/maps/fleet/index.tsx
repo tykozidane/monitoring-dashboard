@@ -19,6 +19,7 @@ import FleetMap from './FleetMap'
 import { useSettings } from '@core/hooks/useSettings'
 import { commonLayoutClasses } from '@layouts/utils/layoutClasses'
 import { ApiAxios } from '@/libs/ApiAxios'
+import type { DashboardProcessedData } from '../..'
 
 export interface TerminalMonitoringProps {
   c_project: string;
@@ -60,9 +61,10 @@ type FleetProps = {
   mapboxAccessToken: string;
   selectedStation: StationData | null;
   activeProject: string | null;
+  dashboardData: DashboardProcessedData | null
 }
 
-const Fleet = ({ mapboxAccessToken, selectedStation, activeProject }: FleetProps) => {
+const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardData }: FleetProps) => {
   const [backdropOpen, setBackdropOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -119,6 +121,23 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject }: FleetProps
 
     return () => { isMounted = false; }
   }, [activeProject]);
+
+  useEffect(() => {
+    setRawStations((prev) => prev.map((m) => {
+      const find = dashboardData?.list_danger.find((f) => f.c_station === m.c_station)
+
+      if (find) return { ...m, ...find }
+
+      return m
+    }))
+    setExpandedData((prev) => prev.map((m) => {
+      const find = dashboardData?.list_danger.find((f) => f.c_station === m.c_station)?.terminal.find((f) => f.c_terminal_sn === m.c_terminal_sn)
+
+      if (find) return { ...m, ...find }
+
+      return m
+    }))
+  }, [dashboardData])
 
   // Memfilter Geojson
   useEffect(() => {
@@ -187,7 +206,8 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject }: FleetProps
       }
 
       setExpandedDataSelected(undefined);
-      setPopupInfo(null); // Tutup popup saat stasiun baru dibuka
+
+      // setPopupInfo(null);
     } catch (err) {
       console.error("Error fetching terminal by station:", err);
       setExpandedData([]);
@@ -205,6 +225,9 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject }: FleetProps
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expanded, geojson.features]);
+
+
+  console.log(popupInfo);
 
   return (
     <div
@@ -248,8 +271,6 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject }: FleetProps
         expandedData={expandedData}
         mapboxAccessToken={mapboxAccessToken}
         activeProject={activeProject}
-
-        // Oper state popup ke Map
         popupInfo={popupInfo}
         setPopupInfo={setPopupInfo}
       />

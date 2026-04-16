@@ -236,7 +236,6 @@ const Dashboard = ({ user, mapboxAccessToken }: { user: UserDefaultProps | null,
     ? dashboardData.green_station + dashboardData.warning_station + dashboardData.danger_station
     : 0
 
-  // KUNCI PERBAIKAN: Gunakan Hex Hardcoded untuk ApexCharts. ApexCharts sering crash jika menerima `var(--color)` dari MUI CSS Variables.
   const chartColors = ['#28C76F', '#FF9F43', '#EA5455'];
 
   const options: ApexOptions = {
@@ -447,6 +446,7 @@ const Dashboard = ({ user, mapboxAccessToken }: { user: UserDefaultProps | null,
             selectedStation={selectedStation}
             mapboxAccessToken={mapboxAccessToken}
             activeProject={projectsActive}
+            dashboardData={dashboardData}
           />
         </Grid>
       </Grid>

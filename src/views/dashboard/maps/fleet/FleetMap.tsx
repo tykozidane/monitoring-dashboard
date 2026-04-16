@@ -6,6 +6,12 @@ import { Map, Marker, Popup } from 'react-map-gl/mapbox'
 import type { MapRef } from 'react-map-gl/mapbox'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { getSession } from 'next-auth/react'
+import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
+import 'dayjs/locale/id'
+
+dayjs.extend(relativeTime)
+dayjs.locale('id')
 
 // Custom Imports
 import { ApiAxios } from '@/libs/ApiAxios'
@@ -73,6 +79,7 @@ const FleetMap = (props: Props) => {
   const [deviceDetails, setDeviceDetails] = useState<DeviceInfo[]>([]);
   const [metricDetails, setMetricDetails] = useState<MetricInfo[]>([]);
   const [loadingPopup, setLoadingPopup] = useState<boolean>(false);
+  const [lastUpdate, setlastUpdate] = useState<string>('');
 
   useEffect(() => {
     mapRef.current?.flyTo({ center: [viewState.longitude, viewState.latitude], zoom: viewState.zoom || 16 })
@@ -88,6 +95,7 @@ const FleetMap = (props: Props) => {
     if (!popupInfo) {
       setDeviceDetails([]);
       setMetricDetails([]);
+      setlastUpdate('')
 
       return;
     }
@@ -126,6 +134,11 @@ const FleetMap = (props: Props) => {
 
           setDeviceDetails(sortedDevices);
           setMetricDetails(sortedMetrics);
+          setlastUpdate(
+            Array.isArray(apiData?.devices) && apiData?.d_monitoring
+              ? dayjs(apiData.d_monitoring).fromNow()
+              : '-'
+          )
         }
       } catch (error) {
         console.error("Error fetching terminal details", error);
@@ -139,7 +152,6 @@ const FleetMap = (props: Props) => {
     return () => { isMounted = false; }
   }, [popupInfo, activeProject]);
 
-  // Kalkulasi Badge Keseluruhan (Devices + Metrics)
   const allData = [...deviceDetails, ...metricDetails];
   const totalDanger = allData.filter(i => i.status?.toLowerCase() === 'danger').length;
   const totalWarning = allData.filter(i => i.status?.toLowerCase() === 'warning').length;
@@ -148,19 +160,6 @@ const FleetMap = (props: Props) => {
 
   return (
     <div className='is-full h-full w-full'>
-      <style dangerouslySetInnerHTML={{
-        __html: `
-        .mapboxgl-popup-content {
-          background: transparent !important;
-          box-shadow: none !important;
-          padding: 0 !important;
-        }
-        .mapboxgl-popup-tip {
-          border-top-color: var(--mui-palette-background-paper) !important;
-          border-bottom-color: var(--mui-palette-background-paper) !important;
-        }
-      `}} />
-
       <Map
         mapboxAccessToken={mapboxAccessToken}
         ref={mapRef}
@@ -244,6 +243,7 @@ const FleetMap = (props: Props) => {
                 </p>
                 {!loadingPopup && (
                   <div className="flex gap-2">
+                    <span className="px-2 py-0.5 rounded text-[10px]">{lastUpdate}</span>
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700">DANGER: {totalDanger}</span>
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-100 text-yellow-700">WARN: {totalWarning}</span>
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-200 text-gray-700">NO DATA: {totalNoData}</span>
@@ -252,8 +252,6 @@ const FleetMap = (props: Props) => {
                 )}
               </div>
 
-              {/* BODY (Scrollable area) */}
-              {/* PERBAIKAN: Menghapus p-3 dan menggantinya dengan px-3 pb-3 agar sticky atasnya benar-benar nempel di frame batas overflow */}
               <div
                 className="max-h-[300px] overflow-y-auto scroll-on-hover px-3 pb-3 flex gap-4"
                 style={{ overscrollBehavior: 'contain' }}
@@ -265,9 +263,7 @@ const FleetMap = (props: Props) => {
                   </div>
                 ) : (
                   <>
-                    {/* KOLOM KIRI: DEVICES */}
                     <div className="flex-1 relative">
-                      {/* PERBAIKAN STICKY: dtambah py-2 supaya punya padding internal sendiri, tidak lagi tertimpa padding parent */}
                       <p className="text-[11px] font-bold text-textSecondary sticky top-0 bg-backgroundPaper py-2 z-10 border-b border-divider">DEVICES</p>
                       {deviceDetails.length === 0 ? (
                         <div className="py-2 text-textSecondary text-xs italic">No device data.</div>
@@ -290,12 +286,9 @@ const FleetMap = (props: Props) => {
                       )}
                     </div>
 
-                    {/* PEMBATAS TENGAH */}
                     <div className="w-px bg-divider shrink-0 mt-2 mb-2"></div>
 
-                    {/* KOLOM KANAN: METRICS */}
                     <div className="flex-1 relative">
-                      {/* PERBAIKAN STICKY */}
                       <p className="text-[11px] font-bold text-textSecondary sticky top-0 bg-backgroundPaper py-2 z-10 border-b border-divider">METRICS</p>
                       {metricDetails.length === 0 ? (
                         <div className="py-2 text-textSecondary text-xs italic">No metric data.</div>
@@ -326,6 +319,20 @@ const FleetMap = (props: Props) => {
           </Popup>
         )}
       </Map>
+
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        .mapboxgl-popup-content {
+          background: transparent !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+        }
+        .mapboxgl-popup-tip {
+          border-top-color: var(--mui-palette-background-paper) !important;
+          border-bottom-color: var(--mui-palette-background-paper) !important;
+        }
+      `}} />
+
     </div>
   )
 }
