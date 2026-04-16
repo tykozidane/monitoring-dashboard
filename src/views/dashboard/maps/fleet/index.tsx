@@ -71,7 +71,7 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
   const [expanded, setExpanded] = useState<string | false>(false)
   const [expandedData, setExpandedData] = useState<TerminalMonitoringProps[]>([])
   const [expandedDataSelected, setExpandedDataSelected] = useState<ViewStateType>()
-  const lastFetchedExpandedRef = useRef<string | false>(false);
+  const lastExpandedRef = useRef<string | false>(false);
 
   const [popupInfo, setPopupInfo] = useState<TerminalMonitoringProps | null>(null);
 
@@ -213,7 +213,7 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
   }, [selectedStation, rawStations, isBelowMdScreen]);
 
   // Function Fetch Terminal Data
-  const handleOpenDetail = async (stationId: string, projectCode?: string) => {
+  const handleOpenDetail = async (stationId: string, projectCode?: string, isBackground = false) => {
     try {
       const session = await getSession();
       const apiUrl = process.env.NEXT_PUBLIC_API_MONITORING_URL || process.env.API_MONITORING_URL || 'https://da-device.devops-nutech.com/api/v1';
@@ -231,39 +231,41 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
       const terminalData = response.data?.data;
 
       if (Array.isArray(terminalData)) {
-        setExpandedData(terminalData);
+        setExpandedData(terminalData); // Ini akan mengupdate status di sidebar!
       } else {
         setExpandedData([]);
       }
 
-      setExpandedDataSelected(undefined);
+      // PERBAIKAN UTAMA: Jangan reset terminal yang dipilih (animasi map)
+      // jika fungsi ini dipanggil otomatis dari background interval 5 detik
+      if (!isBackground) {
+        setExpandedDataSelected(undefined);
+      }
 
       // setPopupInfo(null);
     } catch (err) {
       console.error("Error fetching terminal by station:", err);
-      setExpandedData([]);
+      if (!isBackground) setExpandedData([]);
     }
   }
 
   // Jika accordion di sidebar di-expand secara manual
-  // Jika accordion di sidebar di-expand secara manual
   useEffect(() => {
     if (expanded !== false && geojson.features.length > 0) {
+      const activeFeature = geojson.features.find(f => f.data.c_station === expanded);
 
-      // PERBAIKAN: Hanya fetch detail jika target expand BERBEDA dari sebelumnya
-      if (lastFetchedExpandedRef.current !== expanded) {
-        const activeFeature = geojson.features.find(f => f.data.c_station === expanded);
+      if (activeFeature) {
+        // Jika id sama dengan ref, berarti user sedang diam dan ini refresh dari interval 5 detik.
+        // Jika beda, berarti user baru saja mengklik accordion stasiun baru.
+        const isBackgroundRefresh = lastExpandedRef.current === expanded;
 
-        if (activeFeature) {
-          handleOpenDetail(activeFeature.data.c_station, activeFeature.data.c_project);
+        // Panggil fetch data dengan flag isBackgroundRefresh
+        handleOpenDetail(activeFeature.data.c_station, activeFeature.data.c_project, isBackgroundRefresh);
 
-          // Tandai bahwa station ini sudah difetch detailnya
-          lastFetchedExpandedRef.current = expanded;
-        }
+        lastExpandedRef.current = expanded;
       }
     } else if (expanded === false) {
-      // Reset ref jika accordion ditutup
-      lastFetchedExpandedRef.current = false;
+      lastExpandedRef.current = false;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expanded, geojson.features]);

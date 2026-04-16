@@ -371,7 +371,7 @@ const Dashboard = ({ user, mapboxAccessToken }: { user: UserDefaultProps | null,
                 <span className="animate-warning-icon text-4xl">🚨</span>
                 Danger Stations ({dashboardData?.list_danger?.length || 0})
               </Typography>
-              <List className="h-[350px] scroll-on-hover pr-2">
+              <List className="h-[350px] scroll-on-hover px-2">
                 {dashboardData?.list_danger?.map((station, index) => (
                   <div
                     key={`danger-${index}`}
@@ -411,7 +411,7 @@ const Dashboard = ({ user, mapboxAccessToken }: { user: UserDefaultProps | null,
                 <span className="animate-warning-icon text-4xl">⚠️</span>
                 Warning Stations ({dashboardData?.list_warning?.length || 0})
               </Typography>
-              <List className="h-[350px] scroll-on-hover pr-2">
+              <List className="h-[350px] scroll-on-hover px-2">
                 {dashboardData?.list_warning?.map((station, index) => (
                   <div
                     key={`warning-${index}`}
