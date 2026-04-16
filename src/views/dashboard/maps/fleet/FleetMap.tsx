@@ -93,15 +93,17 @@ const FleetMap = (props: Props) => {
     if (!popupInfo) {
       setDeviceDetails([]);
       setMetricDetails([]);
-      setlastUpdate('')
+      setlastUpdate('');
 
       return;
     }
 
     let isMounted = true;
+    let intervalId: NodeJS.Timeout;
 
-    const fetchDetails = async () => {
-      setLoadingPopup(true);
+    // PERBAIKAN: Tambahkan flag "isBackground" agar loading tidak berkedip setiap 5 detik
+    const fetchDetails = async (isBackground = false) => {
+      if (!isBackground) setLoadingPopup(true);
 
       try {
         const session = await getSession();
@@ -122,33 +124,43 @@ const FleetMap = (props: Props) => {
 
         if (isMounted) {
           const apiData = response.data?.data;
-
           const rawDevices = Array.isArray(apiData?.devices) ? apiData.devices : [];
           const rawMetrics = Array.isArray(apiData?.data) ? apiData.data : [];
 
-          // Sort berdasarkan prioritas status
-          const sortedDevices = [...rawDevices].sort((a, b) => getStatusWeight(a.status) - getStatusWeight(b.status));
-          const sortedMetrics = [...rawMetrics].sort((a, b) => getStatusWeight(a.status) - getStatusWeight(b.status));
+          setDeviceDetails([...rawDevices].sort((a, b) => getStatusWeight(a.status) - getStatusWeight(b.status)));
+          setMetricDetails([...rawMetrics].sort((a, b) => getStatusWeight(a.status) - getStatusWeight(b.status)));
 
-          setDeviceDetails(sortedDevices);
-          setMetricDetails(sortedMetrics);
           setlastUpdate(
             Array.isArray(apiData?.devices) && apiData?.d_monitoring
               ? dayjs(apiData.d_monitoring).fromNow()
               : '-'
-          )
+          );
         }
       } catch (error) {
         console.error("Error fetching terminal details", error);
       } finally {
-        if (isMounted) setLoadingPopup(false);
+        if (isMounted && !isBackground) setLoadingPopup(false);
       }
     };
 
+    // 1. Eksekusi pertama kali saat popup diklik (dengan loading state)
     fetchDetails();
 
-    return () => { isMounted = false; }
-  }, [popupInfo, activeProject]);
+    // 2. Eksekusi berkala setiap 5 detik selama popup terbuka (tanpa loading state)
+    // eslint-disable-next-line prefer-const
+    intervalId = setInterval(() => {
+      fetchDetails(true);
+    }, 5000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId); // Hentikan polling saat popup ditutup
+    }
+
+    // PERBAIKAN: Gunakan Serial Number sebagai dependency agar useEffect tidak terpicu ulang
+    // saat object popupInfo diperbarui dari parent
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [popupInfo?.c_terminal_sn, activeProject]);
 
   const allData = [...deviceDetails, ...metricDetails];
   const totalDanger = allData.filter(i => i.status?.toLowerCase() === 'danger').length;
@@ -194,7 +206,7 @@ const FleetMap = (props: Props) => {
 
           return (
             <Marker
-              key={`terminal-${index}`}
+              key={`terminal-${item.c_terminal_sn}`}
               longitude={Number(item.n_lng)}
               latitude={Number(item.n_lat)}
               anchor="top"
@@ -242,9 +254,9 @@ const FleetMap = (props: Props) => {
                 {!loadingPopup && (
                   <div className="flex gap-2">
                     <span className="px-2 py-0.5 rounded text-[10px]">{lastUpdate}</span>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700">DANGER: {totalDanger}</span>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-100 text-yellow-700">WARN: {totalWarning}</span>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-200 text-gray-700">NO DATA: {totalNoData}</span>
+                    {!!totalDanger && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700">DANGER: {totalDanger}</span>}
+                    {!!totalWarning && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-100 text-yellow-700">WARN: {totalWarning}</span>}
+                    {!!totalNoData && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-200 text-gray-700">NO DATA: {totalNoData}</span>}
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-700">NORMAL: {totalNormal}</span>
                   </div>
                 )}

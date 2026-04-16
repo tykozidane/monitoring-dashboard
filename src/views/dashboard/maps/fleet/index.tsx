@@ -71,6 +71,7 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
   const [expanded, setExpanded] = useState<string | false>(false)
   const [expandedData, setExpandedData] = useState<TerminalMonitoringProps[]>([])
   const [expandedDataSelected, setExpandedDataSelected] = useState<ViewStateType>()
+  const lastFetchedExpandedRef = useRef<string | false>(false);
 
   const [popupInfo, setPopupInfo] = useState<TerminalMonitoringProps | null>(null);
 
@@ -129,13 +130,32 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
 
       return m
     }))
-    setExpandedData((prev) => prev.map((m) => {
-      const find = dashboardData?.list_danger.find((f) => f.c_station === m.c_station)?.terminal.find((f) => f.c_terminal_sn === m.c_terminal_sn)
 
-      if (find) return { ...m, ...find }
+    setExpandedData((prev) => {
+      const newExpandedData = prev.map((m) => {
+        const find = dashboardData?.list_danger.find((f) => f.c_station === m.c_station)?.terminal.find((f) => f.c_terminal_sn === m.c_terminal_sn)
 
-      return m
-    }))
+        if (find) return { ...m, ...find }
+
+        return m
+      });
+
+      // PERBAIKAN: Sinkronisasi data popupInfo jika tooltip sedang terbuka
+      setPopupInfo((currentPopup) => {
+        if (currentPopup) {
+          const updatedPopupData = newExpandedData.find(t => t.c_terminal_sn === currentPopup.c_terminal_sn);
+
+
+          // Jika ada pembaruan data untuk terminal ini, timpa dengan data yang baru
+          if (updatedPopupData) return { ...currentPopup, ...updatedPopupData };
+        }
+
+
+        return currentPopup;
+      });
+
+      return newExpandedData;
+    })
   }, [dashboardData])
 
   // Memfilter Geojson
@@ -226,13 +246,24 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
   }
 
   // Jika accordion di sidebar di-expand secara manual
+  // Jika accordion di sidebar di-expand secara manual
   useEffect(() => {
     if (expanded !== false && geojson.features.length > 0) {
-      const activeFeature = geojson.features.find(f => f.data.c_station === expanded);
 
-      if (activeFeature) {
-        handleOpenDetail(activeFeature.data.c_station, activeFeature.data.c_project);
+      // PERBAIKAN: Hanya fetch detail jika target expand BERBEDA dari sebelumnya
+      if (lastFetchedExpandedRef.current !== expanded) {
+        const activeFeature = geojson.features.find(f => f.data.c_station === expanded);
+
+        if (activeFeature) {
+          handleOpenDetail(activeFeature.data.c_station, activeFeature.data.c_project);
+
+          // Tandai bahwa station ini sudah difetch detailnya
+          lastFetchedExpandedRef.current = expanded;
+        }
       }
+    } else if (expanded === false) {
+      // Reset ref jika accordion ditutup
+      lastFetchedExpandedRef.current = false;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expanded, geojson.features]);
