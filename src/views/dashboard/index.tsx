@@ -14,6 +14,11 @@ import Typography from '@mui/material/Typography'
 import useMediaQuery from '@mui/material/useMediaQuery'
 import { Grid, Card, CardContent, List, ListItem, ListItemText, Autocomplete, TextField } from '@mui/material'
 
+import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
+
+dayjs.extend(relativeTime)
+
 // Third-party Imports
 import type { ApexOptions } from 'apexcharts'
 import { getSession } from 'next-auth/react'
@@ -221,7 +226,7 @@ const Dashboard = ({ user, mapboxAccessToken }: { user: UserDefaultProps | null,
   const renderSafeDate = (dateString: string) => {
     if (!isMounted) return 'Loading date...'
 
-    return `Monitored: ${new Date(dateString).toLocaleString('id-ID')}`
+    return `Monitored: ${dayjs(dateString).fromNow()}`
   }
 
   const handleStationClick = (station: Station) => {
