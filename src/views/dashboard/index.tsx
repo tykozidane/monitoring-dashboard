@@ -62,6 +62,7 @@ export interface DashboardRawData {
   warning_station: number
   danger_station: number
   list_danger: Station[]
+  list_warning: Station[]
 }
 
 export interface DashboardProcessedData extends DashboardRawData {
@@ -136,11 +137,11 @@ const Dashboard = ({ user, mapboxAccessToken }: { user: UserDefaultProps | null,
 
     if (raw.list_danger) {
       raw.list_danger.forEach(station => {
-        if (station.status?.toUpperCase() === 'WARNING') {
-          actualWarning.push(station)
-        } else {
-          actualDanger.push(station)
-        }
+        actualDanger.push(station)
+      })
+
+      raw.list_warning.forEach(station => {
+        actualWarning.push(station)
       })
     }
 

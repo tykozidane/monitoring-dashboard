@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 // MUI Imports
 import Backdrop from '@mui/material/Backdrop'
@@ -72,7 +72,6 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
   const [expandedData, setExpandedData] = useState<TerminalMonitoringProps[]>([])
   const [expandedDataSelected, setExpandedDataSelected] = useState<ViewStateType>()
 
-  // PERBAIKAN: State untuk Popup dipindah ke sini agar dikontrol oleh Map maupun Sidebar
   const [popupInfo, setPopupInfo] = useState<TerminalMonitoringProps | null>(null);
 
   const [rawStations, setRawStations] = useState<StationData[]>([])
@@ -161,25 +160,37 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
     });
   }, [rawStations, searchQuery]);
 
+  // Gunakan useRef untuk melacak station mana yang terakhir kali di-auto-navigate
+  const lastNavigatedStationRef = useRef<string | null>(null);
+
   // Efek Navigasi Otomatis dari Dashboard
   useEffect(() => {
     if (selectedStation && Array.isArray(rawStations) && rawStations.length > 0) {
-      setSearchQuery(selectedStation.n_station);
-      setExpanded(selectedStation.c_station);
-      setViewState({
-        longitude: Number(selectedStation.n_lng) || 0,
-        latitude: Number(selectedStation.n_lat) || 0,
-        zoom: 16
-      });
-      handleOpenDetail(selectedStation.c_station, selectedStation.c_project);
 
-      if (isBelowMdScreen) {
-        setSidebarOpen(true);
-        setBackdropOpen(true);
+      // Validasi: Hanya jalankan setViewState & flyTo jika station ini belum difokuskan
+      if (lastNavigatedStationRef.current !== selectedStation.c_station) {
+        setSearchQuery(selectedStation.n_station);
+        setExpanded(selectedStation.c_station);
+
+        setViewState({
+          longitude: Number(selectedStation.n_lng) || 0,
+          latitude: Number(selectedStation.n_lat) || 0,
+          zoom: 16
+        });
+
+        handleOpenDetail(selectedStation.c_station, selectedStation.c_project);
+
+        if (isBelowMdScreen) {
+          setSidebarOpen(true);
+          setBackdropOpen(true);
+        }
+
+        // Tandai station ini agar tidak memicu flyTo berulang kali saat interval 5 detik berjalan
+        lastNavigatedStationRef.current = selectedStation.c_station;
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedStation, rawStations]);
+  }, [selectedStation, rawStations, isBelowMdScreen]);
 
   // Function Fetch Terminal Data
   const handleOpenDetail = async (stationId: string, projectCode?: string) => {
@@ -225,9 +236,6 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expanded, geojson.features]);
-
-
-  console.log(popupInfo);
 
   return (
     <div
