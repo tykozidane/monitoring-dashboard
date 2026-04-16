@@ -42,15 +42,16 @@ export interface MetricInfo {
   value: number;
 }
 
-// Helper untuk sorting (Danger -> Warning -> Normal)
+// PERBAIKAN: Helper untuk sorting (Danger -> Warning -> No_Data -> Normal)
 const getStatusWeight = (status: string) => {
   const s = status?.toLowerCase() || '';
 
   if (s === 'danger') return 1;
   if (s === 'warning') return 2;
-  if (s === 'normal') return 3;
+  if (s === 'no_data' || s === 'no data') return 3; // NO_DATA masuk urutan 3
+  if (s === 'normal') return 4;
 
-  return 4; // Untuk NO_DATA atau status lainnya
+  return 5;
 };
 
 // Helper untuk warna badge status agar konsisten
@@ -59,6 +60,7 @@ const getStatusBadgeStyle = (status: string) => {
 
   if (s === 'danger') return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
   if (s === 'warning') return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
+  if (s === 'no_data' || s === 'no data') return 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
   if (s === 'normal') return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
 
   return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400';
@@ -113,12 +115,9 @@ const FleetMap = (props: Props) => {
         });
 
         if (isMounted) {
-          // Destructure data dari response Axios -> response.data.data
           const apiData = response.data?.data;
 
           const rawDevices = Array.isArray(apiData?.devices) ? apiData.devices : [];
-
-          // Datanya ada di array "data" di dalam object "data"
           const rawMetrics = Array.isArray(apiData?.data) ? apiData.data : [];
 
           // Sort berdasarkan prioritas status
@@ -141,9 +140,11 @@ const FleetMap = (props: Props) => {
   }, [popupInfo, activeProject]);
 
   // Kalkulasi Badge Keseluruhan (Devices + Metrics)
-  const totalDanger = [...deviceDetails, ...metricDetails].filter(i => i.status?.toLowerCase() === 'danger').length;
-  const totalWarning = [...deviceDetails, ...metricDetails].filter(i => i.status?.toLowerCase() === 'warning').length;
-  const totalNormal = [...deviceDetails, ...metricDetails].filter(i => i.status?.toLowerCase() === 'normal').length;
+  const allData = [...deviceDetails, ...metricDetails];
+  const totalDanger = allData.filter(i => i.status?.toLowerCase() === 'danger').length;
+  const totalWarning = allData.filter(i => i.status?.toLowerCase() === 'warning').length;
+  const totalNoData = allData.filter(i => i.status?.toLowerCase() === 'no_data' || i.status?.toLowerCase() === 'no data').length;
+  const totalNormal = allData.filter(i => i.status?.toLowerCase() === 'normal').length;
 
   return (
     <div className='is-full h-full w-full'>
@@ -232,7 +233,7 @@ const FleetMap = (props: Props) => {
             closeOnClick={true}
             closeButton={false}
             offset={25}
-            maxWidth="800px" // Diperlebar agar cukup untuk dua tabel
+            maxWidth="800px"
           >
             <div className="w-[800px] max-w-[90vw] flex flex-col bg-backgroundPaper border border-divider rounded shadow-lg text-textPrimary overflow-hidden">
 
@@ -241,19 +242,20 @@ const FleetMap = (props: Props) => {
                 <p className="font-bold text-[14px]">
                   {popupInfo.c_terminal_type} - {popupInfo.c_terminal_sn}
                 </p>
-                {/* STATUS BADGES KALKULASI */}
                 {!loadingPopup && (
                   <div className="flex gap-2">
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700">DANGER: {totalDanger}</span>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-100 text-yellow-700">WARNING: {totalWarning}</span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-100 text-yellow-700">WARN: {totalWarning}</span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-200 text-gray-700">NO DATA: {totalNoData}</span>
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-700">NORMAL: {totalNormal}</span>
                   </div>
                 )}
               </div>
 
-              {/* BODY (Scrollable area) - Dibuat dua kolom */}
+              {/* BODY (Scrollable area) */}
+              {/* PERBAIKAN: Menghapus p-3 dan menggantinya dengan px-3 pb-3 agar sticky atasnya benar-benar nempel di frame batas overflow */}
               <div
-                className="max-h-[300px] overflow-y-auto scroll-on-hover p-3 pt-2 flex gap-4"
+                className="max-h-[300px] overflow-y-auto scroll-on-hover px-3 pb-3 flex gap-4"
                 style={{ overscrollBehavior: 'contain' }}
                 onWheel={(e) => e.stopPropagation()}
               >
@@ -264,8 +266,9 @@ const FleetMap = (props: Props) => {
                 ) : (
                   <>
                     {/* KOLOM KIRI: DEVICES */}
-                    <div className="flex-1">
-                      <p className="text-[11px] font-bold text-textSecondary mb-1 sticky top-0 bg-backgroundPaper py-1 z-10 border-b border-divider">DEVICES</p>
+                    <div className="flex-1 relative">
+                      {/* PERBAIKAN STICKY: dtambah py-2 supaya punya padding internal sendiri, tidak lagi tertimpa padding parent */}
+                      <p className="text-[11px] font-bold text-textSecondary sticky top-0 bg-backgroundPaper py-2 z-10 border-b border-divider">DEVICES</p>
                       {deviceDetails.length === 0 ? (
                         <div className="py-2 text-textSecondary text-xs italic">No device data.</div>
                       ) : (
@@ -288,11 +291,12 @@ const FleetMap = (props: Props) => {
                     </div>
 
                     {/* PEMBATAS TENGAH */}
-                    <div className="w-px bg-divider shrink-0"></div>
+                    <div className="w-px bg-divider shrink-0 mt-2 mb-2"></div>
 
                     {/* KOLOM KANAN: METRICS */}
-                    <div className="flex-1">
-                      <p className="text-[11px] font-bold text-textSecondary mb-1 sticky top-0 bg-backgroundPaper py-1 z-10 border-b border-divider">METRICS</p>
+                    <div className="flex-1 relative">
+                      {/* PERBAIKAN STICKY */}
+                      <p className="text-[11px] font-bold text-textSecondary sticky top-0 bg-backgroundPaper py-2 z-10 border-b border-divider">METRICS</p>
                       {metricDetails.length === 0 ? (
                         <div className="py-2 text-textSecondary text-xs italic">No metric data.</div>
                       ) : (

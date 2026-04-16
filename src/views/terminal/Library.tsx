@@ -75,7 +75,6 @@ const AddTerminalModal = dynamic(
 const columnHelper = createColumnHelper<DataWithAction>()
 
 const BASE_URL = process.env.API_MONITORING_URL;
-const API_AUTH = process.env.NEXT_PUBLIC_API_AUTH_JWT;
 
 const ActionButton = ({ terminal, onSuccess }: { terminal: DataWithAction, onSuccess: () => void }) => {
   const [isDownloading, setIsDownloading] = useState(false);
@@ -87,12 +86,14 @@ const ActionButton = ({ terminal, onSuccess }: { terminal: DataWithAction, onSuc
     setIsDownloading(true);
 
     try {
+      const session = await getSession();
+
       const response = await ApiAxios.post(`${BASE_URL}/terminal/get-terminal-config`, {
         c_project: terminal.c_project,
         c_terminal_sn: terminal.c_terminal_sn
       }, {
         headers: {
-          'Authorization': API_AUTH,
+          'Authorization': `Barer ${session?.user.accessToken}`,
           'Content-Type': 'application/json'
         },
       });

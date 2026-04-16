@@ -17,7 +17,6 @@ import { Grid, Card, CardContent, List, ListItem, ListItemText, Autocomplete, Te
 // Third-party Imports
 import type { ApexOptions } from 'apexcharts'
 import { getSession } from 'next-auth/react'
-import toast from 'react-hot-toast'
 
 // Project Imports
 import { ApiAxios } from '@/libs/ApiAxios'
