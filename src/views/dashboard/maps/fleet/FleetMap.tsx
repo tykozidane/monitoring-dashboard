@@ -8,10 +8,8 @@ import 'mapbox-gl/dist/mapbox-gl.css'
 import { getSession } from 'next-auth/react'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
-import 'dayjs/locale/id'
 
 dayjs.extend(relativeTime)
-dayjs.locale('id')
 
 // Custom Imports
 import { ApiAxios } from '@/libs/ApiAxios'
@@ -243,7 +241,7 @@ const FleetMap = (props: Props) => {
                 </p>
                 {!loadingPopup && (
                   <div className="flex gap-2">
-                    <span className="px-2 py-0.5 rounded text-[10px]">{lastUpdate}</span>
+                    <span className="px-2 py-0.5 rounded text-[10px] capitalize">{lastUpdate}</span>
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700">DANGER: {totalDanger}</span>
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-100 text-yellow-700">WARN: {totalWarning}</span>
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-200 text-gray-700">NO DATA: {totalNoData}</span>
