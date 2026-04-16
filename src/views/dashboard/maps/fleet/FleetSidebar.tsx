@@ -8,7 +8,6 @@ import MuiAccordionDetails from '@mui/material/AccordionDetails'
 import MuiAccordionSummary from '@mui/material/AccordionSummary'
 import Drawer from '@mui/material/Drawer'
 import IconButton from '@mui/material/IconButton'
-import LinearProgress from '@mui/material/LinearProgress'
 import { styled } from '@mui/material/styles'
 import Typography from '@mui/material/Typography'
 import MuiTimeline from '@mui/lab/Timeline'
@@ -17,101 +16,50 @@ import TimelineSeparator from '@mui/lab/TimelineSeparator'
 import TimelineDot from '@mui/lab/TimelineDot'
 import TimelineConnector from '@mui/lab/TimelineConnector'
 import TimelineContent from '@mui/lab/TimelineContent'
-import type { AccordionProps } from '@mui/material/Accordion'
-import type { AccordionSummaryProps } from '@mui/material/AccordionSummary'
-import type { AccordionDetailsProps } from '@mui/material/AccordionDetails'
-import type { TimelineProps } from '@mui/lab/Timeline'
+import TextField from '@mui/material/TextField'
 
 // Third-party Imports
 import PerfectScrollbar from 'react-perfect-scrollbar'
 
-// Types Imports
-import { CircularProgress } from '@mui/material'
-
 // Components Imports
 import CustomAvatar from '@core/components/mui/Avatar'
-import { ApiAxios } from '@/libs/ApiAxios'
+import type { GeojsonProps, StationData, TerminalMonitoringProps, ViewStateType } from './'
 
 type Props = {
-  backdropOpen: boolean
-  setBackdropOpen: (value: boolean) => void
-  sidebarOpen: boolean
-  setSidebarOpen: (value: boolean) => void
-  isBelowLgScreen: boolean
-  isBelowMdScreen: boolean
-  isBelowSmScreen: boolean
-  expanded: number | false
-  expandedData: TerminalMonitoringProps[]
-  setExpandedDataSelected: (value: ViewStateType) => void
-  setExpanded: (value: number | false) => void
-  setViewState: (value: ViewStateType) => void
-  geojson: {
-    type: string
-    features: {
-      type: string
-      geometry: {
-        type: string
-        longitude: number
-        latitude: number
-      },
-      data: StationProps
-    }[]
-  }
+  backdropOpen: boolean; setBackdropOpen: (value: boolean) => void;
+  sidebarOpen: boolean; setSidebarOpen: (value: boolean) => void;
+  isBelowLgScreen: boolean; isBelowMdScreen: boolean; isBelowSmScreen: boolean;
+  expanded: string | false; setExpanded: (value: string | false) => void;
+  expandedData: TerminalMonitoringProps[];
+
+  // PERBAIKAN TIPE DATA FUNGSI
+  setExpandedDataSelected: (value: ViewStateType) => void;
+
+  setViewState: (value: ViewStateType) => void;
+  geojson: GeojsonProps;
+  searchQuery: string; setSearchQuery: (value: string) => void;
+
+  popupInfo: TerminalMonitoringProps | null;
+  setPopupInfo: (value: TerminalMonitoringProps | null) => void;
 }
 
-// Styled component for Accordion component
-const Accordion = styled(MuiAccordion)<AccordionProps>({
-  boxShadow: 'none !important',
-  border: 'none',
-  '&:before': {
-    content: 'none'
-  },
-  marginBlockEnd: '0px !important'
+const Accordion = styled(MuiAccordion)({
+  boxShadow: 'none !important', border: 'none', '&:before': { content: 'none' }, marginBlockEnd: '0px !important'
 })
 
-// Styled component for AccordionSummary component
-const AccordionSummary = styled(MuiAccordionSummary)<AccordionSummaryProps>(({ theme }) => ({
-  paddingBlock: theme.spacing(0, 6),
-  paddingInline: theme.spacing(0)
+const AccordionSummary = styled(MuiAccordionSummary)(({ theme }) => ({
+  paddingBlock: theme.spacing(0, 6), paddingInline: theme.spacing(0)
 }))
 
-// Styled component for AccordionDetails component
-const AccordionDetails = styled(MuiAccordionDetails)<AccordionDetailsProps>(({ theme }) => ({
-  paddingBlock: theme.spacing(0, 1),
-  paddingInline: theme.spacing(0)
+const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
+  paddingBlock: theme.spacing(0, 1), paddingInline: theme.spacing(0)
 }))
 
-// Styled Timeline component
-const Timeline = styled(MuiTimeline)<TimelineProps>({
-  paddingLeft: 0,
-  paddingRight: 0,
-  '& .MuiTimelineItem-root': {
-    width: '100%',
-    '&:before': {
-      display: 'none'
-    }
-  },
-  '& .MuiTimelineDot-root': {
-    border: 0,
-    padding: 0
-  }
+const Timeline = styled(MuiTimeline)({
+  paddingLeft: 0, paddingRight: 0,
+  '& .MuiTimelineItem-root': { width: '100%', '&:before': { display: 'none' } },
+  '& .MuiTimelineDot-root': { border: 0, padding: 0 }
 })
-
-export interface StationMonitoringProps {
-  c_project: string;           // "2"
-  c_station: string;           // "CIL"
-
-  n_project_name: string | null;
-  n_project_desc: string | null;
-
-  n_station: string;           // "Station CiliwungLRT Jabodebek"
-
-  n_lat: string;               // "-6.243477"
-  n_lng: string;               // "106.864131"
-
-  status: string;
-}
-
 
 const ScrollWrapper = ({ children, isBelowLgScreen }: { children: ReactNode; isBelowLgScreen: boolean }) => {
   if (isBelowLgScreen) {
@@ -125,263 +73,125 @@ const ScrollWrapper = ({ children, isBelowLgScreen }: { children: ReactNode; isB
   }
 }
 
+// FUNGSI HELPER UNTUK WARNA
+const getStatusColorClass = (status: string) => {
+  const s = status?.toLowerCase() || '';
+
+  if (s === 'normal' || s === 'ok') return 'text-green-500';
+  if (s === 'warning') return 'text-amber-500';
+  if (s === 'danger') return 'text-red-500';
+
+  return 'text-gray-500';
+}
+
+const getStatusIcon = (status: string) => {
+  const s = status?.toLowerCase() || '';
+
+  if (s === 'normal' || s === 'ok') return 'tabler-circle-check';
+  if (s === 'warning') return 'tabler-alert-triangle';
+  if (s === 'danger') return 'tabler-circle-x';
+
+  return 'tabler-info-circle';
+}
+
 const VehicleTracking = ({
-  vehicleTrackingData,
-  index,
-  expanded,
-  expandedData,
-  handleChange,
-  setExpandedDataSelected
+  vehicleTrackingData, expanded, expandedData, handleChange, setExpandedDataSelected, setPopupInfo
 }: {
-  vehicleTrackingData: StationMonitoringProps
-  index: number
-  expanded: number | false
+  vehicleTrackingData: StationData
+  expanded: string | false
   expandedData: TerminalMonitoringProps[]
-  handleChange: (panel: number) => (event: SyntheticEvent, isExpanded: boolean) => void
+  handleChange: (panel: string, lng: number, lat: number) => (event: SyntheticEvent, isExpanded: boolean) => void
   setExpandedDataSelected: (value: ViewStateType) => void
+  setPopupInfo: (value: TerminalMonitoringProps | null) => void
 }) => {
 
-
-  const [loading, setloading] = useState(false);
-
-  const getProgressColor = (value: number) => {
-    // Jika nilai di bawah 35% -> Merah
-    if (value <= 35) return '#ef4444'; // Tailwind: red-500 (Danger)
-
-    // Jika nilai di antara 36% - 75% -> Oranye/Kuning
-    if (value <= 75) return '#f59e0b'; // Tailwind: amber-500 (Warning)
-
-    // Jika di atas 75% -> Hijau
-    return '#22c55e'; // Tailwind: green-500 (Success)
-  };
-
-  const progress = expandedData.length ? Math.round((expandedData.filter(i => i.status === 'OK').length / expandedData.length) * 100) : 0;
-
-  const downloadConfig = async (Terminal: TerminalMonitoringProps) => {
-    try {
-      setloading(true);
-
-      const response = await ApiAxios.post('http://192.168.62.90:4000/api/v1/terminal/get-terminal-config', {
-        "c_project": Terminal.c_project,
-        "c_terminal_sn": Terminal.c_terminal_sn
-      }, {
-        headers: { 'authorization': "Basic aGlzbnV0ZWNoOm51dGVjaDEyMw==" }
-      });
-
-      // 🔹 Convert object → JSON string
-      const jsonString = JSON.stringify(response?.data?.data, null, 2);
-
-      // 🔹 Buat file Blob
-      const blob = new Blob([jsonString], { type: "application/json" });
-
-      // 🔹 Buat URL download
-      const url = window.URL.createObjectURL(blob);
-
-      // 🔹 Trigger download
-      const a = document.createElement("a");
-
-      a.href = url;
-      a.download = `${Terminal.c_terminal_type}-config-${Terminal.c_terminal_sn}.json`;
-      document.body.appendChild(a);
-      a.click();
-
-      // 🔹 Cleanup
-      a.remove();
-      window.URL.revokeObjectURL(url);
-    } finally {
-      setTimeout(() => setloading(false), 1000);
-    }
-  };
+  const isExpanded = expanded === vehicleTrackingData.c_station;
 
   return (
-    <Accordion expanded={expanded === index} onChange={handleChange(index)}>
+    <Accordion expanded={isExpanded} onChange={handleChange(vehicleTrackingData.c_station, Number(vehicleTrackingData.n_lng), Number(vehicleTrackingData.n_lat))}>
       <AccordionSummary>
         <div className='flex gap-4 items-center'>
           <CustomAvatar skin='light' color='secondary'>
             <i className=' tabler-train text-3xl' />
           </CustomAvatar>
           <div className='flex flex-col gap-1'>
-            <Typography className='font-normal'>{vehicleTrackingData.n_station}</Typography>
-            <Typography className='font-normal text-textSecondary!'>{vehicleTrackingData.status}</Typography>
+            <Typography className='font-bold text-[15px]'>{vehicleTrackingData.n_station}</Typography>
+            <Typography className={`font-bold text-xs uppercase tracking-wider ${getStatusColorClass(vehicleTrackingData.status)}`}>
+              {vehicleTrackingData.status}
+            </Typography>
           </div>
         </div>
       </AccordionSummary>
+
       <AccordionDetails>
-        {!expandedData?.length ? <div className="relative flex flex-col gap-3 plb-4 ">
-          <div className="flex items-center justify-between">
-            <Typography className="text-textPrimary!">
-              Progress Success
-            </Typography>
-            <Typography>{progress}%</Typography>
+        {isExpanded && (!expandedData || expandedData.length === 0) ? (
+          <div className="relative flex flex-col gap-3 p-4 text-center rounded-md mb-2 bg-actionHover">
+            <Typography variant="body2" color="text.secondary" className="italic">No terminal data available</Typography>
           </div>
-          <LinearProgress
-            sx={{
-              height: 8,
-              borderRadius: 4,
-              '& .MuiLinearProgress-bar': {
-                backgroundColor: getProgressColor(progress),
-                transition: 'background-color 0.4s ease-in-out, transform 0.4s linear'
-              }
-            }}
-            variant="determinate"
-            value={progress}
-          />
-        </div> : <div className="relative flex flex-col gap-3 p-4 text-center  bg-gray-200/5">
-          Not Data
-        </div>}
+        ) : null}
 
-        {expandedData.map((item, index) => (
-          <Timeline
-            key={index}
-            className="relative pbs-4 pr-14 cursor-pointer"
-            onClick={() =>
-              setExpandedDataSelected({
-                longitude: Number(item.n_lng),
-                latitude: Number(item.n_lat),
-                zoom: 22
-              })
-            }
-          >
-            <TimelineItem>
-              <TimelineSeparator>
-                <TimelineDot variant="outlined" className="mlb-0">
-                  <i
-                    className={
-                      item.status === 'OK'
-                        ? 'tabler-circle-check text-xl text-success'
-                        : 'tabler-circle-x text-xl text-red-500'
-                    }
-                  />
-                </TimelineDot>
-                <TimelineConnector />
-              </TimelineSeparator>
+        {isExpanded && expandedData?.map((item, index) => {
+          const statusColor = getStatusColorClass(item.status);
+          const statusIcon = getStatusIcon(item.status);
 
-              <TimelineContent className="flex flex-col gap-0.5 pbs-0 pis-4 pbe-5">
-                <Typography
-                  className="font-medium text-textPrimary!"
-                >
-                  {item.c_terminal_type}
-                </Typography>
-
-                <Typography className={
-                  item.status === 'OK'
-                    ? 'uppercase text-success! font-medium'
-                    : 'uppercase text-red-500! font-medium'
-                }>
-                  {item.status}
-                </Typography>
-
-                <Typography variant="body2">
-                  SN:{item.c_terminal_sn} ({item.c_terminal_01}{item.c_terminal_02 ? ' | ' + item.c_terminal_02 : ''})
-                </Typography>
-              </TimelineContent>
-            </TimelineItem>
-
-            {/* 🔘 TOMBOL KANAN TENGAH */}
-
-            <button
+          return (
+            <Timeline
+              key={index}
+              className="relative pbs-4 cursor-pointer transition-colors rounded-lg px-2 -mx-2 hover:bg-actionHover"
               onClick={(e) => {
+                // PERBAIKAN: Mencegah scroll liar saat item ini diklik
+                e.preventDefault();
                 e.stopPropagation();
-                downloadConfig(item)
+
+                // 1. Fokuskan Map
+                setExpandedDataSelected({ longitude: Number(item.n_lng), latitude: Number(item.n_lat), zoom: 22 });
+
+                // 2. Buka Popup Tooltip di Map
+                setPopupInfo(item);
               }}
-              title="Download Config"
-              disabled={loading}
-              className="
-                absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer
-                h-10 w-10 flex items-center justify-center
-                rounded bg-blue-600 text-white
-                hover:bg-blue-900"
             >
-              {loading ? <CircularProgress size={20} color="inherit" /> : <i className="tabler-download text-xl" />}
+              <TimelineItem>
+                <TimelineSeparator>
+                  <TimelineDot variant="outlined" className="mlb-0 border-0">
+                    <i className={`${statusIcon} text-xl ${statusColor}`} />
+                  </TimelineDot>
+                  <TimelineConnector />
+                </TimelineSeparator>
 
-            </button>
-          </Timeline>
-        ))}
-
-
-        {/* <Timeline className='pbs-4'>
-          <TimelineItem>
-            <TimelineSeparator>
-              <TimelineDot variant='outlined' className='mlb-0'>
-                <i className='tabler-circle-check text-xl text-success' />
-              </TimelineDot>
-              <TimelineConnector />
-            </TimelineSeparator>
-            <TimelineContent className='flex flex-col gap-0.5 pbs-0 pis-4 pbe-5'>
-              <Typography variant='caption' className='uppercase text-success!'>
-                Tracking Number Created
-              </Typography>
-              <Typography className='font-medium text-textPrimary!'>{vehicleTrackingData.driverName}</Typography>
-              <Typography variant='body2'>Sep 01, 7:53 AM</Typography>
-            </TimelineContent>
-          </TimelineItem>
-        </Timeline>
-        <Timeline>
-          <TimelineItem>
-            <TimelineSeparator>
-              <TimelineDot variant='outlined' className='mlb-0'>
-                <i className='tabler-circle-check text-xl text-success' />
-              </TimelineDot>
-              <TimelineConnector />
-            </TimelineSeparator>
-            <TimelineContent className='flex flex-col gap-0.5 pbs-0 pis-4 pbe-5'>
-              <Typography variant='caption' className='uppercase text-success!'>
-                Out For Delivery
-              </Typography>
-              <Typography className='font-medium text-textPrimary!'>{vehicleTrackingData.driverName}</Typography>
-              <Typography variant='body2'>Sep 03, 8:02 AM</Typography>
-            </TimelineContent>
-          </TimelineItem>
-        </Timeline> */}
-        {/* <Timeline>
-          <TimelineItem>
-            <TimelineSeparator>
-              <TimelineDot variant='outlined' className='mlb-0'>
-                <i className='tabler-map-pin text-xl text-primary' />
-              </TimelineDot>
-            </TimelineSeparator>
-            <TimelineContent className='flex flex-col gap-0.5 pbs-0 pis-4 pbe-5'>
-              <Typography variant='caption' className='uppercase text-primary!'>
-                Arrived
-              </Typography>
-              <Typography className='font-medium text-textPrimary!'>{vehicleTrackingData.passengerName}</Typography>
-              <Typography variant='body2'>Sep 03, 8:02 AM</Typography>
-            </TimelineContent>
-          </TimelineItem>
-        </Timeline> */}
+                <TimelineContent className="flex flex-col gap-0.5 pbs-0 pis-4 pbe-5">
+                  <Typography className="font-semibold text-[14px]">
+                    {item.c_terminal_type}
+                  </Typography>
+                  <Typography className={`uppercase font-bold text-[12px] tracking-wide ${statusColor}`}>
+                    {item.status}
+                  </Typography>
+                  <Typography variant="body2" className="text-[12px]" color="text.secondary">
+                    SN: {item.c_terminal_sn} ({item.c_terminal_01}{item.c_terminal_02 ? ' | ' + item.c_terminal_02 : ''})
+                  </Typography>
+                </TimelineContent>
+              </TimelineItem>
+            </Timeline>
+          )
+        })}
       </AccordionDetails>
     </Accordion>
   )
 }
 
 const FleetSidebar = (props: Props) => {
-  // Props
   const {
-    backdropOpen,
-    setBackdropOpen,
-    sidebarOpen,
-    setSidebarOpen,
-    isBelowLgScreen,
-    isBelowMdScreen,
-    isBelowSmScreen,
-    expanded,
-    expandedData,
-    setExpandedDataSelected,
-    setExpanded,
-    setViewState,
-    geojson
+    backdropOpen, setBackdropOpen, sidebarOpen, setSidebarOpen,
+    isBelowLgScreen, isBelowMdScreen, isBelowSmScreen,
+    expanded, expandedData, setExpandedDataSelected, setExpanded, setViewState, geojson,
+    searchQuery, setSearchQuery, popupInfo, setPopupInfo
   } = props
 
-  const handleChange = (panel: number) => (event: SyntheticEvent, isExpanded: boolean) => {
+  const handleChange = (panelId: string, lng: number, lat: number) => (event: SyntheticEvent, isExpanded: boolean) => {
     if (isExpanded) {
-      setViewState({
-        longitude: geojson.features[panel].geometry.longitude,
-        latitude: geojson.features[panel].geometry.latitude,
-        zoom: 16
-      })
+      setViewState({ longitude: lng, latitude: lat, zoom: 16 })
     }
 
-    setExpanded(isExpanded ? panel : false)
+    setExpanded(isExpanded ? panelId : false)
   }
 
   useEffect(() => {
@@ -397,47 +207,46 @@ const FleetSidebar = (props: Props) => {
       open={sidebarOpen}
       onClose={() => setSidebarOpen(false)}
       variant={!isBelowMdScreen ? 'permanent' : 'persistent'}
-      ModalProps={{
-        disablePortal: true,
-        keepMounted: true // Better open performance on mobile.
-      }}
+      ModalProps={{ disablePortal: true, keepMounted: true }}
       sx={{
         zIndex: isBelowMdScreen && sidebarOpen ? 11 : 10,
         position: !isBelowMdScreen ? 'static' : 'absolute',
         ...(isBelowSmScreen && sidebarOpen && { width: '100%' }),
         '& .MuiDrawer-paper': {
-          borderRight: 'none',
-          boxShadow: 'none',
-          overflow: 'hidden',
-          width: isBelowSmScreen ? '100%' : '360px',
-          position: !isBelowMdScreen ? 'static' : 'absolute'
+          borderRight: 'none', boxShadow: 'none', overflow: 'hidden', width: isBelowSmScreen ? '100%' : '360px', position: !isBelowMdScreen ? 'static' : 'absolute',
+          backgroundColor: 'background.paper'
         }
       }}
     >
-      <div className='flex justify-between items-center p-6'>
+      <div className='flex justify-between items-center plb-6 pli-6'>
         <Typography variant='h5'>Monitoring Station</Typography>
-
         {isBelowMdScreen ? (
-          <IconButton
-            onClick={() => {
-              setSidebarOpen(false)
-              setBackdropOpen(false)
-            }}
-          >
+          <IconButton onClick={() => { setSidebarOpen(false); setBackdropOpen(false) }}>
             <i className='tabler-x' />
           </IconButton>
         ) : null}
       </div>
+
+      <div className="px-6 pb-6 mb-6 flex flex-col gap-4 border-b border-divider">
+        <TextField
+          label="Search Station" variant="outlined" size="small" fullWidth
+          value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
+
       <ScrollWrapper isBelowLgScreen={isBelowLgScreen}>
+        {geojson.features.length === 0 && (
+          <Typography variant='body2' color="text.secondary" className='text-center mt-6 italic'>No station found.</Typography>
+        )}
         {geojson.features.map((item, index) => (
           <VehicleTracking
             vehicleTrackingData={item.data}
-            index={index}
             expanded={expanded}
             expandedData={expandedData}
             handleChange={handleChange}
             setExpandedDataSelected={setExpandedDataSelected}
-            key={index}
+            setPopupInfo={setPopupInfo}
+            key={item.data.c_station || index}
           />
         ))}
       </ScrollWrapper>

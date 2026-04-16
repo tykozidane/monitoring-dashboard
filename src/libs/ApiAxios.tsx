@@ -12,10 +12,10 @@ export const ApiAxios = axios.create({
 ApiAxios.interceptors.response.use(
   res => res,
   async (error: AxiosError) => {
-    if (error.response?.status === 401) {
-      await signOut({ redirect: false })
-      window.location.href = '/login'
-    }
+    // if (error.response?.status === 401) {
+    //   await signOut({ redirect: false })
+    //   window.location.href = '/login'
+    // }
 
     return Promise.reject(error)
   }

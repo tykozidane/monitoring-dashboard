@@ -86,6 +86,7 @@
     "react-dom": "19.0.0-rc.1",
     "react-dropzone": "14.3.8",
     "react-hook-form": "7.66.1",
+    "react-hot-toast": "^2.6.0",
     "react-leaflet": "5.0.0-rc.2",
     "react-leaflet-cluster": "^4.0.0",
     "react-leaflet-drift-marker": "^4.0.0",

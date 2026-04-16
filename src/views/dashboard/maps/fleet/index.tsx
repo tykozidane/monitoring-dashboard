@@ -10,26 +10,72 @@ import type { Theme } from '@mui/material/styles'
 
 // Third-party Imports
 import classNames from 'classnames'
+import { getSession } from 'next-auth/react'
 
-//Components Imports
+// Components Imports
 import CustomIconButton from '@core/components/mui/IconButton'
 import FleetSidebar from './FleetSidebar'
 import FleetMap from './FleetMap'
-
-// Hook Imports
 import { useSettings } from '@core/hooks/useSettings'
-
-// Util Imports
 import { commonLayoutClasses } from '@layouts/utils/layoutClasses'
 import { ApiAxios } from '@/libs/ApiAxios'
 
-const Fleet = ({ mapboxAccessToken }: { mapboxAccessToken: string }) => {
-  // States
+export interface TerminalMonitoringProps {
+  c_project: string;
+  c_station: string;
+  c_terminal_sn: string;
+  c_terminal_type: string;
+  c_terminal_01?: string;
+  c_terminal_02?: string;
+  n_lat: string;
+  n_lng: string;
+  status: string;
+}
+export interface ViewStateType {
+  longitude: number;
+  latitude: number;
+  zoom: number;
+}
+export interface StationData {
+  c_project: string;
+  n_project_name: string | null;
+  n_project_desc: string | null;
+  c_station: string;
+  n_station: string;
+  n_lat: string;
+  n_lng: string;
+  status: string;
+}
+export interface FeatureData {
+  type: string;
+  geometry: { type: string; longitude: number; latitude: number };
+  data: StationData;
+}
+export interface GeojsonProps {
+  type: string;
+  features: FeatureData[];
+}
+
+type FleetProps = {
+  mapboxAccessToken: string;
+  selectedStation: StationData | null;
+  activeProject: string | null;
+}
+
+const Fleet = ({ mapboxAccessToken, selectedStation, activeProject }: FleetProps) => {
   const [backdropOpen, setBackdropOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [expanded, setExpanded] = useState<number | false>(false)
+
+  const [expanded, setExpanded] = useState<string | false>(false)
   const [expandedData, setExpandedData] = useState<TerminalMonitoringProps[]>([])
   const [expandedDataSelected, setExpandedDataSelected] = useState<ViewStateType>()
+
+  // PERBAIKAN: State untuk Popup dipindah ke sini agar dikontrol oleh Map maupun Sidebar
+  const [popupInfo, setPopupInfo] = useState<TerminalMonitoringProps | null>(null);
+
+  const [rawStations, setRawStations] = useState<StationData[]>([])
+  const [geojson, setGeojson] = useState<GeojsonProps>({ type: 'FeatureCollection', features: [] })
+  const [searchQuery, setSearchQuery] = useState<string>('')
 
   const [viewState, setViewState] = useState<ViewStateType>({
     longitude: 106.900,
@@ -37,159 +83,177 @@ const Fleet = ({ mapboxAccessToken }: { mapboxAccessToken: string }) => {
     zoom: 12.5
   })
 
-
-  const [geojson, setGeojson] = useState<GeojsonProps>({
-    type: 'FeatureCollection',
-    features: []
-  });
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await ApiAxios.post(`${process.env.API_MONITORING_URL}/output/all-station`);
-
-        setGeojson({
-          type: 'FeatureCollection',
-          features: response.data.data.map((map: StationProps) => ({
-            type: 'Feature',
-            geometry: {
-              type: 'Point',
-              longitude: Number(map.n_lng),
-              latitude: Number(map.n_lat)
-            },
-            data: map
-          }))
-        });
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
-
-    fetchData();
-
-    // Auto-refresh every 60 seconds
-    // const interval = setInterval(fetchData, 60000);
-    // return () => clearInterval(interval);
-  }, []);
-
-
-  useEffect(() => {
-    // 1️⃣ Cegah refresh / close tab (browser dialog)
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      e.preventDefault()
-      e.returnValue = ''
-    }
-
-    // 2️⃣ Cegah tombol F5 & Ctrl+R
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (
-        e.key === 'F5' ||
-        ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'r')
-      ) {
-        e.preventDefault()
-        alert('Sangat tidak di anjurkan untuk refresh')
-      }
-    }
-
-    // 3️⃣ Cegah tombol Back browser
-    history.pushState(null, '', location.href)
-
-    const handlePopState = () => {
-      alert('Anda yakin ingin meninggalkan halaman ini?')
-      history.pushState(null, '', location.href)
-    }
-
-    window.addEventListener('beforeunload', handleBeforeUnload)
-    window.addEventListener('keydown', handleKeyDown)
-    window.addEventListener('popstate', handlePopState)
-
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload)
-      window.removeEventListener('keydown', handleKeyDown)
-      window.removeEventListener('popstate', handlePopState)
-    }
-  }, [])
-
-  // Hooks
   const { settings } = useSettings()
   const isBelowLgScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('lg'))
   const isBelowMdScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('md'))
   const isBelowSmScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'))
 
+  // Fetch Stations
   useEffect(() => {
-    if (!isBelowMdScreen && backdropOpen && sidebarOpen) {
-      setBackdropOpen(false)
+    let isMounted = true;
+
+    const fetchStations = async (projectCode: string) => {
+      try {
+        const session = await getSession();
+        const apiUrl = process.env.NEXT_PUBLIC_API_MONITORING_URL || process.env.API_MONITORING_URL || 'https://da-device.devops-nutech.com/api/v1';
+
+        const response = await ApiAxios.post(`${apiUrl}/output/all-station`, { c_project: projectCode }, {
+          headers: {
+            'Authorization': `Bearer ${session?.user?.accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (isMounted) {
+          const stationData: StationData[] = response.data?.data;
+
+          setRawStations(Array.isArray(stationData) ? stationData : []);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        if (isMounted) setRawStations([]);
+      }
+    };
+
+    if (activeProject) fetchStations(activeProject);
+
+    return () => { isMounted = false; }
+  }, [activeProject]);
+
+  // Memfilter Geojson
+  useEffect(() => {
+    let filtered = Array.isArray(rawStations) ? [...rawStations] : [];
+
+    if (searchQuery) {
+      filtered = filtered.filter(s => s?.n_station?.toLowerCase().includes(searchQuery.toLowerCase()));
+    }
+
+    setGeojson({
+      type: 'FeatureCollection',
+      features: filtered.map((mapItem) => ({
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          longitude: Number(mapItem.n_lng) || 0,
+          latitude: Number(mapItem.n_lat) || 0
+        },
+        data: mapItem
+      }))
+    });
+  }, [rawStations, searchQuery]);
+
+  // Efek Navigasi Otomatis dari Dashboard
+  useEffect(() => {
+    if (selectedStation && Array.isArray(rawStations) && rawStations.length > 0) {
+      setSearchQuery(selectedStation.n_station);
+      setExpanded(selectedStation.c_station);
+      setViewState({
+        longitude: Number(selectedStation.n_lng) || 0,
+        latitude: Number(selectedStation.n_lat) || 0,
+        zoom: 16
+      });
+      handleOpenDetail(selectedStation.c_station, selectedStation.c_project);
+
+      if (isBelowMdScreen) {
+        setSidebarOpen(true);
+        setBackdropOpen(true);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isBelowMdScreen])
+  }, [selectedStation, rawStations]);
 
-  useEffect(() => {
-    if (!isBelowSmScreen && sidebarOpen) {
-      setBackdropOpen(true)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isBelowSmScreen])
-
-  useEffect(() => {
-    if (expanded !== false && expanded > -1 && geojson.features[expanded])
-      handleOpenDetail(geojson.features[expanded].data)
-  }, [expanded, geojson])
-
-  const handleOpenDetail = async (item: StationProps) => {
+  // Function Fetch Terminal Data
+  const handleOpenDetail = async (stationId: string, projectCode?: string) => {
     try {
+      const session = await getSession();
+      const apiUrl = process.env.NEXT_PUBLIC_API_MONITORING_URL || process.env.API_MONITORING_URL || 'https://da-device.devops-nutech.com/api/v1';
 
-      const response = await ApiAxios.post(`${process.env.API_MONITORING_URL}/output/terminal-by-station`, {
-        c_station: item.c_station,
-        c_project: item.n_project_name ?? 'KCI'
+      const response = await ApiAxios.post(`${apiUrl}/output/terminal-by-station`, {
+        c_station: stationId,
+        c_project: projectCode ?? activeProject ?? 'KCI'
+      }, {
+        headers: {
+          'Authorization': `Bearer ${session?.user?.accessToken}`,
+          'Content-Type': 'application/json'
+        }
       });
 
-      response.data.data.code ?? setExpandedData(response.data.data ?? []);
-      setExpandedDataSelected(undefined)
+      const terminalData = response.data?.data;
+
+      if (Array.isArray(terminalData)) {
+        setExpandedData(terminalData);
+      } else {
+        setExpandedData([]);
+      }
+
+      setExpandedDataSelected(undefined);
+      setPopupInfo(null); // Tutup popup saat stasiun baru dibuka
     } catch (err) {
-      console.error("Error fetching:", err);
+      console.error("Error fetching terminal by station:", err);
+      setExpandedData([]);
     }
   }
+
+  // Jika accordion di sidebar di-expand secara manual
+  useEffect(() => {
+    if (expanded !== false && geojson.features.length > 0) {
+      const activeFeature = geojson.features.find(f => f.data.c_station === expanded);
+
+      if (activeFeature) {
+        handleOpenDetail(activeFeature.data.c_station, activeFeature.data.c_project);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expanded, geojson.features]);
 
   return (
     <div
       className={classNames(
         commonLayoutClasses.contentHeightFixed,
-        'flex is-full bs-full  overflow-hidden rounded-xl relative',
-        {
-          border: settings.skin === 'bordered',
-          'shadow-md': settings.skin !== 'bordered'
-        }
+        'flex is-full overflow-hidden rounded-xl relative',
+        { border: settings.skin === 'bordered', 'shadow-md': settings.skin !== 'bordered' }
       )}
+      style={{ height: 'calc(100vh - 110px)' }}
     >
       {isBelowMdScreen ? (
         <CustomIconButton
-          variant='contained'
-          color='primary'
-          className='absolute top-4 left-4 z-10 bg-backgroundPaper text-textPrimary shadow-xs shadow-gray-500 hover:bg-backgroundPaper focus:bg-backgroundPaper active:bg-backgroundPaper'
-          onClick={() => {
-            setSidebarOpen(true)
-            setBackdropOpen(true)
-          }}
+          variant='contained' color='primary'
+          className='absolute top-4 left-4 z-10 bg-backgroundPaper text-textPrimary shadow-xs shadow-gray-500 hover:bg-backgroundPaper'
+          onClick={() => { setSidebarOpen(true); setBackdropOpen(true); }}
         >
           <i className='tabler-menu-2' />
         </CustomIconButton>
       ) : null}
+
       <FleetSidebar
-        backdropOpen={backdropOpen}
-        setBackdropOpen={setBackdropOpen}
-        sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-        isBelowMdScreen={isBelowMdScreen}
-        isBelowLgScreen={isBelowLgScreen}
-        isBelowSmScreen={isBelowSmScreen}
-        expanded={expanded}
-        expandedData={expandedData}
-        setExpanded={setExpanded}
+        backdropOpen={backdropOpen} setBackdropOpen={setBackdropOpen}
+        sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}
+        isBelowMdScreen={isBelowMdScreen} isBelowLgScreen={isBelowLgScreen} isBelowSmScreen={isBelowSmScreen}
+        expanded={expanded} setExpanded={setExpanded}
+        expandedData={expandedData} setExpandedDataSelected={setExpandedDataSelected}
         setViewState={setViewState}
         geojson={geojson}
-        setExpandedDataSelected={setExpandedDataSelected}
+        searchQuery={searchQuery} setSearchQuery={setSearchQuery}
+
+        // Oper state popup ke Sidebar
+        popupInfo={popupInfo}
+        setPopupInfo={setPopupInfo}
       />
-      <FleetMap carIndex={expanded} expandedDataSelected={expandedDataSelected} viewState={viewState} geojson={geojson} expandedData={expandedData} mapboxAccessToken={mapboxAccessToken} />
+
+      <FleetMap
+        expandedStationId={expanded}
+        expandedDataSelected={expandedDataSelected}
+        viewState={viewState}
+        geojson={geojson}
+        expandedData={expandedData}
+        mapboxAccessToken={mapboxAccessToken}
+        activeProject={activeProject}
+
+        // Oper state popup ke Map
+        popupInfo={popupInfo}
+        setPopupInfo={setPopupInfo}
+      />
+
       <Backdrop open={backdropOpen} onClick={() => setBackdropOpen(false)} className='absolute z-10' />
     </div>
   )

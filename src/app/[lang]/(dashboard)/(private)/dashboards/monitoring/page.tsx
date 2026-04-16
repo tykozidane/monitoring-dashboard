@@ -1,45 +1,32 @@
-// MUI Imports
-import Grid from '@mui/material/Grid'
+import { getServerSession } from 'next-auth'
 
-// Component Imports
-// import MapComponent from '@views/apps/maps/dashboard'
+import { authOptions } from '@/libs/auth'
+import DashboardComponent from '@views/dashboard'
+import { prisma } from '@/libs/prisma'
+import { defaultUserProps } from '@/libs/prisma-selects'
 
-import WelcomeCard from '@/views/dashboard/WelcomeCard'
-import FleetMap from '@views/dashboard/maps/fleet'
 
-/**
- * ! If you need data using an API call, uncomment the below API code, update the `process.env.API_URL` variable in the
- * ! `.env` file found at root of your project and also update the API endpoints like `/apps/academy` in below example.
- * ! Also, remove the above server action import and the action itself from the `src/app/server/actions.ts` file to clean up unused code
- * ! because we've used the server action for getting our static data.
- */
+const getData = async () => {
+  const session = await getServerSession(authOptions)
 
-/* const getAcademyData = async () => {
-  // Vars
-  const res = await fetch(`${process.env.API_URL}/apps/academy`)
+  const userbyId = await prisma.user.findFirst({
+    where: {
+      AND: [{ id: session?.user.id }, { deletedAt: null }]
+    },
+    select: defaultUserProps
+  })
 
-  if (!res.ok) {
-    throw new Error('Failed to fetch academy data')
+  return {
+    user: userbyId
   }
+}
 
-  return res.json()
-} */
-
-const AcademyDashboard = async () => {
+const Dashboard = async () => {
+  const getDatas = await getData()
 
   return (
-    <Grid container spacing={6}>
-      <Grid size={{ xs: 12 }}>
-        <WelcomeCard />
-      </Grid>
-      {/* <Grid size={{ xs: 12 }}>
-        <MapComponent />
-      </Grid> */}
-      <Grid className="w-full h-[500px] flex-1" >
-        <FleetMap mapboxAccessToken={process.env.MAPBOX_ACCESS_TOKEN!} />
-      </Grid>
-    </Grid>
+    <DashboardComponent user={getDatas.user} mapboxAccessToken={process.env.MAPBOX_ACCESS_TOKEN!} />
   )
 }
 
-export default AcademyDashboard
+export default Dashboard
