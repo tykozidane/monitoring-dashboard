@@ -6,10 +6,6 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
   // This is how you will normally render submenu
   {
     label: dictionary['navigation'].dashboards,
-    suffix: {
-      label: '5',
-      color: 'error'
-    },
     icon: 'tabler-smart-home',
     children: [
       {

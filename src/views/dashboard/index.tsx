@@ -274,26 +274,6 @@ const Dashboard = ({ user, mapboxAccessToken }: { user: UserDefaultProps | null,
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{
-        __html: `
-        @keyframes intermittent-shake {
-          0%, 80%, 100% { transform: translateX(0); }
-          82%, 86%, 90%, 94%, 98% { transform: translateX(-4px); }
-          84%, 88%, 92%, 96% { transform: translateX(4px); }
-        }
-        @keyframes intermittent-pulse {
-          0%, 80%, 100% { transform: scale(1); }
-          90% { transform: scale(1.3); }
-        }
-        .animate-danger-box { animation: intermittent-shake 4s ease-in-out infinite; }
-        .animate-warning-icon { animation: intermittent-pulse 2.5s ease-in-out infinite; display: inline-block; }
-
-        .scroll-on-hover { overflow-y: hidden; }
-        .scroll-on-hover:hover { overflow-y: auto; }
-        .scroll-on-hover::-webkit-scrollbar { width: 6px; }
-        .scroll-on-hover::-webkit-scrollbar-thumb { background-color: rgba(0,0,0,0.2); border-radius: 10px; }
-      `}} />
-
       <Grid container spacing={6}>
         <Grid size={{ xs: 12 }}>
           <div className='flex max-md:flex-col md:items-start justify-between gap-6 plb-6'>
@@ -470,6 +450,26 @@ const Dashboard = ({ user, mapboxAccessToken }: { user: UserDefaultProps | null,
           />
         </Grid>
       </Grid>
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        @keyframes intermittent-shake {
+          0%, 80%, 100% { transform: translateX(0); }
+          82%, 86%, 90%, 94%, 98% { transform: translateX(-4px); }
+          84%, 88%, 92%, 96% { transform: translateX(4px); }
+        }
+        @keyframes intermittent-pulse {
+          0%, 80%, 100% { transform: scale(1); }
+          90% { transform: scale(1.3); }
+        }
+        .animate-danger-box { animation: intermittent-shake 4s ease-in-out infinite; }
+        .animate-warning-icon { animation: intermittent-pulse 2.5s ease-in-out infinite; display: inline-block; }
+
+        .scroll-on-hover { overflow-y: hidden; }
+        .scroll-on-hover:hover { overflow-y: auto; }
+        .scroll-on-hover::-webkit-scrollbar { width: 6px; }
+        .scroll-on-hover::-webkit-scrollbar-thumb { background-color: rgba(0,0,0,0.2); border-radius: 10px; }
+      `}} />
+
     </>
   )
 }
