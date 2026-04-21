@@ -136,8 +136,7 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
       // dan reset array terminal agar tidak ada sisa data bahaya sebelumnya.
       return {
         ...m,
-        status: 'normal',
-        terminal: [] // Reset daftar terminal yang rusak
+        status: 'normal'
       }
     }))
 
@@ -205,7 +204,6 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
   useEffect(() => {
     if (selectedStation && Array.isArray(rawStations) && rawStations.length > 0) {
 
-      // Validasi: Hanya jalankan setViewState & flyTo jika station ini belum difokuskan
       if (lastNavigatedStationRef.current !== selectedStation.c_station) {
         setSearchQuery(selectedStation.n_station);
         setExpanded(selectedStation.c_station);
@@ -223,11 +221,9 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
           setBackdropOpen(true);
         }
 
-        // Tandai station ini agar tidak memicu flyTo berulang kali saat interval 5 detik berjalan
         lastNavigatedStationRef.current = selectedStation.c_station;
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedStation, rawStations, isBelowMdScreen]);
 
   // Function Fetch Terminal Data
@@ -267,26 +263,18 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
     }
   }
 
-  // Jika accordion di sidebar di-expand secara manual
   useEffect(() => {
-    if (expanded !== false && geojson.features.length > 0) {
+    if (expanded !== false && expanded !== lastExpandedRef.current) {
       const activeFeature = geojson.features.find(f => f.data.c_station === expanded);
 
       if (activeFeature) {
-        // Jika id sama dengan ref, berarti user sedang diam dan ini refresh dari interval 5 detik.
-        // Jika beda, berarti user baru saja mengklik accordion stasiun baru.
-        const isBackgroundRefresh = lastExpandedRef.current === expanded;
-
-        // Panggil fetch data dengan flag isBackgroundRefresh
-        handleOpenDetail(activeFeature.data.c_station, activeFeature.data.c_project, isBackgroundRefresh);
-
+        handleOpenDetail(activeFeature.data.c_station, activeFeature.data.c_project, false);
         lastExpandedRef.current = expanded;
       }
     } else if (expanded === false) {
       lastExpandedRef.current = false;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [expanded, geojson.features]);
+  }, [expanded]);
 
   return (
     <div

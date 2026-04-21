@@ -137,16 +137,11 @@ const VehicleTracking = ({
           return (
             <Timeline
               key={index}
-              className="relative pbs-4 cursor-pointer transition-colors rounded-lg px-2 -mx-2 hover:bg-actionHover"
+              className="relative  cursor-pointer transition-colors rounded-lg px-2 -mx-2 hover:bg-actionHover"
               onClick={(e) => {
-                // PERBAIKAN: Mencegah scroll liar saat item ini diklik
                 e.preventDefault();
                 e.stopPropagation();
-
-                // 1. Fokuskan Map
                 setExpandedDataSelected({ longitude: Number(item.n_lng), latitude: Number(item.n_lat), zoom: 22 });
-
-                // 2. Buka Popup Tooltip di Map
                 setPopupInfo(item);
               }}
             >
@@ -158,7 +153,7 @@ const VehicleTracking = ({
                   <TimelineConnector />
                 </TimelineSeparator>
 
-                <TimelineContent className="flex flex-col gap-0.5 pbs-0 pis-4 pbe-5">
+                <TimelineContent className="flex flex-col gap-0.5 pbs-0 pis-4 pbe-4 mt-4">
                   <Typography className="font-semibold text-[14px]">
                     {item.c_terminal_type}
                   </Typography>

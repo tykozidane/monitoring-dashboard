@@ -99,11 +99,16 @@ const FleetMap = (props: Props) => {
     }
 
     let isMounted = true;
-    let intervalId: NodeJS.Timeout;
+    let timerId: NodeJS.Timeout;
 
-    // PERBAIKAN: Tambahkan flag "isBackground" agar loading tidak berkedip setiap 5 detik
+    // Fungsi fetch API yang menggunakan rekursif setTimeout
     const fetchDetails = async (isBackground = false) => {
+      // 1. Jika komponen sudah tertutup/unmount, jangan lanjutkan
+      if (!isMounted) return;
+
+      // 2. Tampilkan loading hanya saat klik pertama kali
       if (!isBackground) setLoadingPopup(true);
+      if (!popupInfo.c_terminal_sn) return;
 
       try {
         const session = await getSession();
@@ -122,6 +127,7 @@ const FleetMap = (props: Props) => {
           }
         });
 
+        // 3. Masukkan data ke state HANYA jika komponen masih aktif
         if (isMounted) {
           const apiData = response.data?.data;
           const rawDevices = Array.isArray(apiData?.devices) ? apiData.devices : [];
@@ -139,26 +145,28 @@ const FleetMap = (props: Props) => {
       } catch (error) {
         console.error("Error fetching terminal details", error);
       } finally {
-        if (isMounted && !isBackground) setLoadingPopup(false);
+        if (isMounted) {
+          if (!isBackground) setLoadingPopup(false);
+
+          // 4. PERBAIKAN UTAMA: Jadwalkan hit API berikutnya (5 detik lagi)
+          // HANYA SETELAH request yang saat ini sudah benar-benar selesai.
+          // Ini mencegah penumpukan request di server.
+          timerId = setTimeout(() => {
+            fetchDetails(true);
+          }, 5000);
+        }
       }
     };
 
-    // 1. Eksekusi pertama kali saat popup diklik (dengan loading state)
+    // Eksekusi pemanggilan API untuk pertama kalinya
     fetchDetails();
 
-    // 2. Eksekusi berkala setiap 5 detik selama popup terbuka (tanpa loading state)
-    // eslint-disable-next-line prefer-const
-    intervalId = setInterval(() => {
-      fetchDetails(true);
-    }, 5000);
-
+    // Fungsi cleanup: dijalankan ketika popup ditutup atau terminal lain diklik
     return () => {
       isMounted = false;
-      clearInterval(intervalId); // Hentikan polling saat popup ditutup
+      clearTimeout(timerId); // Pastikan timer dibersihkan agar tidak jalan di background
     }
 
-    // PERBAIKAN: Gunakan Serial Number sebagai dependency agar useEffect tidak terpicu ulang
-    // saat object popupInfo diperbarui dari parent
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [popupInfo?.c_terminal_sn, activeProject]);
 
@@ -242,50 +250,54 @@ const FleetMap = (props: Props) => {
             closeOnClick={true}
             closeButton={false}
             offset={25}
-            maxWidth="800px"
+            maxWidth="650px" /* Lebar maksimal diperkecil */
           >
-            <div className="w-[800px] max-w-[90vw] flex flex-col bg-backgroundPaper border border-divider rounded shadow-lg text-textPrimary overflow-hidden">
+            <div className="w-[650px] max-w-[90vw] flex flex-col bg-backgroundPaper border border-divider rounded shadow-lg text-textPrimary overflow-hidden">
 
               {/* HEADER (Sticky Title & Badges) */}
-              <div className="p-3 border-b border-divider bg-backgroundPaper z-10 shrink-0 flex justify-between items-center">
-                <p className="font-bold text-[14px]">
+              <div className="p-2 border-b border-divider bg-backgroundPaper z-10 shrink-0 flex justify-between items-center">
+                <p className="font-bold text-[13px]">
                   {popupInfo.c_terminal_type} - {popupInfo.c_terminal_sn}
                 </p>
                 {!loadingPopup && (
-                  <div className="flex gap-2">
-                    <span className="px-2 py-0.5 rounded text-[10px]">{lastUpdate}</span>
-                    {!!totalDanger && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700">DANGER: {totalDanger}</span>}
-                    {!!totalWarning && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-100 text-yellow-700">WARN: {totalWarning}</span>}
-                    {!!totalNoData && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-200 text-gray-700">NO DATA: {totalNoData}</span>}
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-700">NORMAL: {totalNormal}</span>
+                  <div className="flex gap-1.5">
+                    <span className="px-1.5 py-0.5 rounded text-[9px]">{lastUpdate}</span>
+                    {!!totalDanger && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-100 text-red-700">DANGER: {totalDanger}</span>}
+                    {!!totalWarning && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-yellow-100 text-yellow-700">WARN: {totalWarning}</span>}
+                    {!!totalNoData && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-gray-200 text-gray-700">NO DATA: {totalNoData}</span>}
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-green-100 text-green-700">NORMAL: {totalNormal}</span>
                   </div>
                 )}
               </div>
 
-              <div
-                className="max-h-[300px] overflow-y-auto scroll-on-hover px-3 pb-3 flex gap-4"
-                style={{ overscrollBehavior: 'contain' }}
-                onWheel={(e) => e.stopPropagation()}
-              >
+              {/* BODY (Fixed height agar rapi, scroll dipisah per kolom) */}
+              <div className="flex px-2 pb-2 gap-3 h-[250px]">
                 {loadingPopup ? (
-                  <div className="flex justify-center items-center w-full py-4">
+                  <div className="flex justify-center items-center w-full h-full">
                     <span className="text-textSecondary text-xs italic animate-pulse">Loading data...</span>
                   </div>
                 ) : (
                   <>
-                    <div className="flex-1 relative">
-                      <p className="text-[11px] font-bold text-textSecondary sticky top-0 bg-backgroundPaper py-2 z-10 border-b border-divider">DEVICES</p>
+                    {/* KOLOM DEVICES (Scroll Independent) */}
+                    <div
+                      className="flex-1 overflow-y-auto scroll-on-hover relative pl-1 pr-2 overscroll-contain"
+                      onWheel={(e) => e.stopPropagation()}
+                      style={{ overscrollBehavior: 'contain' }}
+                    >
+                      <p className="text-[10px] font-bold text-textSecondary sticky top-0 bg-backgroundPaper py-1.5 z-10 border-b border-divider mb-1">
+                        DEVICES
+                      </p>
                       {deviceDetails.length === 0 ? (
-                        <div className="py-2 text-textSecondary text-xs italic">No device data.</div>
+                        <div className="py-2 text-textSecondary text-[10px] italic">No device data.</div>
                       ) : (
-                        <table className="w-full text-left border-collapse text-[11px]">
+                        <table className="w-full text-left border-collapse text-[10px]">
                           <tbody>
                             {deviceDetails.map((dev, idx) => (
                               <tr key={`dev-${idx}`} className="border-b border-divider last:border-0 hover:bg-actionHover transition-colors">
-                                <td className="py-2 pl-1 pr-2 font-medium whitespace-nowrap uppercase">{dev.c_device.replace(/_/g, ' ') || '-'}</td>
-                                <td className="py-2 pr-2 text-textSecondary whitespace-nowrap">{dev.c_device_type || '-'}</td>
-                                <td className="py-2 pr-1 whitespace-nowrap text-right">
-                                  <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${getStatusBadgeStyle(dev.status)}`}>
+                                <td className="py-1.5 pl-1 pr-1 font-medium whitespace-nowrap uppercase">{dev.c_device.replace(/_/g, ' ') || '-'}</td>
+                                <td className="py-1.5 pr-1 text-textSecondary whitespace-nowrap">{dev.c_device_type || '-'}</td>
+                                <td className="py-1.5 pr-1 whitespace-nowrap text-right">
+                                  <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold ${getStatusBadgeStyle(dev.status)}`}>
                                     {dev.status.toUpperCase()}
                                   </span>
                                 </td>
@@ -296,23 +308,31 @@ const FleetMap = (props: Props) => {
                       )}
                     </div>
 
-                    <div className="w-px bg-divider shrink-0 mt-2 mb-2"></div>
+                    {/* Garis Pemisah Tengah */}
+                    <div className="w-px bg-divider shrink-0 my-2"></div>
 
-                    <div className="flex-1 relative">
-                      <p className="text-[11px] font-bold text-textSecondary sticky top-0 bg-backgroundPaper py-2 z-10 border-b border-divider">METRICS</p>
+                    {/* KOLOM METRICS (Scroll Independent) */}
+                    <div
+                      className="flex-1 overflow-y-auto scroll-on-hover relative pl-2 pr-1 overscroll-contain"
+                      onWheel={(e) => e.stopPropagation()}
+                      style={{ overscrollBehavior: 'contain' }}
+                    >
+                      <p className="text-[10px] font-bold text-textSecondary sticky top-0 bg-backgroundPaper py-1.5 z-10 border-b border-divider mb-1">
+                        METRICS
+                      </p>
                       {metricDetails.length === 0 ? (
-                        <div className="py-2 text-textSecondary text-xs italic">No metric data.</div>
+                        <div className="py-2 text-textSecondary text-[10px] italic">No metric data.</div>
                       ) : (
-                        <table className="w-full text-left border-collapse text-[11px]">
+                        <table className="w-full text-left border-collapse text-[10px]">
                           <tbody>
                             {metricDetails.map((metric, idx) => (
                               <tr key={`metric-${idx}`} className="border-b border-divider last:border-0 hover:bg-actionHover transition-colors">
-                                <td className="py-2 pl-1 pr-2 font-medium whitespace-nowrap uppercase">{metric.c_data_type.replace(/_/g, ' ') || '-'}</td>
-                                <td className="py-2 pr-2 text-textSecondary whitespace-nowrap font-mono text-right">
+                                <td className="py-1.5 pl-1 pr-1 font-medium whitespace-nowrap uppercase">{metric.c_data_type.replace(/_/g, ' ') || '-'}</td>
+                                <td className="py-1.5 pr-1 text-textSecondary whitespace-nowrap font-mono text-right">
                                   {metric.value} {metric.measure}
                                 </td>
-                                <td className="py-2 pr-1 whitespace-nowrap text-right">
-                                  <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${getStatusBadgeStyle(metric.status)}`}>
+                                <td className="py-1.5 pr-1 whitespace-nowrap text-right">
+                                  <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold ${getStatusBadgeStyle(metric.status)}`}>
                                     {metric.status.toUpperCase()}
                                   </span>
                                 </td>

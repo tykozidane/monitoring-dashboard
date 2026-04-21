@@ -137,21 +137,20 @@ const Dashboard = ({ user, mapboxAccessToken }: { user: UserDefaultProps | null,
   }, [])
 
   const processDashboardData = (raw: DashboardRawData): DashboardProcessedData => {
-    const actualDanger: Station[] = []
-    const actualWarning: Station[] = []
+    // Logika sorting berdasarkan getLatestTime (Descending: Terbaru ke Terlama)
+    const sortByLatest = (a: Station, b: Station) => getLatestTime(b) - getLatestTime(a);
 
-    if (raw.list_danger) {
-      raw.list_danger.forEach(station => {
-        actualDanger.push(station)
-      })
-
-      raw.list_warning.forEach(station => {
-        actualWarning.push(station)
-      })
-    }
-
+    const actualDanger = [...(raw.list_danger || [])].sort(sortByLatest);
+    const actualWarning = [...(raw.list_warning || [])].sort(sortByLatest);
 
     return { ...raw, list_danger: actualDanger, list_warning: actualWarning }
+  }
+
+  const renderSafeDate = (dateString: string) => {
+    if (!isMounted) return 'Loading date...'
+
+    // Teks diubah sesuai permintaan
+    return `Last update: ${dayjs(dateString).fromNow()}`
   }
 
   const fetchProjects = useCallback(async (mounted: boolean) => {
@@ -205,6 +204,14 @@ const Dashboard = ({ user, mapboxAccessToken }: { user: UserDefaultProps | null,
     }
   }, [])
 
+  const [currentTime, setCurrentTime] = useState<number>(Date.now())
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(Date.now()), 1000)
+
+    return () => clearInterval(timer)
+  }, [])
+
   useEffect(() => {
     let mounted = true;
 
@@ -222,12 +229,6 @@ const Dashboard = ({ user, mapboxAccessToken }: { user: UserDefaultProps | null,
       return () => clearInterval(interval);
     }
   }, [projectsActive, fetchDashboardData])
-
-  const renderSafeDate = (dateString: string) => {
-    if (!isMounted) return 'Loading date...'
-
-    return `Monitored: ${dayjs(dateString).fromNow()}`
-  }
 
   const handleStationClick = (station: Station) => {
     setSelectedStation(station);
@@ -275,6 +276,13 @@ const Dashboard = ({ user, mapboxAccessToken }: { user: UserDefaultProps | null,
         }
       }
     }
+  }
+
+  const getLatestTime = (station: Station) => {
+    if (!station?.terminal?.length) return 0;
+
+    // Cari d_monitoring terbaru dari semua terminal di stasiun ini
+    return Math.max(...station.terminal.map(t => dayjs(t.d_monitoring).valueOf()));
   }
 
   return (
@@ -373,7 +381,9 @@ const Dashboard = ({ user, mapboxAccessToken }: { user: UserDefaultProps | null,
           <Card>
             <CardContent>
               <Typography variant='h5' color='error' className='mbe-4 flex items-center gap-2'>
-                <span className="animate-warning-icon text-4xl">🚨</span>
+                <span className={dashboardData?.list_danger?.length ? "animate-warning-icon text-4xl" : "text-2xl"}>
+                  🚨
+                </span>
                 Danger Stations ({dashboardData?.list_danger?.length || 0})
               </Typography>
               <List className="h-[350px] scroll-on-hover px-2">
@@ -384,7 +394,16 @@ const Dashboard = ({ user, mapboxAccessToken }: { user: UserDefaultProps | null,
                     className="animate-danger-box mbe-4 p-4 border rounded border-error/50 bg-error/10 cursor-pointer hover:bg-error/20 transition-all"
                     style={{ animationDelay: `${index * 0.75}s` }}
                   >
-                    <Typography variant='subtitle1' className='font-bold'>{station.n_station}</Typography>
+                    <div className="flex justify-between items-start">
+                      <Typography variant='subtitle1' className='font-bold'>
+                        {index + 1}. {station.n_station}
+                      </Typography>
+                      {/* Durasi NEW diubah menjadi 60 detik (60000 ms) */}
+                      {(currentTime - getLatestTime(station)) <= 60000 && (
+                        <Chip label="NEW" color="error" size="small" className="h-5 text-[10px] font-bold animate-pulse" />
+                      )}
+                    </div>
+
                     <Typography variant='body2' className='mbe-2 opacity-80'>Station ID: {station.c_station}</Typography>
 
                     <Divider className='my-2' />
@@ -400,7 +419,7 @@ const Dashboard = ({ user, mapboxAccessToken }: { user: UserDefaultProps | null,
                     ))}
                   </div>
                 ))}
-                {!loading && dashboardData?.list_danger?.length === 0 && (
+                {!loading && (!dashboardData?.list_danger || dashboardData.list_danger.length === 0) && (
                   <Typography variant="body2" className="text-center italic opacity-70 mt-4">No danger stations found.</Typography>
                 )}
               </List>
@@ -413,7 +432,9 @@ const Dashboard = ({ user, mapboxAccessToken }: { user: UserDefaultProps | null,
           <Card>
             <CardContent>
               <Typography variant='h5' color='warning.main' className='mbe-4 flex items-center gap-2'>
-                <span className="animate-warning-icon text-4xl">⚠️</span>
+                <span className={dashboardData?.list_warning?.length ? "animate-warning-icon text-4xl" : "text-2xl"}>
+                  ⚠️
+                </span>
                 Warning Stations ({dashboardData?.list_warning?.length || 0})
               </Typography>
               <List className="h-[350px] scroll-on-hover px-2">
@@ -423,7 +444,16 @@ const Dashboard = ({ user, mapboxAccessToken }: { user: UserDefaultProps | null,
                     onClick={() => handleStationClick(station)}
                     className="mbe-4 p-4 border rounded border-warning/50 bg-warning/10 cursor-pointer hover:bg-warning/20 transition-all"
                   >
-                    <Typography variant='subtitle1' className='font-bold'>{station.n_station}</Typography>
+                    <div className="flex justify-between items-start">
+                      <Typography variant='subtitle1' className='font-bold'>
+                        {index + 1}. {station.n_station}
+                      </Typography>
+                      {/* Durasi NEW diubah menjadi 60 detik (60000 ms) */}
+                      {(currentTime - getLatestTime(station)) <= 60000 && (
+                        <Chip label="NEW" color="warning" size="small" className="h-5 text-[10px] font-bold animate-pulse" />
+                      )}
+                    </div>
+
                     <Typography variant='body2' className='mbe-2 opacity-80'>Station ID: {station.c_station}</Typography>
 
                     <Divider className='my-2' />
@@ -439,7 +469,7 @@ const Dashboard = ({ user, mapboxAccessToken }: { user: UserDefaultProps | null,
                     ))}
                   </div>
                 ))}
-                {!loading && dashboardData?.list_warning?.length === 0 && (
+                {!loading && (!dashboardData?.list_warning || dashboardData.list_warning.length === 0) && (
                   <Typography variant="body2" className="text-center italic opacity-70 mt-4">No warning stations found.</Typography>
                 )}
               </List>
