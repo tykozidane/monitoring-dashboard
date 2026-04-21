@@ -35,28 +35,47 @@ interface StationData {
 const columnHelper = createColumnHelper<StationData>()
 const BASE_URL = process.env.API_MONITORING_URL;
 
-// Komponen Helper Geocoding Tabel dengan Limit Lebar (Width)
+// Table Geocoding Helper Component (On-Demand Fetching to avoid Rate Limits)
 const AddressCell = ({ lat, lng }: { lat: string | null, lng: string | null }) => {
-  const [address, setAddress] = useState<string>('Waiting for coordinates...');
+  const [address, setAddress] = useState<string>('');
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (!lat || !lng) {
-      setAddress('-');
+  const fetchAddress = async () => {
+    if (!lat || !lng) return;
+    setLoading(true);
 
-      return;
+    try {
+      const res = await fetch(`/api/geocode?type=reverse&lat=${lat}&lng=${lng}`);
+      const data = await res.json();
+
+      if (data.error) {
+        setAddress('Failed: API Limit');
+      } else {
+        setAddress(data.display_name || 'Unknown location');
+      }
+    } catch (error) {
+      setAddress('Failed to load address');
+    } finally {
+      setLoading(false);
     }
+  };
 
-    const fetchAddress = async () => {
-      try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
-        const data = await res.json();
+  if (!lat || !lng) return <Typography variant="body2" color="text.secondary">-</Typography>;
 
-        setAddress(data.display_name || 'Location name not found');
-      } catch (error) { setAddress('Failed to fetch address'); }
-    };
-
-    fetchAddress();
-  }, [lat, lng]);
+  if (!address) {
+    return (
+      <Button
+        size="small"
+        variant="text"
+        color="info"
+        onClick={(e) => { e.stopPropagation(); fetchAddress(); }}
+        disabled={loading}
+        sx={{ textTransform: 'none', fontSize: '0.75rem', p: 0, minWidth: 'auto' }}
+      >
+        {loading ? <CircularProgress size={14} color="inherit" /> : 'View Address'}
+      </Button>
+    );
+  }
 
   return (
     <Box sx={{ maxWidth: '250px', whiteSpace: 'normal', wordBreak: 'break-word' }}>
@@ -126,7 +145,7 @@ const Station = (props: { permission: string[] }) => {
       setIsSearching(true);
 
       try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${inputValue}`);
+        const res = await fetch(`/api/geocode?type=search&q=${inputValue}`);
 
         setLocationOptions(await res.json());
       } catch (error) { console.error(error); } finally { setIsSearching(false); }
@@ -180,7 +199,7 @@ const Station = (props: { permission: string[] }) => {
 
   const fetchAddressByCoords = async (lat: number, lng: number) => {
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+      const res = await fetch(`/api/geocode?type=reverse&lat=${lat}&lng=${lng}`);
       const data = await res.json();
 
       setLocationName(data.display_name || 'Location name not found');
