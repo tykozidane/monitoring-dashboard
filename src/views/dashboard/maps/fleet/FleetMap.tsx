@@ -51,9 +51,10 @@ const getStatusWeight = (status: string) => {
   const s = status?.toLowerCase() || '';
 
   if (s === 'danger') return 1;
-  if (s === 'warning') return 2;
-  if (s === 'no_data' || s === 'no data') return 3; // NO_DATA masuk urutan 3
-  if (s === 'normal') return 4;
+  if (s === 'down') return 2;
+  if (s === 'warning') return 3;
+  if (s === 'no_data' || s === 'no data') return 4;
+  if (s === 'normal') return 5;
 
   return 5;
 };
@@ -63,6 +64,7 @@ const getStatusBadgeStyle = (status: string) => {
   const s = status?.toLowerCase() || '';
 
   if (s === 'danger') return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+  if (s === 'down') return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
   if (s === 'warning') return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
   if (s === 'no_data' || s === 'no data') return 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
   if (s === 'normal') return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
@@ -171,7 +173,7 @@ const FleetMap = (props: Props) => {
   }, [popupInfo?.c_terminal_sn, activeProject]);
 
   const allData = [...deviceDetails, ...metricDetails];
-  const totalDanger = allData.filter(i => i.status?.toLowerCase() === 'danger').length;
+  const totalDanger = allData.filter(i => i.status?.toLowerCase() === 'danger' || i.status?.toLowerCase() === 'down').length;
   const totalWarning = allData.filter(i => i.status?.toLowerCase() === 'warning').length;
   const totalNoData = allData.filter(i => i.status?.toLowerCase() === 'no_data' || i.status?.toLowerCase() === 'no data').length;
   const totalNormal = allData.filter(i => i.status?.toLowerCase() === 'normal').length;
@@ -368,3 +370,5 @@ const FleetMap = (props: Props) => {
 }
 
 export default FleetMap
+
+

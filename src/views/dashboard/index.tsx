@@ -137,7 +137,6 @@ const Dashboard = ({ user, mapboxAccessToken }: { user: UserDefaultProps | null,
   }, [])
 
   const processDashboardData = (raw: DashboardRawData): DashboardProcessedData => {
-    // Logika sorting berdasarkan getLatestTime (Descending: Terbaru ke Terlama)
     const sortByLatest = (a: Station, b: Station) => getLatestTime(b) - getLatestTime(a);
 
     const actualDanger = [...(raw.list_danger || [])].sort(sortByLatest);
@@ -149,7 +148,6 @@ const Dashboard = ({ user, mapboxAccessToken }: { user: UserDefaultProps | null,
   const renderSafeDate = (dateString: string) => {
     if (!isMounted) return 'Loading date...'
 
-    // Teks diubah sesuai permintaan
     return `Last update: ${dayjs(dateString).fromNow()}`
   }
 
@@ -281,7 +279,6 @@ const Dashboard = ({ user, mapboxAccessToken }: { user: UserDefaultProps | null,
   const getLatestTime = (station: Station) => {
     if (!station?.terminal?.length) return 0;
 
-    // Cari d_monitoring terbaru dari semua terminal di stasiun ini
     return Math.max(...station.terminal.map(t => dayjs(t.d_monitoring).valueOf()));
   }
 

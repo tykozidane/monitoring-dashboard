@@ -42,6 +42,11 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
     href: '/location'
   },
   {
+    label: dictionary['navigation'].threshold,
+    icon: 'tabler-alert-triangle',
+    href: '/threshold'
+  },
+  {
     label: dictionary['navigation'].apps,
     icon: 'tabler-apps-filled',
     href: '/apps'

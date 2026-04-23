@@ -123,43 +123,34 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
   }, [activeProject]);
 
   useEffect(() => {
-    // 1. Update Status Stasiun (Raw Stations)
     setRawStations((prev) => prev.map((m) => {
       const find = dashboardData?.list_danger.find((f) => f.c_station === m.c_station)
 
       if (find) {
-        // Jika stasiun ada di list_danger, timpa dengan data terbaru
         return { ...m, ...find }
       }
 
-      // PERBAIKAN: Jika TIDAK ADA di list_danger, pastikan status dikembalikan ke 'normal'
-      // dan reset array terminal agar tidak ada sisa data bahaya sebelumnya.
       return {
         ...m,
         status: 'normal'
       }
     }))
 
-    // 2. Update Detail Terminal (Expanded Data)
     setExpandedData((prev) => {
       const newExpandedData = prev.map((m) => {
-        // Cari apakah terminal ini masih ada di list_danger
         const findStation = dashboardData?.list_danger.find((f) => f.c_station === m.c_station);
         const findTerminal = findStation?.terminal.find((f) => f.c_terminal_sn === m.c_terminal_sn);
 
         if (findTerminal) {
-          // Update jika masih bahaya
           return { ...m, ...findTerminal }
         }
 
-        // PERBAIKAN: Kembalikan status terminal ke 'normal' jika sudah tidak ada di list_danger
         return {
           ...m,
           status: 'normal'
         }
       });
 
-      // 3. Sinkronisasi data popupInfo jika tooltip sedang terbuka (Kode yang sebelumnya sudah kita buat)
       setPopupInfo((currentPopup) => {
         if (currentPopup) {
           const updatedPopupData = newExpandedData.find(t => t.c_terminal_sn === currentPopup.c_terminal_sn);
@@ -197,10 +188,8 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
     });
   }, [rawStations, searchQuery]);
 
-  // Gunakan useRef untuk melacak station mana yang terakhir kali di-auto-navigate
   const lastNavigatedStationRef = useRef<string | null>(null);
 
-  // Efek Navigasi Otomatis dari Dashboard
   useEffect(() => {
     if (selectedStation && Array.isArray(rawStations) && rawStations.length > 0) {
 
@@ -304,8 +293,6 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
         setViewState={setViewState}
         geojson={geojson}
         searchQuery={searchQuery} setSearchQuery={setSearchQuery}
-
-        // Oper state popup ke Sidebar
         popupInfo={popupInfo}
         setPopupInfo={setPopupInfo}
       />
