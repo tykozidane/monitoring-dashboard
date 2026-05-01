@@ -1,3 +1,5 @@
+'use client'
+
 // React Imports
 import { useEffect, useState } from 'react'
 import type { ReactNode, SyntheticEvent } from 'react'
@@ -31,14 +33,11 @@ type Props = {
   isBelowLgScreen: boolean; isBelowMdScreen: boolean; isBelowSmScreen: boolean;
   expanded: string | false; setExpanded: (value: string | false) => void;
   expandedData: TerminalMonitoringProps[];
-
-  // PERBAIKAN TIPE DATA FUNGSI
+  loadingExpanded: boolean;
   setExpandedDataSelected: (value: ViewStateType) => void;
-
   setViewState: (value: ViewStateType) => void;
   geojson: GeojsonProps;
   searchQuery: string; setSearchQuery: (value: string) => void;
-
   popupInfo: TerminalMonitoringProps | null;
   setPopupInfo: (value: TerminalMonitoringProps | null) => void;
 }
@@ -80,6 +79,7 @@ const getStatusColorClass = (status: string) => {
   if (s === 'normal' || s === 'ok') return 'text-green-500';
   if (s === 'warning') return 'text-amber-500';
   if (s === 'danger') return 'text-red-500';
+  if (s === 'no_data' || s === 'no data') return 'text-gray-500';
 
   return 'text-gray-500';
 }
@@ -95,17 +95,32 @@ const getStatusIcon = (status: string) => {
 }
 
 const VehicleTracking = ({
-  vehicleTrackingData, expanded, expandedData, handleChange, setExpandedDataSelected, setPopupInfo
+  vehicleTrackingData, expanded, expandedData, loadingExpanded, handleChange, setExpandedDataSelected, setPopupInfo
 }: {
   vehicleTrackingData: StationData
   expanded: string | false
   expandedData: TerminalMonitoringProps[]
+  loadingExpanded: boolean
   handleChange: (panel: string, lng: number, lat: number) => (event: SyntheticEvent, isExpanded: boolean) => void
   setExpandedDataSelected: (value: ViewStateType) => void
   setPopupInfo: (value: TerminalMonitoringProps | null) => void
 }) => {
 
   const isExpanded = expanded === vehicleTrackingData.c_station;
+
+  // PERBAIKAN UTAMA: Cek apakah data yang merender adalah milik stasiun lain (stale data)
+  // Jika c_station di data terminal tidak sama dengan c_station di stasiun ini, berarti data belum update.
+  const hasStaleData = expandedData && expandedData.length > 0 && expandedData[0].c_station !== vehicleTrackingData.c_station;
+
+  // Gabungkan status loading dari prop dengan validasi stale data
+  const isCurrentlyLoading = loadingExpanded || hasStaleData;
+
+  // Tentukan status untuk header
+  let displayStatus = vehicleTrackingData.status || 'NORMAL';
+
+  if (isExpanded && !isCurrentlyLoading && (!expandedData || expandedData.length === 0)) {
+    displayStatus = 'NO DATA';
+  }
 
   return (
     <Accordion expanded={isExpanded} onChange={handleChange(vehicleTrackingData.c_station, Number(vehicleTrackingData.n_lng), Number(vehicleTrackingData.n_lat))}>
@@ -116,58 +131,64 @@ const VehicleTracking = ({
           </CustomAvatar>
           <div className='flex flex-col gap-1'>
             <Typography className='font-bold text-[15px]'>{vehicleTrackingData.n_station}</Typography>
-            <Typography className={`font-bold text-xs uppercase tracking-wider ${getStatusColorClass(vehicleTrackingData.status)}`}>
-              {vehicleTrackingData.status}
+            <Typography className={`font-bold text-xs uppercase tracking-wider ${getStatusColorClass(displayStatus)}`}>
+              {displayStatus.replace('_', ' ')}
             </Typography>
           </div>
         </div>
       </AccordionSummary>
 
       <AccordionDetails>
-        {isExpanded && (!expandedData || expandedData.length === 0) ? (
+        {/* LOGIKA TAMPILAN: Cegah data lama tampil dengan "isCurrentlyLoading" */}
+        {isExpanded && isCurrentlyLoading ? (
           <div className="relative flex flex-col gap-3 p-4 text-center rounded-md mb-2 bg-actionHover">
-            <Typography variant="body2" color="text.secondary" className="italic">No terminal data available</Typography>
+            <Typography variant="body2" color="text.secondary" className="italic animate-pulse">Loading data...</Typography>
           </div>
-        ) : null}
+        ) : isExpanded && (!expandedData || expandedData.length === 0) ? (
+          <div className="relative flex flex-col gap-3 p-4 text-center rounded-md mb-2 bg-actionHover">
+            <Typography variant="body2" color="text.secondary" className="italic font-bold">NO DATA</Typography>
+            <Typography variant="caption" color="text.secondary">No data terminals available.</Typography>
+          </div>
+        ) : (
+          isExpanded && expandedData?.map((item, index) => {
+            const statusColor = getStatusColorClass(item.status);
+            const statusIcon = getStatusIcon(item.status);
 
-        {isExpanded && expandedData?.map((item, index) => {
-          const statusColor = getStatusColorClass(item.status);
-          const statusIcon = getStatusIcon(item.status);
+            return (
+              <Timeline
+                key={index}
+                className="relative cursor-pointer transition-colors rounded-lg px-2 -mx-2 hover:bg-actionHover"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setExpandedDataSelected({ longitude: Number(item.n_lng), latitude: Number(item.n_lat), zoom: 22 });
+                  setPopupInfo(item);
+                }}
+              >
+                <TimelineItem>
+                  <TimelineSeparator>
+                    <TimelineDot variant="outlined" className="mlb-0 border-0">
+                      <i className={`${statusIcon} text-xl ${statusColor}`} />
+                    </TimelineDot>
+                    <TimelineConnector />
+                  </TimelineSeparator>
 
-          return (
-            <Timeline
-              key={index}
-              className="relative  cursor-pointer transition-colors rounded-lg px-2 -mx-2 hover:bg-actionHover"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setExpandedDataSelected({ longitude: Number(item.n_lng), latitude: Number(item.n_lat), zoom: 22 });
-                setPopupInfo(item);
-              }}
-            >
-              <TimelineItem>
-                <TimelineSeparator>
-                  <TimelineDot variant="outlined" className="mlb-0 border-0">
-                    <i className={`${statusIcon} text-xl ${statusColor}`} />
-                  </TimelineDot>
-                  <TimelineConnector />
-                </TimelineSeparator>
-
-                <TimelineContent className="flex flex-col gap-0.5 pbs-0 pis-4 pbe-4 mt-4">
-                  <Typography className="font-semibold text-[14px]">
-                    {item.c_terminal_type}
-                  </Typography>
-                  <Typography className={`uppercase font-bold text-[12px] tracking-wide ${statusColor}`}>
-                    {item.status}
-                  </Typography>
-                  <Typography variant="body2" className="text-[12px]" color="text.secondary">
-                    SN: {item.c_terminal_sn} ({item.c_terminal_01}{item.c_terminal_02 ? ' | ' + item.c_terminal_02 : ''})
-                  </Typography>
-                </TimelineContent>
-              </TimelineItem>
-            </Timeline>
-          )
-        })}
+                  <TimelineContent className="flex flex-col gap-0.5 pbs-0 pis-4 pbe-4 mt-4">
+                    <Typography className="font-semibold text-[14px]">
+                      {item.c_terminal_type}
+                    </Typography>
+                    <Typography className={`uppercase font-bold text-[12px] tracking-wide ${statusColor}`}>
+                      {item.status}
+                    </Typography>
+                    <Typography variant="body2" className="text-[12px]" color="text.secondary">
+                      SN: {item.c_terminal_sn} ({item.c_terminal_01}{item.c_terminal_02 ? ' | ' + item.c_terminal_02 : ''})
+                    </Typography>
+                  </TimelineContent>
+                </TimelineItem>
+              </Timeline>
+            )
+          })
+        )}
       </AccordionDetails>
     </Accordion>
   )
@@ -177,7 +198,7 @@ const FleetSidebar = (props: Props) => {
   const {
     backdropOpen, setBackdropOpen, sidebarOpen, setSidebarOpen,
     isBelowLgScreen, isBelowMdScreen, isBelowSmScreen,
-    expanded, expandedData, setExpandedDataSelected, setExpanded, setViewState, geojson,
+    expanded, expandedData, loadingExpanded, setExpandedDataSelected, setExpanded, setViewState, geojson,
     searchQuery, setSearchQuery, popupInfo, setPopupInfo
   } = props
 
@@ -193,7 +214,6 @@ const FleetSidebar = (props: Props) => {
     if (!backdropOpen && sidebarOpen) {
       setSidebarOpen(false)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [backdropOpen])
 
   return (
@@ -238,6 +258,7 @@ const FleetSidebar = (props: Props) => {
             vehicleTrackingData={item.data}
             expanded={expanded}
             expandedData={expandedData}
+            loadingExpanded={loadingExpanded}
             handleChange={handleChange}
             setExpandedDataSelected={setExpandedDataSelected}
             setPopupInfo={setPopupInfo}

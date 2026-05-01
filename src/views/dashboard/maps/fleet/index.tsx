@@ -76,6 +76,7 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
   const [popupInfo, setPopupInfo] = useState<TerminalMonitoringProps | null>(null);
 
   const [rawStations, setRawStations] = useState<StationData[]>([])
+  const [originalStations, setOriginalStations] = useState<StationData[]>([])
   const [geojson, setGeojson] = useState<GeojsonProps>({ type: 'FeatureCollection', features: [] })
   const [searchQuery, setSearchQuery] = useState<string>('')
 
@@ -109,11 +110,19 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
         if (isMounted) {
           const stationData: StationData[] = response.data?.data;
 
-          setRawStations(Array.isArray(stationData) ? stationData : []);
+          // PERBAIKAN DI SINI: Simpan juga ke originalStations
+          const validData = Array.isArray(stationData) ? stationData : [];
+
+          setOriginalStations(validData);
+          setRawStations(validData);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
-        if (isMounted) setRawStations([]);
+
+        if (isMounted) {
+          setOriginalStations([]);
+          setRawStations([]);
+        }
       }
     };
 
@@ -123,34 +132,53 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
   }, [activeProject]);
 
   useEffect(() => {
-    setRawStations((prev) => prev.map((m) => {
-      const find = dashboardData?.list_danger.find((f) => f.c_station === m.c_station)
+    // Pastikan dashboardData tersedia sebelum melakukan update
+    if (!dashboardData) return;
 
-      if (find) {
-        return { ...m, ...find }
+    // PERBAIKAN DI SINI: Gunakan originalStations agar status 'no_data' bawaan API tidak hilang
+    setRawStations(originalStations.map((m) => {
+      // 1. Cek apakah stasiun ada di list_danger
+      const findDanger = dashboardData.list_danger?.find((f) => f.c_station === m.c_station);
+
+      if (findDanger) {
+        return { ...m, ...findDanger };
       }
 
-      return {
-        ...m,
-        status: 'normal'
+      // 2. Cek apakah stasiun ada di list_warning
+      const findWarning = dashboardData.list_warning?.find((f) => f.c_station === m.c_station);
+
+      if (findWarning) {
+        return { ...m, ...findWarning };
       }
-    }))
+
+      // 3. JANGAN PAKSA MENJADI NORMAL.
+      // Kembalikan ke status asli bawaan API (jika aslinya NO DATA, biarkan NO DATA)
+      return { ...m };
+    }));
 
     setExpandedData((prev) => {
       const newExpandedData = prev.map((m) => {
-        const findStation = dashboardData?.list_danger.find((f) => f.c_station === m.c_station);
-        const findTerminal = findStation?.terminal.find((f) => f.c_terminal_sn === m.c_terminal_sn);
+        // Cari stasiun induknya di dashboardData
+        const findStationDanger = dashboardData.list_danger?.find((f) => f.c_station === m.c_station);
+        const findStationWarning = dashboardData.list_warning?.find((f) => f.c_station === m.c_station);
 
+        // Cari terminalnya di dalam stasiun tersebut
+        let findTerminal = findStationDanger?.terminal?.find((f) => f.c_terminal_sn === m.c_terminal_sn);
+
+        if (!findTerminal) {
+          findTerminal = findStationWarning?.terminal?.find((f) => f.c_terminal_sn === m.c_terminal_sn);
+        }
+
+        // Jika terminal ditemukan sedang bermasalah, update datanya
         if (findTerminal) {
-          return { ...m, ...findTerminal }
+          return { ...m, ...findTerminal };
         }
 
-        return {
-          ...m,
-          status: 'normal'
-        }
+        // Jika terminal tidak ada di list_danger atau list_warning, paksa status ke 'normal'
+        return { ...m, status: 'normal' };
       });
 
+      // Update popup secara realtime jika sedang terbuka
       setPopupInfo((currentPopup) => {
         if (currentPopup) {
           const updatedPopupData = newExpandedData.find(t => t.c_terminal_sn === currentPopup.c_terminal_sn);
@@ -158,13 +186,12 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
           if (updatedPopupData) return { ...currentPopup, ...updatedPopupData };
         }
 
-
         return currentPopup;
       });
 
       return newExpandedData;
-    })
-  }, [dashboardData])
+    });
+  }, [dashboardData, originalStations]); // Tambahkan originalStations ke dependency array
 
   // Memfilter Geojson
   useEffect(() => {
@@ -216,8 +243,17 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
   }, [selectedStation, rawStations, isBelowMdScreen]);
 
   // Function Fetch Terminal Data
+  const [loadingExpanded, setLoadingExpanded] = useState<boolean>(false);
+
+
+  // Function Fetch Terminal Data
   const handleOpenDetail = async (stationId: string, projectCode?: string, isBackground = false) => {
     try {
+      if (!isBackground) {
+        setLoadingExpanded(true); // Mulai animasi loading
+        setExpandedData([]);      // Hapus data lama agar layar tidak kedip
+      }
+
       const session = await getSession();
       const apiUrl = process.env.NEXT_PUBLIC_API_MONITORING_URL || process.env.API_MONITORING_URL || 'https://da-device.devops-nutech.com/api/v1';
 
@@ -234,21 +270,47 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
       const terminalData = response.data?.data;
 
       if (Array.isArray(terminalData)) {
-        setExpandedData(terminalData); // Ini akan mengupdate status di sidebar!
+        // --- PERBAIKAN UTAMA DI SINI ---
+        // Sinkronisasi LANGSUNG dengan data realtime (dashboardData)
+        // sebelum dimasukkan ke dalam state.
+        const syncedData = terminalData.map((term) => {
+          // Cari stasiun ini di list_danger / list_warning pada dashboard realtime
+          const findStationDanger = dashboardData?.list_danger?.find((f) => f.c_station === stationId);
+          const findStationWarning = dashboardData?.list_warning?.find((f) => f.c_station === stationId);
+
+          // Cari apakah terminal spesifik ini sedang bermasalah
+          let findTerminal = findStationDanger?.terminal?.find((f) => f.c_terminal_sn === term.c_terminal_sn);
+
+          if (!findTerminal) {
+            findTerminal = findStationWarning?.terminal?.find((f) => f.c_terminal_sn === term.c_terminal_sn);
+          }
+
+          // Jika ditemukan di daftar bahaya/peringatan, timpa dengan status realtime!
+          if (findTerminal) {
+            return { ...term, ...findTerminal };
+          }
+
+          // Jika aman, paksa menjadi normal
+          return { ...term, status: 'normal' };
+        });
+
+        // Simpan data yang sudah disinkronkan
+        setExpandedData(syncedData);
       } else {
         setExpandedData([]);
       }
 
-      // PERBAIKAN UTAMA: Jangan reset terminal yang dipilih (animasi map)
-      // jika fungsi ini dipanggil otomatis dari background interval 5 detik
       if (!isBackground) {
         setExpandedDataSelected(undefined);
       }
 
-      // setPopupInfo(null);
     } catch (err) {
       console.error("Error fetching terminal by station:", err);
       if (!isBackground) setExpandedData([]);
+    } finally {
+      if (!isBackground) {
+        setLoadingExpanded(false); // Matikan loading
+      }
     }
   }
 
@@ -295,6 +357,7 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
         searchQuery={searchQuery} setSearchQuery={setSearchQuery}
         popupInfo={popupInfo}
         setPopupInfo={setPopupInfo}
+        loadingExpanded={loadingExpanded}
       />
 
       <FleetMap

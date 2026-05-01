@@ -24,8 +24,6 @@ type Props = {
   expandedData?: TerminalMonitoringProps[]
   mapboxAccessToken: string
   activeProject: string | null;
-
-  // Prop Popup Control
   popupInfo: TerminalMonitoringProps | null;
   setPopupInfo: (value: TerminalMonitoringProps | null) => void;
 }
@@ -46,7 +44,7 @@ export interface MetricInfo {
   value: number;
 }
 
-// PERBAIKAN: Helper untuk sorting (Danger -> Warning -> No_Data -> Normal)
+// Helper untuk sorting Device (Danger -> Warning -> Normal)
 const getStatusWeight = (status: string) => {
   const s = status?.toLowerCase() || '';
 
@@ -59,12 +57,11 @@ const getStatusWeight = (status: string) => {
   return 5;
 };
 
-// Helper untuk warna badge status agar konsisten
+// Helper untuk warna badge status
 const getStatusBadgeStyle = (status: string) => {
   const s = status?.toLowerCase() || '';
 
-  if (s === 'danger') return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
-  if (s === 'down') return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+  if (s === 'danger' || s === 'down') return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
   if (s === 'warning') return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
   if (s === 'no_data' || s === 'no data') return 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
   if (s === 'normal') return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
@@ -73,13 +70,17 @@ const getStatusBadgeStyle = (status: string) => {
 };
 
 const FleetMap = (props: Props) => {
-  const { expandedStationId, viewState, geojson, mapboxAccessToken, expandedData, expandedDataSelected, activeProject, popupInfo, setPopupInfo } = props
+  const {
+    expandedStationId, viewState, geojson, mapboxAccessToken,
+    expandedData, expandedDataSelected, activeProject,
+    popupInfo, setPopupInfo
+  } = props
 
   const mapRef = useRef<MapRef>(null!)
   const [deviceDetails, setDeviceDetails] = useState<DeviceInfo[]>([]);
   const [metricDetails, setMetricDetails] = useState<MetricInfo[]>([]);
   const [loadingPopup, setLoadingPopup] = useState<boolean>(false);
-  const [lastUpdate, setlastUpdate] = useState<string>('');
+  const [lastUpdate, setLastUpdate] = useState<string>('');
 
   useEffect(() => {
     mapRef.current?.flyTo({ center: [viewState.longitude, viewState.latitude], zoom: viewState.zoom || 16 })
@@ -91,24 +92,23 @@ const FleetMap = (props: Props) => {
     }
   }, [expandedDataSelected])
 
+  const currentPopupSn = useRef<string | null>(null);
+
   useEffect(() => {
     if (!popupInfo) {
       setDeviceDetails([]);
       setMetricDetails([]);
-      setlastUpdate('');
+      setLastUpdate('');
+      currentPopupSn.current = null;
 
       return;
     }
 
     let isMounted = true;
-    let timerId: NodeJS.Timeout;
 
-    // Fungsi fetch API yang menggunakan rekursif setTimeout
     const fetchDetails = async (isBackground = false) => {
-      // 1. Jika komponen sudah tertutup/unmount, jangan lanjutkan
       if (!isMounted) return;
 
-      // 2. Tampilkan loading hanya saat klik pertama kali
       if (!isBackground) setLoadingPopup(true);
       if (!popupInfo.c_terminal_sn) return;
 
@@ -129,16 +129,59 @@ const FleetMap = (props: Props) => {
           }
         });
 
-        // 3. Masukkan data ke state HANYA jika komponen masih aktif
         if (isMounted) {
           const apiData = response.data?.data;
           const rawDevices = Array.isArray(apiData?.devices) ? apiData.devices : [];
           const rawMetrics = Array.isArray(apiData?.data) ? apiData.data : [];
 
+          // 1. Set Device Info
           setDeviceDetails([...rawDevices].sort((a, b) => getStatusWeight(a.status) - getStatusWeight(b.status)));
-          setMetricDetails([...rawMetrics].sort((a, b) => getStatusWeight(a.status) - getStatusWeight(b.status)));
 
-          setlastUpdate(
+          // 2. Set Metric Info
+          const processedMetrics = [...rawMetrics]
+
+            // A. Filter: Sembunyikan status NO_DATA
+            .filter((m) => {
+              const status = (m.status || '').toLowerCase();
+
+
+              return status !== 'no_data' && status !== 'no data';
+            })
+
+            // B. Sorting
+            .sort((a, b) => {
+              // Prioritas Utama: Urutkan berdasarkan Status (Danger -> Warning -> Normal)
+              const weightA = getStatusWeight(a.status);
+              const weightB = getStatusWeight(b.status);
+
+              if (weightA !== weightB) {
+                return weightA - weightB;
+              }
+
+              const measureA = (a.measure || '').trim();
+              const measureB = (b.measure || '').trim();
+
+              // Prioritas 1: Yang memiliki measure ditaruh di atas, yang kosong di paling bawah
+              if (measureA && !measureB) return -1;
+              if (!measureA && measureB) return 1;
+
+              // Prioritas 2: Urutkan alfabetikal berdasarkan nama c_data_type
+              const typeA = (a.c_data_type || '').replace(/_/g, ' ').toLowerCase();
+              const typeB = (b.c_data_type || '').replace(/_/g, ' ').toLowerCase();
+
+              if (typeA < typeB) return -1;
+              if (typeA > typeB) return 1;
+
+              // Prioritas 3: Urutkan alfabetikal berdasarkan satuan measure
+              if (measureA.toLowerCase() < measureB.toLowerCase()) return -1;
+              if (measureA.toLowerCase() > measureB.toLowerCase()) return 1;
+
+              return 0;
+            });
+
+          setMetricDetails(processedMetrics);
+
+          setLastUpdate(
             Array.isArray(apiData?.devices) && apiData?.d_monitoring
               ? dayjs(apiData.d_monitoring).fromNow()
               : '-'
@@ -150,32 +193,30 @@ const FleetMap = (props: Props) => {
         if (isMounted) {
           if (!isBackground) setLoadingPopup(false);
 
-          // 4. PERBAIKAN UTAMA: Jadwalkan hit API berikutnya (5 detik lagi)
-          // HANYA SETELAH request yang saat ini sudah benar-benar selesai.
-          // Ini mencegah penumpukan request di server.
-          timerId = setTimeout(() => {
-            fetchDetails(true);
-          }, 5000);
+          // DIHAPUS: Kita tidak lagi menggunakan setTimeout 5 detik di sini.
+          // Fetch akan dijalankan oleh perubahan dari dependency array.
         }
       }
     };
 
-    // Eksekusi pemanggilan API untuk pertama kalinya
-    fetchDetails();
+    const isFirstTimeClick = currentPopupSn.current !== popupInfo.c_terminal_sn;
 
-    // Fungsi cleanup: dijalankan ketika popup ditutup atau terminal lain diklik
-    return () => {
-      isMounted = false;
-      clearTimeout(timerId); // Pastikan timer dibersihkan agar tidak jalan di background
+    if (isFirstTimeClick) {
+      currentPopupSn.current = popupInfo.c_terminal_sn;
     }
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [popupInfo?.c_terminal_sn, activeProject]);
+    fetchDetails(!isFirstTimeClick);
+
+    return () => {
+      isMounted = false;
+    }
+
+  }, [popupInfo?.c_terminal_sn, activeProject, expandedData]);
 
   const allData = [...deviceDetails, ...metricDetails];
-  const totalDanger = allData.filter(i => i.status?.toLowerCase() === 'danger' || i.status?.toLowerCase() === 'down').length;
+  const totalDanger = allData.filter(i => ['danger', 'down'].includes(i.status?.toLowerCase() || '')).length;
   const totalWarning = allData.filter(i => i.status?.toLowerCase() === 'warning').length;
-  const totalNoData = allData.filter(i => i.status?.toLowerCase() === 'no_data' || i.status?.toLowerCase() === 'no data').length;
+  const totalNoData = allData.filter(i => ['no_data', 'no data'].includes(i.status?.toLowerCase() || '')).length;
   const totalNormal = allData.filter(i => i.status?.toLowerCase() === 'normal').length;
 
   return (
@@ -197,7 +238,6 @@ const FleetMap = (props: Props) => {
         {geojson.features.map((item, index) => {
           const isActiveStation = expandedStationId === item.data.c_station;
 
-
           return (
             <Marker key={item.data.c_station || index} longitude={item.geometry.longitude} latitude={item.geometry.latitude} style={{ display: 'flex' }}>
               <img
@@ -210,9 +250,8 @@ const FleetMap = (props: Props) => {
         })}
 
         {/* MARKER TERMINAL */}
-        {expandedData?.map((item, index) => {
+        {expandedData?.map((item) => {
           const isSelectedTerminal = Number(expandedDataSelected?.longitude) === Number(item.n_lng) && Number(expandedDataSelected?.latitude) === Number(item.n_lat);
-
 
           return (
             <Marker
@@ -232,10 +271,10 @@ const FleetMap = (props: Props) => {
                   {...(isSelectedTerminal && { style: { filter: 'drop-shadow(0 0 7px var(--mui-palette-primary-main))' } })}
                 />
                 {isSelectedTerminal && (
-                  <p className='text-[10px] leading-3 font-bold text-gray-800 bg-white/80 px-1 rounded shadow-sm'>{item.c_terminal_type} </p>
+                  <p className='text-[10px] leading-3 font-bold text-gray-800 bg-white/80 px-1 rounded shadow-sm mt-0.5'>{item.c_terminal_type}</p>
                 )}
                 {isSelectedTerminal && (
-                  <p className='text-[10px] leading-3 font-bold text-gray-800 bg-white/80 px-1 rounded mt-0.5 shadow-sm'> ({item.c_terminal_01}{item.c_terminal_02 ? ' | ' + item.c_terminal_02 : ''})</p>
+                  <p className='text-[10px] leading-3 font-bold text-gray-800 bg-white/80 px-1 rounded shadow-sm mt-0.5'>({item.c_terminal_01}{item.c_terminal_02 ? ` | ${item.c_terminal_02}` : ''})</p>
                 )}
               </div>
             </Marker>
@@ -252,11 +291,11 @@ const FleetMap = (props: Props) => {
             closeOnClick={true}
             closeButton={false}
             offset={25}
-            maxWidth="650px" /* Lebar maksimal diperkecil */
+            maxWidth="650px"
           >
             <div className="w-[650px] max-w-[90vw] flex flex-col bg-backgroundPaper border border-divider rounded shadow-lg text-textPrimary overflow-hidden">
 
-              {/* HEADER (Sticky Title & Badges) */}
+              {/* HEADER */}
               <div className="p-2 border-b border-divider bg-backgroundPaper z-10 shrink-0 flex justify-between items-center">
                 <p className="font-bold text-[13px]">
                   {popupInfo.c_terminal_type} - {popupInfo.c_terminal_sn}
@@ -272,7 +311,7 @@ const FleetMap = (props: Props) => {
                 )}
               </div>
 
-              {/* BODY (Fixed height agar rapi, scroll dipisah per kolom) */}
+              {/* BODY (Kolom Devices & Metrics) */}
               <div className="flex px-2 pb-2 gap-3 h-[250px]">
                 {loadingPopup ? (
                   <div className="flex justify-center items-center w-full h-full">
@@ -280,12 +319,8 @@ const FleetMap = (props: Props) => {
                   </div>
                 ) : (
                   <>
-                    {/* KOLOM DEVICES (Scroll Independent) */}
-                    <div
-                      className="flex-1 overflow-y-auto scroll-on-hover relative pl-1 pr-2 overscroll-contain"
-                      onWheel={(e) => e.stopPropagation()}
-                      style={{ overscrollBehavior: 'contain' }}
-                    >
+                    {/* KOLOM DEVICES */}
+                    <div className="flex-1 overflow-y-auto scroll-on-hover relative pl-1 pr-2" onWheel={(e) => e.stopPropagation()} style={{ overscrollBehavior: 'contain' }}>
                       <p className="text-[10px] font-bold text-textSecondary sticky top-0 bg-backgroundPaper py-1.5 z-10 border-b border-divider mb-1">
                         DEVICES
                       </p>
@@ -310,15 +345,11 @@ const FleetMap = (props: Props) => {
                       )}
                     </div>
 
-                    {/* Garis Pemisah Tengah */}
+                    {/* PEMISAH */}
                     <div className="w-px bg-divider shrink-0 my-2"></div>
 
-                    {/* KOLOM METRICS (Scroll Independent) */}
-                    <div
-                      className="flex-1 overflow-y-auto scroll-on-hover relative pl-2 pr-1 overscroll-contain"
-                      onWheel={(e) => e.stopPropagation()}
-                      style={{ overscrollBehavior: 'contain' }}
-                    >
+                    {/* KOLOM METRICS */}
+                    <div className="flex-1 overflow-y-auto scroll-on-hover relative pl-2 pr-1" onWheel={(e) => e.stopPropagation()} style={{ overscrollBehavior: 'contain' }}>
                       <p className="text-[10px] font-bold text-textSecondary sticky top-0 bg-backgroundPaper py-1.5 z-10 border-b border-divider mb-1">
                         METRICS
                       </p>
@@ -364,11 +395,8 @@ const FleetMap = (props: Props) => {
           border-bottom-color: var(--mui-palette-background-paper) !important;
         }
       `}} />
-
     </div>
   )
 }
 
 export default FleetMap
-
-

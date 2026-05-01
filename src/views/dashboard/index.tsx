@@ -191,12 +191,16 @@ const Dashboard = ({ user, mapboxAccessToken }: { user: UserDefaultProps | null,
       );
 
       const rawData: DashboardRawData = response.data?.data || {
-        green_station: 0, warning_station: 0, danger_station: 0, list_danger: []
+        green_station: 0, warning_station: 0, danger_station: 0, list_danger: [], list_warning: []
       };
 
       setDashboardData(processDashboardData(rawData));
-    } catch (err) {
-      console.error("Error fetching dashboard monitoring", err);
+    } catch (err: any) {
+      if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+        console.warn('Fetch dashboard timeout. Retrying on next interval...');
+      } else {
+        console.log('Fetch dashboard info:', err.message || 'Network issue');
+      }
     } finally {
       setLoading(false);
     }
