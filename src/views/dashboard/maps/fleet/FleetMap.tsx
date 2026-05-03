@@ -231,7 +231,7 @@ const FleetMap = (props: Props) => {
           latitude: -6.242127,
           zoom: 12,
           bearing: 0,
-          pitch: 0
+          pitch: 50
         }}
       >
         {/* MARKER STASIUN */}

@@ -109,8 +109,6 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
 
         if (isMounted) {
           const stationData: StationData[] = response.data?.data;
-
-          // PERBAIKAN DI SINI: Simpan juga ke originalStations
           const validData = Array.isArray(stationData) ? stationData : [];
 
           setOriginalStations(validData);
@@ -132,53 +130,36 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
   }, [activeProject]);
 
   useEffect(() => {
-    // Pastikan dashboardData tersedia sebelum melakukan update
     if (!dashboardData) return;
 
-    // PERBAIKAN DI SINI: Gunakan originalStations agar status 'no_data' bawaan API tidak hilang
     setRawStations(originalStations.map((m) => {
-      // 1. Cek apakah stasiun ada di list_danger
       const findDanger = dashboardData.list_danger?.find((f) => f.c_station === m.c_station);
 
-      if (findDanger) {
-        return { ...m, ...findDanger };
-      }
+      if (findDanger) return { ...m, ...findDanger };
 
-      // 2. Cek apakah stasiun ada di list_warning
       const findWarning = dashboardData.list_warning?.find((f) => f.c_station === m.c_station);
 
-      if (findWarning) {
-        return { ...m, ...findWarning };
-      }
+      if (findWarning) return { ...m, ...findWarning };
 
-      // 3. JANGAN PAKSA MENJADI NORMAL.
-      // Kembalikan ke status asli bawaan API (jika aslinya NO DATA, biarkan NO DATA)
       return { ...m };
     }));
 
     setExpandedData((prev) => {
       const newExpandedData = prev.map((m) => {
-        // Cari stasiun induknya di dashboardData
         const findStationDanger = dashboardData.list_danger?.find((f) => f.c_station === m.c_station);
         const findStationWarning = dashboardData.list_warning?.find((f) => f.c_station === m.c_station);
 
-        // Cari terminalnya di dalam stasiun tersebut
         let findTerminal = findStationDanger?.terminal?.find((f) => f.c_terminal_sn === m.c_terminal_sn);
 
         if (!findTerminal) {
           findTerminal = findStationWarning?.terminal?.find((f) => f.c_terminal_sn === m.c_terminal_sn);
         }
 
-        // Jika terminal ditemukan sedang bermasalah, update datanya
-        if (findTerminal) {
-          return { ...m, ...findTerminal };
-        }
+        if (findTerminal) return { ...m, ...findTerminal };
 
-        // Jika terminal tidak ada di list_danger atau list_warning, paksa status ke 'normal'
         return { ...m, status: 'normal' };
       });
 
-      // Update popup secara realtime jika sedang terbuka
       setPopupInfo((currentPopup) => {
         if (currentPopup) {
           const updatedPopupData = newExpandedData.find(t => t.c_terminal_sn === currentPopup.c_terminal_sn);
@@ -191,9 +172,8 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
 
       return newExpandedData;
     });
-  }, [dashboardData, originalStations]); // Tambahkan originalStations ke dependency array
+  }, [dashboardData, originalStations]);
 
-  // Memfilter Geojson
   useEffect(() => {
     let filtered = Array.isArray(rawStations) ? [...rawStations] : [];
 
@@ -219,7 +199,6 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
 
   useEffect(() => {
     if (selectedStation && Array.isArray(rawStations) && rawStations.length > 0) {
-
       if (lastNavigatedStationRef.current !== selectedStation.c_station) {
         setSearchQuery(selectedStation.n_station);
         setExpanded(selectedStation.c_station);
@@ -242,16 +221,13 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
     }
   }, [selectedStation, rawStations, isBelowMdScreen]);
 
-  // Function Fetch Terminal Data
   const [loadingExpanded, setLoadingExpanded] = useState<boolean>(false);
 
-
-  // Function Fetch Terminal Data
   const handleOpenDetail = async (stationId: string, projectCode?: string, isBackground = false) => {
     try {
       if (!isBackground) {
-        setLoadingExpanded(true); // Mulai animasi loading
-        setExpandedData([]);      // Hapus data lama agar layar tidak kedip
+        setLoadingExpanded(true);
+        setExpandedData([]);
       }
 
       const session = await getSession();
@@ -270,49 +246,104 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
       const terminalData = response.data?.data;
 
       if (Array.isArray(terminalData)) {
-        // --- PERBAIKAN UTAMA DI SINI ---
-        // Sinkronisasi LANGSUNG dengan data realtime (dashboardData)
-        // sebelum dimasukkan ke dalam state.
         const syncedData = terminalData.map((term) => {
-          // Cari stasiun ini di list_danger / list_warning pada dashboard realtime
           const findStationDanger = dashboardData?.list_danger?.find((f) => f.c_station === stationId);
           const findStationWarning = dashboardData?.list_warning?.find((f) => f.c_station === stationId);
 
-          // Cari apakah terminal spesifik ini sedang bermasalah
           let findTerminal = findStationDanger?.terminal?.find((f) => f.c_terminal_sn === term.c_terminal_sn);
 
           if (!findTerminal) {
             findTerminal = findStationWarning?.terminal?.find((f) => f.c_terminal_sn === term.c_terminal_sn);
           }
 
-          // Jika ditemukan di daftar bahaya/peringatan, timpa dengan status realtime!
-          if (findTerminal) {
-            return { ...term, ...findTerminal };
-          }
+          if (findTerminal) return { ...term, ...findTerminal };
 
-          // Jika aman, paksa menjadi normal
           return { ...term, status: 'normal' };
         });
 
-        // Simpan data yang sudah disinkronkan
         setExpandedData(syncedData);
       } else {
         setExpandedData([]);
       }
 
-      if (!isBackground) {
-        setExpandedDataSelected(undefined);
-      }
+      if (!isBackground) setExpandedDataSelected(undefined);
 
     } catch (err) {
       console.error("Error fetching terminal by station:", err);
       if (!isBackground) setExpandedData([]);
     } finally {
-      if (!isBackground) {
-        setLoadingExpanded(false); // Matikan loading
-      }
+      if (!isBackground) setLoadingExpanded(false);
     }
   }
+
+
+  // --- FUNGSI BARU: Mengambil seluruh terminal dengan melakukan hit API per Stasiun ---
+  const fetchAllTerminalsApi = async (): Promise<TerminalMonitoringProps[]> => {
+    try {
+      const session = await getSession();
+      const apiUrl = process.env.NEXT_PUBLIC_API_MONITORING_URL || process.env.API_MONITORING_URL || 'https://da-device.devops-nutech.com/api/v1';
+
+      // 1. Pastikan kita punya daftar stasiun yang akan di-looping
+      if (!originalStations || originalStations.length === 0) {
+        console.warn("No station data available to fetch terminals.");
+
+        return [];
+      }
+
+      // 2. Buat array of Promises. Kita hit API terminal-by-station untuk setiap stasiun secara paralel
+      const promises = originalStations.map((station) =>
+        ApiAxios.post(`${apiUrl}/output/terminal-by-station`, {
+          c_station: station.c_station,
+          c_project: activeProject ?? 'KCI'
+        }, {
+          headers: {
+            'Authorization': `Bearer ${session?.user?.accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        }).catch((err) => {
+          // Tangkap error per API agar jika 1 stasiun gagal, pencarian keseluruhan tidak terhenti (crash)
+          console.error(`Failed to fetch terminal for station ${station.c_station}:`, err);
+
+          return null; // Return null untuk stasiun yang gagal
+        })
+      );
+
+      // 3. Jalankan semua promise secara bersamaan
+      const responses = await Promise.all(promises);
+
+      // 4. Gabungkan (flatten) data dari semua stasiun menjadi satu array besar
+      let allTerminals: TerminalMonitoringProps[] = [];
+
+      responses.forEach((res) => {
+        if (res && res.data && Array.isArray(res.data.data)) {
+          allTerminals = [...allTerminals, ...res.data.data];
+        }
+      });
+
+      // 5. Lakukan sinkronisasi langsung dengan status realtime Dashboard
+      const syncedData = allTerminals.map((term) => {
+        const findStationDanger = dashboardData?.list_danger?.find((f) => f.c_station === term.c_station);
+        const findStationWarning = dashboardData?.list_warning?.find((f) => f.c_station === term.c_station);
+
+        let findTerminal = findStationDanger?.terminal?.find((f) => f.c_terminal_sn === term.c_terminal_sn);
+
+        if (!findTerminal) {
+          findTerminal = findStationWarning?.terminal?.find((f) => f.c_terminal_sn === term.c_terminal_sn);
+        }
+
+        if (findTerminal) return { ...term, ...findTerminal };
+
+        return { ...term, status: 'normal' };
+      });
+
+      return syncedData;
+
+    } catch (error) {
+      console.error("Failed to fetch all terminals in bulk:", error);
+
+      return [];
+    }
+  };
 
   useEffect(() => {
     if (expanded !== false && expanded !== lastExpandedRef.current) {
@@ -358,6 +389,9 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
         popupInfo={popupInfo}
         setPopupInfo={setPopupInfo}
         loadingExpanded={loadingExpanded}
+
+        // Passing fungsi hit API ke sidebar!
+        fetchAllTerminalsApi={fetchAllTerminalsApi}
       />
 
       <FleetMap
