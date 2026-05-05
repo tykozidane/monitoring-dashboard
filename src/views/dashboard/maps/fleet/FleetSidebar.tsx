@@ -179,7 +179,7 @@ const VehicleTracking = ({
                       {item.status}
                     </Typography>
                     <Typography variant="body2" className="text-[12px]" color="text.secondary">
-                      SN: {item.c_terminal_sn}
+                      SN : {item.c_terminal_sn ?? ' -'}
                     </Typography>
                   </TimelineContent>
                 </TimelineItem>
@@ -419,7 +419,7 @@ const FleetSidebar = (props: Props) => {
                       </Typography>
                     </div>
                     <Typography variant="body2" className="text-[12px]" color="text.secondary">
-                      SN: <span className="font-semibold">{item.c_terminal_sn}</span>
+                      SN: <span className="font-semibold">{item.c_terminal_sn ?? '-'}</span>
                     </Typography>
                     <Typography variant="caption" className="text-[11px] flex items-center gap-1 mt-0.5" color="text.disabled">
                       <i className="tabler-map-pin text-[12px]" />

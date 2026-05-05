@@ -154,16 +154,63 @@ const SyncDetailView = ({ rowData, onClose, permission }: SyncDetailViewProps) =
     if (parsedSyncItems.length > 0 && optionDevice.length > 0) {
       const newMapping: Record<string, DeviceProps> = {};
 
+      const aliasMapping: Record<string, string> = {
+        "MODULE READER": "Card Reader",
+        "CONTROLLER": "MBC",
+        "BARCODE SCANNER": "QR Scanner",
+        "TRANSFORMER": "Trafo",
+        "CARD DISPANSER": "Card Dispanser"
+      };
+
+      // 1. Cek apakah nama model terminal mengandung kata "gate" (case-insensitive)
+      const isGateModel = (rowData.model_name || "").toLowerCase().includes("gate");
+
+      const usedDeviceCodes = new Set<string>();
+
       parsedSyncItems.forEach((sourceItem, idx) => {
         const itemId = `src-${idx}`;
 
-        const matchOption = optionDevice.find((opt) =>
-          opt.c_device === sourceItem.sub_model_code ||
-          opt.c_device_type === sourceItem.sub_item_type ||
-          opt.n_device_type.toUpperCase() === sourceItem.sub_item_type.toUpperCase()
-        );
+        const sourceItemTypeUpper = (sourceItem.sub_item_type || "").toUpperCase().trim();
+        let mappedAlias = aliasMapping[sourceItemTypeUpper];
+
+        // 2. Logic khusus: Jika MODULE READER tapi modelnya NFC, ubah aliasnya ke NFC Reader
+        if (sourceItemTypeUpper === "MODULE READER" && (sourceItem.sub_model_name || "").toUpperCase().includes("NFC")) {
+          mappedAlias = "NFC Reader";
+        }
+
+        const matchOption = optionDevice.find((opt) => {
+          const optNameUpper = (opt.n_device_type || "").toUpperCase().trim();
+
+          const isMatch = (
+            opt.c_device === sourceItem.sub_model_code ||
+            opt.c_device_type === sourceItem.sub_item_type ||
+            optNameUpper === sourceItemTypeUpper ||
+            (mappedAlias && optNameUpper === mappedAlias.toUpperCase())
+          );
+
+          return isMatch && !usedDeviceCodes.has(opt.c_device);
+        });
 
         if (matchOption) {
+          usedDeviceCodes.add(matchOption.c_device);
+
+          let tempDir = 0; // Default direction (0 = No Direction)
+
+          if (isGateModel) {
+            const requiresDirection = ["MODULE READER", "CONTROLLER", "BARCODE SCANNER"].includes(sourceItemTypeUpper);
+
+            if (requiresDirection) {
+              const deviceCodeVal = matchOption.c_device.toLowerCase();
+              const numVal = parseInt(matchOption.n_number, 10);
+
+              if (deviceCodeVal.endsWith('01') || numVal === 1) {
+                tempDir = 1; // 1 untuk 01 (IN)
+              } else if (deviceCodeVal.endsWith('02') || numVal === 2) {
+                tempDir = 2; // 2 untuk 02 (OUT)
+              }
+            }
+          }
+
           const generatedName = `${matchOption.n_device_type} ${rowData.station_code} ${matchOption.n_number}`;
 
           newMapping[itemId] = {
@@ -172,7 +219,7 @@ const SyncDetailView = ({ rowData, onClose, permission }: SyncDetailViewProps) =
             c_device_type: matchOption.c_device_type,
             n_device_name: generatedName,
             c_serial_number: sourceItem.sub_serial_number,
-            c_direction: 0,
+            c_direction: tempDir, // Masukkan variabel direction di sini
             c_project: rowData.c_project || "KCI",
             c_terminal_sn: rowData.c_terminal_sn || "",
             b_active: true,
@@ -185,7 +232,7 @@ const SyncDetailView = ({ rowData, onClose, permission }: SyncDetailViewProps) =
 
       setMappedDevices(prev => ({ ...prev, ...newMapping }));
     }
-  }, [parsedSyncItems, optionDevice, rowData.station_code]);
+  }, [parsedSyncItems, optionDevice, rowData.station_code, rowData.c_project, rowData.c_terminal_sn, rowData.model_name]);
 
   const fetchFreeTerminals = async () => {
     setLoadingOptions(true);

@@ -100,6 +100,7 @@ const FleetMap = (props: Props) => {
       setMetricDetails([]);
       setLastUpdate('');
       currentPopupSn.current = null;
+      setLoadingPopup(false); // [FIX] Pastikan loading ikut direset saat popup ditutup
 
       return;
     }
@@ -110,7 +111,13 @@ const FleetMap = (props: Props) => {
       if (!isMounted) return;
 
       if (!isBackground) setLoadingPopup(true);
-      if (!popupInfo.c_terminal_sn) return;
+
+      // [FIX] Jangan biarkan stuck loading jika ternyata SN tidak valid/kosong
+      if (!popupInfo.c_terminal_sn) {
+        if (isMounted) setLoadingPopup(false);
+
+        return;
+      }
 
       try {
         const session = await getSession();
@@ -191,10 +198,9 @@ const FleetMap = (props: Props) => {
         console.error("Error fetching terminal details", error);
       } finally {
         if (isMounted) {
-          if (!isBackground) setLoadingPopup(false);
-
-          // DIHAPUS: Kita tidak lagi menggunakan setTimeout 5 detik di sini.
-          // Fetch akan dijalankan oleh perubahan dari dependency array.
+          // [FIX] Selalu set ke false untuk menghindari UI nyangkut
+          // saat ada antrian fetch background vs foreground.
+          setLoadingPopup(false);
         }
       }
     };
