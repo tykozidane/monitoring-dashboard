@@ -47,6 +47,7 @@ interface TerminalProps {
   c_terminal_type: string
   c_project?: string | null
   c_station?: string | null
+  c_terminal_01?: string
   n_terminal_name: string
   devices: DeviceProps[]
   n_station: string
@@ -246,7 +247,7 @@ const SyncDetailView = ({ rowData, onClose, permission }: SyncDetailViewProps) =
     }
   }, [parsedSyncItems, optionDevice, rowData.station_code, rowData.c_project, rowData.c_terminal_sn, rowData.model_name]);
 
-  const fetchFreeTerminals = async () => {
+  const fetchFreeTerminals = async (sourceSnToMatch?: string) => {
     setLoadingOptions(true);
 
     try {
@@ -261,14 +262,31 @@ const SyncDetailView = ({ rowData, onClose, permission }: SyncDetailViewProps) =
       });
 
       const data = response.data?.data;
+      let options: TerminalProps[] = [];
 
       if (Array.isArray(data)) {
-        setTerminalOptions(data);
+        options = data;
       } else if (data && typeof data === 'object') {
-        setTerminalOptions([data]);
-      } else {
-        setTerminalOptions([]);
+        options = [data];
       }
+
+      setTerminalOptions(options);
+
+      // --- LOGIKA AUTO SELECT ---
+      // Gunakan parameter yang dipassing, atau fallback ke rowData.serial_number
+      const targetSn = sourceSnToMatch || rowData.serial_number;
+
+      if (targetSn) {
+        const matchedTerminal = options.find(
+          (opt) => opt.c_terminal_01 === targetSn
+        );
+
+        // Jika ketemu yang sama, langsung pilih secara otomatis
+        if (matchedTerminal) {
+          setSelectedTerminal(matchedTerminal);
+        }
+      }
+
     } catch (error) {
       console.error("Error fetching free terminals:", error);
       toast.error("Failed to load available terminals.");
@@ -350,6 +368,10 @@ const SyncDetailView = ({ rowData, onClose, permission }: SyncDetailViewProps) =
       } else {
         setSelectedTerminal(null);
         setIsLocked(false);
+
+        // --- TAMBAHKAN BARIS INI ---
+        // Panggil pencarian terminal bebas dan passing SN dari source untuk auto-select
+        fetchFreeTerminals(formattedData.sync_terminal?.serial_number || rowData.serial_number);
       }
 
     } catch (error) {
