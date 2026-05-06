@@ -30,6 +30,7 @@ import {
   IconCloudUpload,
   IconX,
   IconFileTypeZip,
+  IconFileCode, // Tambahan Icon untuk JSON
   IconCheck,
   IconPlus,
   IconTrash,
@@ -68,8 +69,8 @@ interface TerminalTypeProps {
 
 const BASE_URL = process.env.API_MONITORING_URL;
 
-// --- KONSTANTA UKURAN FILE (50 MB) ---
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB dalam Bytes
+// --- KONSTANTA UKURAN FILE (100 MB) ---
+const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB dalam Bytes
 
 export default function AppVersionManager({ permission }: { permission: string[] }) {
   // --- State Data ---
@@ -203,15 +204,15 @@ export default function AppVersionManager({ permission }: { permission: string[]
     if (acceptedFiles?.length > 0) {
       const file = acceptedFiles[0];
 
-      // --- LOGIKA CEK UKURAN FILE (MAX 50MB) ---
+      // --- LOGIKA CEK UKURAN FILE (MAX 100MB) ---
       if (file.size > MAX_FILE_SIZE) {
-        toast.error("Ukuran file terlalu besar! Maksimal 50MB.");
+        toast.error("Ukuran file terlalu besar! Maksimal 100MB.");
 
         return; // Hentikan proses jika file terlalu besar
       }
 
-      if (!file.name.endsWith('.zip')) {
-        toast.warning("Disarankan mengupload file .zip");
+      if (!file.name.endsWith('.zip') && !file.name.endsWith('.json')) {
+        toast.warning("Disarankan mengupload file berformat .zip atau .json");
       }
 
       setUploadFile(file);
@@ -223,10 +224,11 @@ export default function AppVersionManager({ permission }: { permission: string[]
     onDrop,
     multiple: false,
 
-    // Kita handle size check manual di onDrop agar bisa custom alert toastify
+    // Menambahkan dukungan format JSON
     accept: {
       'application/zip': ['.zip'],
-      'application/x-zip-compressed': ['.zip']
+      'application/x-zip-compressed': ['.zip'],
+      'application/json': ['.json']
     }
   });
 
@@ -269,7 +271,7 @@ export default function AppVersionManager({ permission }: { permission: string[]
 
     // Double check sebelum submit (optional, untuk keamanan extra)
     if (uploadFile.size > MAX_FILE_SIZE) {
-      toast.error("Ukuran file melebihi 50MB.");
+      toast.error("Ukuran file melebihi 100MB.");
 
       return;
     }
@@ -351,10 +353,10 @@ export default function AppVersionManager({ permission }: { permission: string[]
           </Box>
 
           <Typography variant="h5" fontWeight="600" gutterBottom color="text.primary">
-            {isDragActive ? "Drop file ZIP di sini..." : "Drag & Drop File Aplikasi"}
+            {isDragActive ? "Drop file zip/json di sini..." : "Drag & Drop File Aplikasi"}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Support file <strong>.ZIP</strong>. Maksimal ukuran file <strong>50MB</strong>.
+            Support file <strong>.zip/.json</strong>. Maksimal ukuran file <strong>100MB</strong>.
           </Typography>
 
           <Button variant="contained" color="primary" sx={{ px: 4, borderRadius: 2, textTransform: 'none', fontWeight: 'bold' }}>
@@ -412,124 +414,129 @@ export default function AppVersionManager({ permission }: { permission: string[]
               </Paper>
             </Grid>
           ) : (
-            filteredData.map((item) => (
-              <Grid size={{ xs: 12, md: 6, lg: 4 }} key={item.i_id}>
-                <Card
-                  elevation={0}
-                  sx={{
-                    borderRadius: 3,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    bgcolor: 'background.paper',
-                    transition: 'transform 0.2s, box-shadow 0.2s',
-                    '&:hover': {
-                      transform: 'translateY(-4px)',
-                      boxShadow: 6,
-                      borderColor: 'primary.main'
-                    }
-                  }}
-                >
-                  <CardContent sx={{ flexGrow: 1, p: 3 }}>
-                    {/* Header Card */}
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                        <Box sx={{
-                          p: 1.5,
-                          borderRadius: 2,
-                          bgcolor: (theme) => theme.palette.mode === 'dark' ? '#e3f2fd' : '#e3f2fd',
-                          color: 'primary.main'
-                        }}>
-                          <IconFileTypeZip size={26} />
-                        </Box>
-                        <Box>
-                          <Typography variant="h6" fontWeight="bold" lineHeight={1.2} color="text.primary">
-                            {item.n_app_name}
-                          </Typography>
-                          <Stack direction="row" alignItems="center" spacing={0.5} mt={0.5}>
-                            <IconCalendar size={14} style={{ opacity: 0.6 }} />
-                            <Typography variant="caption" color="text.secondary">
-                              {item.d_app_upload ? format(new Date(item.d_app_upload), 'dd MMM yyyy, HH:mm') : '-'}
+            filteredData.map((item) => {
+              const isJsonFile = item.file_name?.endsWith('.json');
+
+
+              return (
+                <Grid size={{ xs: 12, md: 6, lg: 4 }} key={item.i_id}>
+                  <Card
+                    elevation={0}
+                    sx={{
+                      borderRadius: 3,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      bgcolor: 'background.paper',
+                      transition: 'transform 0.2s, box-shadow 0.2s',
+                      '&:hover': {
+                        transform: 'translateY(-4px)',
+                        boxShadow: 6,
+                        borderColor: 'primary.main'
+                      }
+                    }}
+                  >
+                    <CardContent sx={{ flexGrow: 1, p: 3 }}>
+                      {/* Header Card */}
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                          <Box sx={{
+                            p: 1.5,
+                            borderRadius: 2,
+                            bgcolor: (theme) => theme.palette.mode === 'dark' ? '#e3f2fd' : '#e3f2fd',
+                            color: isJsonFile ? 'warning.main' : 'primary.main'
+                          }}>
+                            {isJsonFile ? <IconFileCode size={26} /> : <IconFileTypeZip size={26} />}
+                          </Box>
+                          <Box>
+                            <Typography variant="h6" fontWeight="bold" lineHeight={1.2} color="text.primary">
+                              {item.n_app_name}
                             </Typography>
-                          </Stack>
+                            <Stack direction="row" alignItems="center" spacing={0.5} mt={0.5}>
+                              <IconCalendar size={14} style={{ opacity: 0.6 }} />
+                              <Typography variant="caption" color="text.secondary">
+                                {item.d_app_upload ? format(new Date(item.d_app_upload), 'dd MMM yyyy, HH:mm') : '-'}
+                              </Typography>
+                            </Stack>
+                          </Box>
                         </Box>
+                        <Chip label="Active" color="success" size="small" variant="filled" sx={{ fontWeight: 'bold' }} />
                       </Box>
-                      <Chip label="Active" color="success" size="small" variant="filled" sx={{ fontWeight: 'bold' }} />
+
+                      {/* Metadata Badges */}
+                      <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+                        <Chip
+                          icon={<IconBuildingSkyscraper size={14} />}
+                          label={item.c_project}
+                          size="small"
+                          sx={{ fontWeight: 600, bgcolor: 'action.hover', color: 'text.primary' }}
+                        />
+                        <Chip
+                          icon={<IconDeviceDesktop size={14} />}
+                          label={item.c_terminal_type}
+                          size="small"
+                          sx={{ fontWeight: 600, bgcolor: 'action.hover', color: 'text.primary' }}
+                        />
+                      </Stack>
+
+                      <Divider sx={{ my: 2, borderStyle: 'dashed' }} />
+
+                      {/* Content Detail */}
+                      <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1, color: 'text.primary' }}>
+                        Changelog / Details:
+                      </Typography>
+
+                      <Box
+                        component="ul"
+                        sx={{
+                          m: 0,
+                          pl: 5,
+                          fontSize: '0.875rem',
+                          color: 'text.secondary',
+                          '& li': { mb: 0.5 }
+                        }}
+                      >
+                        {item.n_app_detail ? (
+                          item.n_app_detail.split('\n').map((line, idx) => (
+                            line.trim() !== '' && <li key={idx}>{line}</li>
+                          ))
+                        ) : (
+                          <li> Tidak ada detail</li>
+                        )}
+                      </Box>
+                    </CardContent>
+
+                    {/* Footer Card: Download Button */}
+                    <Box sx={{ p: 2, pt: 0 }}>
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        startIcon={<IconDownload size={18} />}
+                        href={item.link_download}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        sx={{
+                          borderRadius: 2,
+                          textTransform: 'none',
+                          borderColor: 'divider',
+                          color: 'text.primary',
+                          bgcolor: 'background.paper',
+                          '&:hover': {
+                            borderColor: 'primary.main',
+                            bgcolor: 'action.hover',
+                            color: 'primary.main'
+                          }
+                        }}
+                      >
+                        Download {isJsonFile ? 'JSON' : 'ZIP'}
+                      </Button>
                     </Box>
-
-                    {/* Metadata Badges */}
-                    <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-                      <Chip
-                        icon={<IconBuildingSkyscraper size={14} />}
-                        label={item.c_project}
-                        size="small"
-                        sx={{ fontWeight: 600, bgcolor: 'action.hover', color: 'text.primary' }}
-                      />
-                      <Chip
-                        icon={<IconDeviceDesktop size={14} />}
-                        label={item.c_terminal_type}
-                        size="small"
-                        sx={{ fontWeight: 600, bgcolor: 'action.hover', color: 'text.primary' }}
-                      />
-                    </Stack>
-
-                    <Divider sx={{ my: 2, borderStyle: 'dashed' }} />
-
-                    {/* Content Detail */}
-                    <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1, color: 'text.primary' }}>
-                      Changelog / Details:
-                    </Typography>
-
-                    <Box
-                      component="ul"
-                      sx={{
-                        m: 0,
-                        pl: 5,
-                        fontSize: '0.875rem',
-                        color: 'text.secondary',
-                        '& li': { mb: 0.5 }
-                      }}
-                    >
-                      {item.n_app_detail ? (
-                        item.n_app_detail.split('\n').map((line, idx) => (
-                          line.trim() !== '' && <li key={idx}>{line}</li>
-                        ))
-                      ) : (
-                        <li> Tidak ada detail</li>
-                      )}
-                    </Box>
-                  </CardContent>
-
-                  {/* Footer Card: Download Button */}
-                  <Box sx={{ p: 2, pt: 0 }}>
-                    <Button
-                      variant="outlined"
-                      fullWidth
-                      startIcon={<IconDownload size={18} />}
-                      href={item.link_download}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      sx={{
-                        borderRadius: 2,
-                        textTransform: 'none',
-                        borderColor: 'divider',
-                        color: 'text.primary',
-                        bgcolor: 'background.paper',
-                        '&:hover': {
-                          borderColor: 'primary.main',
-                          bgcolor: 'action.hover',
-                          color: 'primary.main'
-                        }
-                      }}
-                    >
-                      Download ZIP
-                    </Button>
-                  </Box>
-                </Card>
-              </Grid>
-            ))
+                  </Card>
+                </Grid>
+              );
+            })
           )}
         </Grid>
       )}
@@ -569,7 +576,11 @@ export default function AppVersionManager({ permission }: { permission: string[]
             alignItems: 'center',
             gap: 2
           }}>
-            <IconFileTypeZip className="text-blue-500" size={32} />
+            {uploadFile?.name.endsWith('.json') ? (
+              <IconFileCode className="text-yellow-500" size={32} />
+            ) : (
+              <IconFileTypeZip className="text-blue-500" size={32} />
+            )}
             <Box sx={{ overflow: 'hidden' }}>
               <Typography variant="body2" color="text.secondary">File Selected:</Typography>
               <Typography variant="subtitle2" fontWeight="bold" noWrap color="text.primary">
