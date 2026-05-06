@@ -177,7 +177,8 @@ const SyncDetailView = ({ rowData, onClose, permission }: SyncDetailViewProps) =
           mappedAlias = "NFC Reader";
         }
 
-        const matchOption = optionDevice.find((opt) => {
+        // 1. Cari SEMUA kemungkinan device yang cocok
+        const possibleMatches = optionDevice.filter((opt) => {
           const optNameUpper = (opt.n_device_type || "").toUpperCase().trim();
 
           const isMatch = (
@@ -189,6 +190,18 @@ const SyncDetailView = ({ rowData, onClose, permission }: SyncDetailViewProps) =
 
           return isMatch && !usedDeviceCodes.has(opt.c_device);
         });
+
+        // 2. Urutkan berdasarkan n_number secara ascending (agar 01, 1, dst terpilih lebih dulu)
+        possibleMatches.sort((a, b) => {
+          const numA = parseInt(a.n_number, 10) || 0;
+          const numB = parseInt(b.n_number, 10) || 0;
+
+
+          return numA - numB;
+        });
+
+        // 3. Ambil opsi dengan urutan pertama (paling kecil n_number-nya)
+        const matchOption = possibleMatches[0];
 
         if (matchOption) {
           usedDeviceCodes.add(matchOption.c_device);
