@@ -158,8 +158,7 @@ const SyncDetailView = ({ rowData, onClose, permission }: SyncDetailViewProps) =
         "MODULE READER": "Card Reader",
         "CONTROLLER": "MBC",
         "BARCODE SCANNER": "QR Scanner",
-        "TRANSFORMER": "Trafo",
-        "CARD DISPANSER": "Card Dispanser"
+        "TRANSFORMER": "Trafo"
       };
 
       // 1. Cek apakah nama model terminal mengandung kata "gate" (case-insensitive)
