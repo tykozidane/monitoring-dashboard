@@ -93,7 +93,7 @@ const Sync = ({ onUpdateCount, permission }: SyncProps) => {
   // --- 4. Definisi Kolom ---
   const columns = useMemo(() => [
     columnHelper.accessor('item_serial_code', {
-      header: 'Serial / Model',
+      header: 'Serial/Project',
       cell: ({ row }) => (
         <div className='flex items-center gap-3'>
           <div className='cursor-pointer p-1 rounded-full hover:bg-action-hover' onClick={() => row.toggleExpanded()}>
@@ -101,7 +101,17 @@ const Sync = ({ onUpdateCount, permission }: SyncProps) => {
           </div>
           <div className='flex flex-col'>
             <Typography color='text.primary' className='font-medium text-sm'>{row.original.item_serial_code}</Typography>
-            <Typography variant='caption' color='text.secondary'>{row.original.model_name}</Typography>
+            <Typography variant='caption' color='text.secondary'>{row.original.client_name}</Typography>
+          </div>
+        </div>
+      )
+    }),
+    columnHelper.accessor('model_name', {
+      header: 'Model',
+      cell: ({ row }) => (
+        <div className='flex items-center gap-3'>
+          <div className='flex flex-col'>
+            <Typography color='text.primary' className='font-medium text-sm'>{row.original.model_name}</Typography>
           </div>
         </div>
       )
