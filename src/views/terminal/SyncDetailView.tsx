@@ -269,7 +269,9 @@ const SyncDetailView = ({ rowData, onClose, permission }: SyncDetailViewProps) =
         options = [data];
       }
 
-      setTerminalOptions(options);
+      const uniqueOptions = Array.from(new Map(options.map(item => [item.i_id, item])).values());
+
+      setTerminalOptions(uniqueOptions);
 
       // --- LOGIKA AUTO SELECT BARU ---
       // Gunakan parameter yang dipassing, atau fallback ke rowData.serial_number
@@ -702,66 +704,82 @@ const SyncDetailView = ({ rowData, onClose, permission }: SyncDetailViewProps) =
       )
     })
 
-    const targetDeletedView = selectedTerminal.devices?.map((dev, idx) => {
-      const isRestored = restoredItems.includes(dev.i_id);
-      const manualMap = mappedDevices[dev.i_id];
-      const libraryInfo = optionDevice.find(opt => opt.c_device === dev.c_device);
+    const targetDeletedView = selectedTerminal.devices?.filter((dev) => {
+      // Cek apakah device dari terminal target ini sudah match dengan data sync (source)
+      const isAlreadyMatched = parsedSyncItems.some((sourceItem, idx) => {
+        const mapping = mappedDevices[`src-${idx}`];
 
-      const cardOpacity = isRestored ? 1 : 0.5;
-      const cardBorderColor = isRestored ? theme.palette.success.main : theme.palette.text.disabled;
-      const cardBg = isRestored ? (theme.palette.mode === 'dark' ? 'rgba(27, 94, 32, 0.2)' : '#f0fdf4') : 'transparent';
 
-      return (
-        <div key={`del-${idx}`} className="relative mb-2 mt-2 group">
-          <Card variant="outlined"
-            sx={{
-              p: 1.5, opacity: cardOpacity, borderColor: cardBorderColor,
-              borderStyle: isRestored ? 'solid' : 'dashed', bgcolor: cardBg,
-              borderWidth: isRestored ? 1 : 1, borderLeftWidth: isRestored ? 4 : 1,
-              transition: 'all 0.3s ease'
-            }}>
-            <div className="absolute -top-2 -right-1 z-10">
-              <Chip label={isRestored ? (manualMap ? "MAPPED MANUAL" : "KEEP EXISTING") : "UNMATCHED"} color={isRestored ? "success" : "error"} size="small" className="font-bold h-4 text-[9px]" />
-            </div>
-            <div className="flex justify-between items-start">
-              <div className='w-full'>
-                <Typography variant="subtitle2" className="text-xs font-bold" color={isRestored ? "success.main" : "error.main"}>{manualMap ? manualMap.n_device_name : dev.n_device_name}</Typography>
-                <div className="mt-2 p-2 sx={{ bgcolor: 'background.default' }} border border-gray-200 rounded text-xs dark:border-gray-700">
-                  <div className="flex items-center gap-1 mb-1 font-bold border-b pb-1 dark:border-gray-700 opacity-70"><i className="tabler-database text-xs"></i> Existing Device Info:</div>
-                  <div className="grid grid-cols-[90px_1fr] gap-x-2 gap-y-1">
-                    <Typography variant="caption" color="text.secondary">Device Code:</Typography>
-                    <span className="font-mono font-medium">{manualMap ? manualMap.c_device : dev.c_device}</span>
-                    <Typography variant="caption" color="text.secondary">Device Name:</Typography>
-                    <span>{manualMap ? manualMap.n_device_name : (libraryInfo ? `${libraryInfo.n_device_type} ${rowData.station_code} ${libraryInfo.n_number}` : dev.n_device_name)}</span>
-                    <Typography variant="caption" color="text.secondary">SN (Target):</Typography>
-                    <span className="font-mono font-bold">{dev.c_serial_number}</span>
+        return (
+          mapping &&
+          dev.c_serial_number === sourceItem.sub_serial_number &&
+          dev.c_device === mapping.c_device
+        );
+      });
+
+      // Hanya render (kembalikan true) jika device ini TIDAK match dengan source
+      return !isAlreadyMatched;
+    })
+      .map((dev, idx) => {
+        const isRestored = restoredItems.includes(dev.i_id);
+        const manualMap = mappedDevices[dev.i_id];
+        const libraryInfo = optionDevice.find(opt => opt.c_device === dev.c_device);
+
+        const cardOpacity = isRestored ? 1 : 0.5;
+        const cardBorderColor = isRestored ? theme.palette.success.main : theme.palette.text.disabled;
+        const cardBg = isRestored ? (theme.palette.mode === 'dark' ? 'rgba(27, 94, 32, 0.2)' : '#f0fdf4') : 'transparent';
+
+        return (
+          <div key={`del-${idx}`} className="relative mb-2 mt-2 group">
+            <Card variant="outlined"
+              sx={{
+                p: 1.5, opacity: cardOpacity, borderColor: cardBorderColor,
+                borderStyle: isRestored ? 'solid' : 'dashed', bgcolor: cardBg,
+                borderWidth: isRestored ? 1 : 1, borderLeftWidth: isRestored ? 4 : 1,
+                transition: 'all 0.3s ease'
+              }}>
+              <div className="absolute -top-2 -right-1 z-10">
+                <Chip label={isRestored ? (manualMap ? "MAPPED MANUAL" : "KEEP EXISTING") : "UNMATCHED"} color={isRestored ? "success" : "error"} size="small" className="font-bold h-4 text-[9px]" />
+              </div>
+              <div className="flex justify-between items-start">
+                <div className='w-full'>
+                  <Typography variant="subtitle2" className="text-xs font-bold" color={isRestored ? "success.main" : "error.main"}>{manualMap ? manualMap.n_device_name : dev.n_device_name}</Typography>
+                  <div className="mt-2 p-2 border border-gray-200 rounded text-xs dark:border-gray-700" style={{ backgroundColor: 'var(--mui-palette-background-default)' }}>
+                    <div className="flex items-center gap-1 mb-1 font-bold border-b pb-1 dark:border-gray-700 opacity-70"><i className="tabler-database text-xs"></i> Existing Device Info:</div>
+                    <div className="grid grid-cols-[90px_1fr] gap-x-2 gap-y-1">
+                      <Typography variant="caption" color="text.secondary">Device Code:</Typography>
+                      <span className="font-mono font-medium">{manualMap ? manualMap.c_device : dev.c_device}</span>
+                      <Typography variant="caption" color="text.secondary">Device Name:</Typography>
+                      <span>{manualMap ? manualMap.n_device_name : (libraryInfo ? `${libraryInfo.n_device_type} ${rowData.station_code} ${libraryInfo.n_number}` : dev.n_device_name)}</span>
+                      <Typography variant="caption" color="text.secondary">SN (Target):</Typography>
+                      <span className="font-mono font-bold">{dev.c_serial_number}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-            <div className="absolute top-2 right-2 z-20">
-              <Tooltip title="Edit this existing device mapping">
-                <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); handleEditClick(dev.i_id, dev.sub_item_serial_code); }} sx={{ bgcolor: 'background.paper', boxShadow: 1 }}>
-                  <i className="tabler-pencil text-sm" />
+              <div className="absolute top-2 right-2 z-20">
+                <Tooltip title="Edit this existing device mapping">
+                  <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); handleEditClick(dev.i_id, dev.sub_item_serial_code); }} sx={{ bgcolor: 'background.paper', boxShadow: 1 }}>
+                    <i className="tabler-pencil text-sm" />
+                  </IconButton>
+                </Tooltip>
+              </div>
+            </Card>
+            <div className={classnames("absolute inset-0 flex items-center justify-center transition-opacity pointer-events-none", { "opacity-0 group-hover:opacity-100": isRestored, "opacity-100": !isRestored })}>
+              <Tooltip title={isRestored ? "Undo Keep (Remove)" : "Keep this item"}>
+                <IconButton size="small" onClick={() => handleToggleRestore(dev.i_id)} className="pointer-events-auto shadow-md border" sx={{ bgcolor: 'background.paper', color: isRestored ? 'error.main' : 'success.main' }}>
+                  <i className={classnames(isRestored ? "tabler-minus" : "tabler-plus")}></i>
                 </IconButton>
               </Tooltip>
             </div>
-          </Card>
-          <div className={classnames("absolute inset-0 flex items-center justify-center transition-opacity pointer-events-none", { "opacity-0 group-hover:opacity-100": isRestored, "opacity-100": !isRestored })}>
-            <Tooltip title={isRestored ? "Undo Keep (Remove)" : "Keep this item"}>
-              <IconButton size="small" onClick={() => handleToggleRestore(dev.i_id)} className="pointer-events-auto shadow-md border" sx={{ bgcolor: 'background.paper', color: isRestored ? 'error.main' : 'success.main' }}>
-                <i className={classnames(isRestored ? "tabler-minus" : "tabler-plus")}></i>
-              </IconButton>
-            </Tooltip>
           </div>
-        </div>
-      )
-    })
+        )
+      })
 
     return (
       <div className="max-h-80 overflow-y-auto pr-1">
         {mergedView}
-        {selectedTerminal.devices?.length > 0 && <Divider className="my-4"><Typography variant="caption" className="font-bold" color="text.secondary">Unmatched Devices</Typography></Divider>}
+        {targetDeletedView?.length > 0 && <Divider className="my-4"><Typography variant="caption" className="font-bold" color="text.secondary">Unmatched Devices</Typography></Divider>}
         {targetDeletedView}
       </div>
     )
