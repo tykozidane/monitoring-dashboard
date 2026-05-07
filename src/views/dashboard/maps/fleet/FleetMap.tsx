@@ -261,7 +261,7 @@ const FleetMap = (props: Props) => {
 
           return (
             <Marker
-              key={`terminal-${item.c_terminal_sn}`}
+              key={`terminal-${item.c_terminal_sn || item.c_terminal_01}`}
               longitude={Number(item.n_lng)}
               latitude={Number(item.n_lat)}
               anchor="top"
