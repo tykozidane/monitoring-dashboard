@@ -158,7 +158,7 @@ const SyncDetailView = ({ rowData, onClose, permission }: SyncDetailViewProps) =
         "MODULE READER": "Card Reader",
         "CONTROLLER": "MBC",
         "BARCODE SCANNER": "QR Scanner",
-        "TRANSFORMER": "Trafo"
+        "TRANSFORMER": "Trafo",
       };
 
       // 1. Cek apakah nama model terminal mengandung kata "gate" (case-insensitive)
@@ -219,6 +219,8 @@ const SyncDetailView = ({ rowData, onClose, permission }: SyncDetailViewProps) =
                 tempDir = 1; // 1 untuk 01 (IN)
               } else if (deviceCodeVal.endsWith('02') || numVal === 2) {
                 tempDir = 2; // 2 untuk 02 (OUT)
+              } else if (deviceCodeVal.endsWith('03') || numVal === 3) {
+                tempDir = 3; // 3 untuk 03 (OUT)
               }
             }
           }

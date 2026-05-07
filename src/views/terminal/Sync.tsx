@@ -3,7 +3,8 @@
 import { useEffect, useState, useMemo, Fragment } from 'react'
 
 import type {
-  ExpandedState
+  ExpandedState,
+  SortingState
 } from '@tanstack/react-table';
 import {
   createColumnHelper, flexRender, getCoreRowModel, useReactTable,
@@ -38,6 +39,10 @@ const Sync = ({ onUpdateCount, permission }: SyncProps) => {
   const [loading, setLoading] = useState(false)
   const [globalFilter, setGlobalFilter] = useState('')
   const [expanded, setExpanded] = useState<ExpandedState>({})
+
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: 'd_sync', desc: true } // Contoh default urutkan berdasarkan 'Created' terbaru
+  ])
 
   // --- 3. Fungsi Fetch API ---
   const fetchSyncData = async () => {
@@ -148,11 +153,11 @@ const Sync = ({ onUpdateCount, permission }: SyncProps) => {
   ], [])
 
   const table = useReactTable({
-    data, columns, state: { globalFilter, expanded }, filterFns: { fuzzy: fuzzyFilter },
+    data, columns, state: { globalFilter, expanded, sorting }, filterFns: { fuzzy: fuzzyFilter },
     onExpandedChange: setExpanded, getRowCanExpand: () => true, getExpandedRowModel: getExpandedRowModel(),
     getCoreRowModel: getCoreRowModel(), getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(), getPaginationRowModel: getPaginationRowModel(),
-    onGlobalFilterChange: setGlobalFilter,
+    onGlobalFilterChange: setGlobalFilter, onSortingChange: setSorting,
   })
 
   return (
@@ -176,7 +181,33 @@ const Sync = ({ onUpdateCount, permission }: SyncProps) => {
 
       <div className='overflow-x-auto border-t'>
         <table className={tableStyles.table}>
-          <thead>{table.getHeaderGroups().map(hg => <tr key={hg.id}>{hg.headers.map(h => <th key={h.id}>{flexRender(h.column.columnDef.header, h.getContext())}</th>)}</tr>)}</thead>
+          <thead>
+            {table.getHeaderGroups().map(hg => (
+              <tr key={hg.id}>
+                {hg.headers.map(h => (
+                  <th key={h.id}>
+                    {h.isPlaceholder ? null : (
+                      <div
+                        className={classnames(
+                          'flex items-center gap-2',
+                          { 'cursor-pointer select-none hover:text-primary transition-colors': h.column.getCanSort() }
+                        )}
+                        onClick={h.column.getToggleSortingHandler()}
+                      >
+                        {flexRender(h.column.columnDef.header, h.getContext())}
+
+                        {/* Indikator Panah Sorting */}
+                        {{
+                          asc: <i className="tabler-arrow-up text-sm font-bold" />,
+                          desc: <i className="tabler-arrow-down text-sm font-bold" />,
+                        }[h.column.getIsSorted() as string] ?? null}
+                      </div>
+                    )}
+                  </th>
+                ))}
+              </tr>
+            ))}
+          </thead>
           <tbody>
             {loading ? (
               <tr><td colSpan={columns.length} className="text-center py-4"><LinearProgress className='w-full py-4' /></td></tr>
