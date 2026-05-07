@@ -150,18 +150,20 @@ const SyncDetailView = ({ rowData, onClose, permission }: SyncDetailViewProps) =
     fecthOptionDevice()
   }, [])
 
+
   useEffect(() => {
     if (parsedSyncItems.length > 0 && optionDevice.length > 0) {
       const newMapping: Record<string, DeviceProps> = {};
 
-      const aliasMapping: Record<string, string> = {
-        "MODULE READER": "Card Reader",
-        "CONTROLLER": "MBC",
-        "BARCODE SCANNER": "QR Scanner",
-        "TRANSFORMER": "Trafo",
+      // 1. Ubah alias mapping menjadi Array agar bisa menampung banyak kemungkinan (termasuk typo)
+      const aliasMapping: Record<string, string[]> = {
+        "MODULE READER": ["CARD READER", "MODULE READER"],
+        "CONTROLLER": ["MBC", "CONTROLLER"],
+        "BARCODE SCANNER": ["QR SCANNER", "BARCODE SCANNER"],
+        "TRANSFORMER": ["TRAFO", "TRANFORMER"],
       };
 
-      // 1. Cek apakah nama model terminal mengandung kata "gate" (case-insensitive)
+      // Cek apakah nama model terminal mengandung kata "gate" (case-insensitive)
       const isGateModel = (rowData.model_name || "").toLowerCase().includes("gate");
 
       const usedDeviceCodes = new Set<string>();
@@ -170,28 +172,31 @@ const SyncDetailView = ({ rowData, onClose, permission }: SyncDetailViewProps) =
         const itemId = `src-${idx}`;
 
         const sourceItemTypeUpper = (sourceItem.sub_item_type || "").toUpperCase().trim();
-        let mappedAlias = aliasMapping[sourceItemTypeUpper];
 
-        // 2. Logic khusus: Jika MODULE READER tapi modelnya NFC, ubah aliasnya ke NFC Reader
+        // Ambil daftar alias berdasarkan tipe, default ke array kosong jika tidak ada
+        let mappedAliases = aliasMapping[sourceItemTypeUpper] || [];
+
+        // Logic khusus: Jika MODULE READER tapi modelnya NFC, ubah aliasnya ke NFC Reader
         if (sourceItemTypeUpper === "MODULE READER" && (sourceItem.sub_model_name || "").toUpperCase().includes("NFC")) {
-          mappedAlias = "NFC Reader";
+          mappedAliases = ["NFC READER"];
         }
 
-        // 1. Cari SEMUA kemungkinan device yang cocok
+        // Cari SEMUA kemungkinan device yang cocok
         const possibleMatches = optionDevice.filter((opt) => {
           const optNameUpper = (opt.n_device_type || "").toUpperCase().trim();
+          const optDeviceTypeUpper = (opt.c_device_type || "").toUpperCase().trim();
 
           const isMatch = (
             opt.c_device === sourceItem.sub_model_code ||
-            opt.c_device_type === sourceItem.sub_item_type ||
+            optDeviceTypeUpper === sourceItemTypeUpper ||
             optNameUpper === sourceItemTypeUpper ||
-            (mappedAlias && optNameUpper === mappedAlias.toUpperCase())
+            mappedAliases.includes(optNameUpper)
           );
 
           return isMatch && !usedDeviceCodes.has(opt.c_device);
         });
 
-        // 2. Urutkan berdasarkan n_number secara ascending (agar 01, 1, dst terpilih lebih dulu)
+        // Urutkan berdasarkan n_number secara ascending
         possibleMatches.sort((a, b) => {
           const numA = parseInt(a.n_number, 10) || 0;
           const numB = parseInt(b.n_number, 10) || 0;
@@ -200,7 +205,7 @@ const SyncDetailView = ({ rowData, onClose, permission }: SyncDetailViewProps) =
           return numA - numB;
         });
 
-        // 3. Ambil opsi dengan urutan pertama (paling kecil n_number-nya)
+        // Ambil opsi dengan urutan pertama (paling kecil n_number-nya)
         const matchOption = possibleMatches[0];
 
         if (matchOption) {
@@ -233,7 +238,7 @@ const SyncDetailView = ({ rowData, onClose, permission }: SyncDetailViewProps) =
             c_device_type: matchOption.c_device_type,
             n_device_name: generatedName,
             c_serial_number: sourceItem.sub_serial_number,
-            c_direction: tempDir, // Masukkan variabel direction di sini
+            c_direction: tempDir,
             c_project: rowData.c_project || "KCI",
             c_terminal_sn: rowData.c_terminal_sn || "",
             b_active: true,
