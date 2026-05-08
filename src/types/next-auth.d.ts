@@ -17,13 +17,17 @@ interface UserSession {
 }
 
 declare module 'next-auth/jwt' {
-  interface JWT extends UserSession {}
+  interface JWT extends UserSession {
+    error?: string // <--- TAMBAHKAN INI
+  }
 }
 
 declare module 'next-auth' {
   interface JWTUser extends UserSession {}
+
   interface Session {
     user: UserSession
+    error?: string // <--- TAMBAHKAN INI
   }
 
   interface User extends UserSession {

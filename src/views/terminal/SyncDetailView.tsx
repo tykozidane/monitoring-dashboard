@@ -1056,1077 +1056,1052 @@ const SyncDetailView = ({ rowData, onClose, permission }: SyncDetailViewProps) =
 export default SyncDetailView
 
 export const CUSTOM_TERMINAL_MAPPING = [
-  { "Serial No": "309-142", "nama": "GATE 16 POC" },
-  { "Serial No": "594-077", "nama": "GATE 01 AC" },
-  { "Serial No": "577-077", "nama": "GATE 02 AC" },
-  { "Serial No": "601-077", "nama": "GATE 03 AC" },
-  { "Serial No": "623-200", "nama": "GATE 01 AK" },
-  { "Serial No": "671-200", "nama": "GATE 02 AK" },
-  { "Serial No": "614-200", "nama": "GATE 03 AK" },
-  { "Serial No": "679-200", "nama": "GATE 04 AK" },
-  { "Serial No": "267-142", "nama": "GATE 01 BPR" },
-  { "Serial No": "268-142", "nama": "GATE 02 BPR" },
-  { "Serial No": "269-142", "nama": "GATE 03 BPR" },
-  { "Serial No": "270-142", "nama": "GATE 04 BPR" },
-  { "Serial No": "638-200", "nama": "GATE 05 BPR" },
-  { "Serial No": "639-200", "nama": "GATE 06 BPR" },
-  { "Serial No": "664-200", "nama": "GATE 07 BPR" },
-  { "Serial No": "744-200", "nama": "GATE 08 BPR" },
-  { "Serial No": "692-200", "nama": "GATE 09 BPR" },
-  { "Serial No": "871-031", "nama": "GATE 01 BKS" },
-  { "Serial No": "869-031", "nama": "GATE 02 BKS" },
-  { "Serial No": "864-031", "nama": "GATE 03 BKS" },
-  { "Serial No": "860-031", "nama": "GATE 04 BKS" },
-  { "Serial No": "859-031", "nama": "GATE 05 BKS" },
-  { "Serial No": "857-031", "nama": "GATE 06 BKS" },
-  { "Serial No": "856-031", "nama": "GATE 07 BKS" },
-  { "Serial No": "850-031", "nama": "GATE 08 BKS" },
-  { "Serial No": "849-031", "nama": "GATE 09 BKS" },
-  { "Serial No": "848-031", "nama": "GATE 10 BKS" },
-  { "Serial No": "847-031", "nama": "GATE 11 BKS" },
-  { "Serial No": "841-031", "nama": "GATE 12 BKS" },
-  { "Serial No": "843-031", "nama": "GATE 13 BKS" },
-  { "Serial No": "845-031", "nama": "GATE 14 BKS" },
-  { "Serial No": "846-031", "nama": "GATE 15 BKS" },
-  { "Serial No": "852-031", "nama": "GATE 16 BKS" },
-  { "Serial No": "853-031", "nama": "GATE 17 BKS" },
-  { "Serial No": "854-031", "nama": "GATE 18 BKS" },
-  { "Serial No": "858-031", "nama": "GATE 19 BKS" },
-  { "Serial No": "751-200", "nama": "GATE 01 BKT" },
-  { "Serial No": "768-200", "nama": "GATE 02 BKT" },
-  { "Serial No": "711-200", "nama": "GATE 03 BKT" },
-  { "Serial No": "717-200", "nama": "GATE 04 BKT" },
-  { "Serial No": "723-200", "nama": "GATE 05 BKT" },
-  { "Serial No": "709-200", "nama": "GATE 06 BKT" },
-  { "Serial No": "757-200", "nama": "GATE 07 BKT" },
-  { "Serial No": "754-200", "nama": "GATE 08 BKT" },
-  { "Serial No": "715-200", "nama": "GATE 09 BKT" },
-  { "Serial No": "001-197", "nama": "GATE 01 BOO" },
-  { "Serial No": "002-197", "nama": "GATE 02 BOO" },
-  { "Serial No": "003-197", "nama": "GATE 03 BOO" },
-  { "Serial No": "004-197", "nama": "GATE 04 BOO" },
-  { "Serial No": "005-197", "nama": "GATE 05 BOO" },
-  { "Serial No": "006-197", "nama": "GATE 06 BOO" },
-  { "Serial No": "198-142", "nama": "GATE 07 BOO" },
-  { "Serial No": "199-142", "nama": "GATE 08 BOO" },
-  { "Serial No": "200-142", "nama": "GATE 09 BOO" },
-  { "Serial No": "201-142", "nama": "GATE 10 BOO" },
-  { "Serial No": "202-142", "nama": "GATE 11 BOO" },
-  { "Serial No": "203-142", "nama": "GATE 12 BOO" },
-  { "Serial No": "204-142", "nama": "GATE 13 BOO" },
-  { "Serial No": "007-197", "nama": "GATE 14 BOO" },
-  { "Serial No": "008-197", "nama": "GATE 15 BOO" },
-  { "Serial No": "009-197", "nama": "GATE 16 BOO" },
-  { "Serial No": "010-197", "nama": "GATE 17 BOO" },
-  { "Serial No": "567-077", "nama": "GATE 18 BOO" },
-  { "Serial No": "595-077", "nama": "GATE 19 BOO" },
-  { "Serial No": "624-200", "nama": "GATE 20 BOO" },
-  { "Serial No": "750-200", "nama": "GATE 21 BOO" },
-  { "Serial No": "580-077", "nama": "GATE 22 BOO" },
-  { "Serial No": "234-142", "nama": "GATE 23 BOO" },
-  { "Serial No": "243-142", "nama": "GATE 24 BOO" },
-  { "Serial No": "239-142", "nama": "GATE 25 BOO" },
-  { "Serial No": "241-142", "nama": "GATE 26 BOO" },
-  { "Serial No": "240-142", "nama": "GATE 27 BOO" },
-  { "Serial No": "228-142", "nama": "GATE 28 BOO" },
-  { "Serial No": "233-142", "nama": "GATE 29 BOO" },
-  { "Serial No": "232-142", "nama": "GATE 30 BOO" },
-  { "Serial No": "231-142", "nama": "GATE 31 BOO" },
-  { "Serial No": "593-077", "nama": "GATE 32 BOO" },
-  { "Serial No": "382-050", "nama": "GATE 33 BOO" },
-  { "Serial No": "178-197", "nama": "GATE 34 BOO" },
-  { "Serial No": "1030-097", "nama": "GATE 35 BOO" },
-  { "Serial No": "012-197", "nama": "GATE 03 BJD" },
-  { "Serial No": "013-197", "nama": "GATE 05 BJD" },
-  { "Serial No": "213-142", "nama": "GATE 07 BJD" },
-  { "Serial No": "214-142", "nama": "GATE 08 BJD" },
-  { "Serial No": "215-142", "nama": "GATE 09 BJD" },
-  { "Serial No": "216-142", "nama": "GATE 10 BJD" },
-  { "Serial No": "513-23.2", "nama": "GATE 11 BJD" },
-  { "Serial No": "343-050", "nama": "GATE 12 BJD" },
-  { "Serial No": "344-050", "nama": "GATE 13 BJD" },
-  { "Serial No": "345-050", "nama": "GATE 14 BJD" },
-  { "Serial No": "393-100", "nama": "GATE 15 BJD" },
-  { "Serial No": "931-036", "nama": "GATE 16 BJD" },
-  { "Serial No": "953-036", "nama": "GATE 17 BJD" },
-  { "Serial No": "947-036", "nama": "GATE 18 BJD" },
-  { "Serial No": "946-036", "nama": "GATE 19 BJD" },
-  { "Serial No": "945-036", "nama": "GATE 20 BJD" },
-  { "Serial No": "921-036", "nama": "GATE 21 BJD" },
-  { "Serial No": "282-142", "nama": "GATE 01 BOI" },
-  { "Serial No": "283-142", "nama": "GATE 02 BOI" },
-  { "Serial No": "284-142", "nama": "GATE 03 BOI" },
-  { "Serial No": "285-142", "nama": "GATE 04 BOI" },
-  { "Serial No": "837-028", "nama": "GATE 01 BBN" },
-  { "Serial No": "160-197", "nama": "GATE 02 BBN" },
-  { "Serial No": "788-200", "nama": "GATE 01 BUA" },
-  { "Serial No": "779-200", "nama": "GATE 02 BUA" },
-  { "Serial No": "801-200", "nama": "GATE 03 BUA" },
-  { "Serial No": "741-200", "nama": "GATE 04 BUA" },
-  { "Serial No": "791-200", "nama": "GATE 05 BUA" },
-  { "Serial No": "737-200", "nama": "GATE 06 BUA" },
-  { "Serial No": "662-200", "nama": "GATE 07 BUA" },
-  { "Serial No": "670-200", "nama": "GATE 08 BUA" },
-  { "Serial No": "661-200", "nama": "GATE 09 BUA" },
-  { "Serial No": "620-200", "nama": "GATE 01 CUK" },
-  { "Serial No": "621-200", "nama": "GATE 02 CUK" },
-  { "Serial No": "655-200", "nama": "GATE 03 CUK" },
-  { "Serial No": "676-200", "nama": "GATE 04 CUK" },
-  { "Serial No": "678-200", "nama": "GATE 05 CUK" },
-  { "Serial No": "701-200", "nama": "GATE 06 CUK" },
-  { "Serial No": "734-200", "nama": "GATE 07 CUK" },
-  { "Serial No": "776-200", "nama": "GATE 08 CUK" },
-  { "Serial No": "795-200", "nama": "GATE 09 CUK" },
-  { "Serial No": "880-044", "nama": "GATE 01 CT" },
-  { "Serial No": "884-044", "nama": "GATE 02 CT" },
-  { "Serial No": "079-197", "nama": "GATE 01 CW" },
-  { "Serial No": "080-197", "nama": "GATE 02 CW" },
-  { "Serial No": "357-050", "nama": "GATE 03 CW" },
-  { "Serial No": "358-050", "nama": "GATE 04 CW" },
-  { "Serial No": "416-100", "nama": "GATE 05 CW" },
-  { "Serial No": "417-100", "nama": "GATE 06 CW" },
-  { "Serial No": "598-077", "nama": "GATE 07 CW" },
-  { "Serial No": "585-077", "nama": "GATE 08 CW" },
-  { "Serial No": "081-197", "nama": "GATE 09 CW" },
-  { "Serial No": "082-197", "nama": "GATE 10 CW" },
-  { "Serial No": "418-100", "nama": "GATE 11 CW" },
-  { "Serial No": "956-036", "nama": "GATE 12 CW" },
-  { "Serial No": "955-036", "nama": "GATE 13 CW" },
-  { "Serial No": "825-028", "nama": "GATE 01 CE" },
-  { "Serial No": "162-197", "nama": "GATE 02 CE" },
-  { "Serial No": "069-197", "nama": "GATE 01 CBN" },
-  { "Serial No": "347-050", "nama": "GATE 02 CBN" },
-  { "Serial No": "348-050", "nama": "GATE 03 CBN" },
-  { "Serial No": "572-077", "nama": "GATE 04 CBN" },
-  { "Serial No": "806-200", "nama": "GATE 05 CBN" },
-  { "Serial No": "725-200", "nama": "GATE 01 CBT" },
-  { "Serial No": "766-200", "nama": "GATE 02 CBT" },
-  { "Serial No": "778-200", "nama": "GATE 03 CBT" },
-  { "Serial No": "767-200", "nama": "GATE 04 CBT" },
-  { "Serial No": "764-200", "nama": "GATE 05 CBT" },
-  { "Serial No": "1027-097", "nama": "GATE 06 CBT" },
-  { "Serial No": "765-200", "nama": "GATE 08 CBT" },
-  { "Serial No": "334-142", "nama": "GATE 01 CCY" },
-  { "Serial No": "335-142", "nama": "GATE 02 CCY" },
-  { "Serial No": "471-100", "nama": "GATE 03 CCY" },
-  { "Serial No": "727-200", "nama": "GATE 01 CKR" },
-  { "Serial No": "736-200", "nama": "GATE 02 CKR" },
-  { "Serial No": "695-200", "nama": "GATE 03 CKR" },
-  { "Serial No": "743-200", "nama": "GATE 04 CKR" },
-  { "Serial No": "735-200", "nama": "GATE 05 CKR" },
-  { "Serial No": "732-200", "nama": "GATE 06 CKR" },
-  { "Serial No": "749-200", "nama": "GATE 07 CKR" },
-  { "Serial No": "724-200", "nama": "GATE 08 CKR" },
-  { "Serial No": "733-200", "nama": "GATE 09 CKR" },
-  { "Serial No": "905-044", "nama": "GATE 10 CKR" },
-  { "Serial No": "888-044", "nama": "GATE 11 CKR" },
-  { "Serial No": "882-044", "nama": "GATE 12 CKR" },
-  { "Serial No": "879-044", "nama": "GATE 13 CKR" },
-  { "Serial No": "900-044", "nama": "GATE 01 CKL" },
-  { "Serial No": "893-044", "nama": "GATE 02 CKL" },
-  { "Serial No": "427-100", "nama": "GATE 01 CKI" },
-  { "Serial No": "095-197", "nama": "GATE 02 CKI" },
-  { "Serial No": "096-197", "nama": "GATE 03 CKI" },
-  { "Serial No": "097-197", "nama": "GATE 04 CKI" },
-  { "Serial No": "098-197", "nama": "GATE 05 CKI" },
-  { "Serial No": "099-197", "nama": "GATE 06 CKI" },
-  { "Serial No": "100-197", "nama": "GATE 07 CKI" },
-  { "Serial No": "101-197", "nama": "GATE 08 CKI" },
-  { "Serial No": "102-197", "nama": "GATE 09 CKI" },
-  { "Serial No": "612-077", "nama": "GATE 10 CKI" },
-  { "Serial No": "586-077", "nama": "GATE 11 CKI" },
-  { "Serial No": "696-200", "nama": "GATE 12 CKI" },
-  { "Serial No": "698-200", "nama": "GATE 13 CKI" },
-  { "Serial No": "699-200", "nama": "GATE 14 CKI" },
-  { "Serial No": "1035-097", "nama": "GATE 15 CKI" },
-  { "Serial No": "511-23.1", "nama": "GATE 02 CKY" },
-  { "Serial No": "512-23.1", "nama": "GATE 03 CKY" },
-  { "Serial No": "576-077", "nama": "GATE 04 CKY" },
-  { "Serial No": "468-100", "nama": "GATE 05 CKY" },
-  { "Serial No": "011-197", "nama": "GATE 01 CLT" },
-  { "Serial No": "205-142", "nama": "GATE 02 CLT" },
-  { "Serial No": "206-142", "nama": "GATE 03 CLT" },
-  { "Serial No": "207-142", "nama": "GATE 04 CLT" },
-  { "Serial No": "208-142", "nama": "GATE 05 CLT" },
-  { "Serial No": "209-142", "nama": "GATE 06 CLT" },
-  { "Serial No": "390-100", "nama": "GATE 07 CLT" },
-  { "Serial No": "391-100", "nama": "GATE 08 CLT" },
-  { "Serial No": "392-100", "nama": "GATE 09 CLT" },
-  { "Serial No": "340-050", "nama": "GATE 10 CLT" },
-  { "Serial No": "341-050", "nama": "GATE 11 CLT" },
-  { "Serial No": "607-077", "nama": "GATE 12 CLT" },
-  { "Serial No": "693-200", "nama": "GATE 13 CLT" },
-  { "Serial No": "907-044", "nama": "GATE 01 CLG" },
-  { "Serial No": "876-044", "nama": "GATE 02 CLG" },
-  { "Serial No": "899-044", "nama": "GATE 03 CLG" },
-  { "Serial No": "476-100", "nama": "GATE 01 CJT" },
-  { "Serial No": "477-100", "nama": "GATE 02 CJT" },
-  { "Serial No": "478-100", "nama": "GATE 03 CJT" },
-  { "Serial No": "582-077", "nama": "GATE 04 CJT" },
-  { "Serial No": "812-200", "nama": "GATE 01 CSK" },
-  { "Serial No": "666-200", "nama": "GATE 02 CSK" },
-  { "Serial No": "629-200", "nama": "GATE 03 CSK" },
-  { "Serial No": "739-200", "nama": "GATE 04 CSK" },
-  { "Serial No": "668-200", "nama": "GATE 05 CSK" },
-  { "Serial No": "688-200", "nama": "GATE 06 CSK" },
-  { "Serial No": "653-200", "nama": "GATE 07 CSK" },
-  { "Serial No": "706-200", "nama": "GATE 08 CSK" },
-  { "Serial No": "704-200", "nama": "GATE 09 CSK" },
-  { "Serial No": "514-23.2", "nama": "GATE 01 CTA" },
-  { "Serial No": "014-197", "nama": "GATE 02 CTA" },
-  { "Serial No": "015-197", "nama": "GATE 03 CTA" },
-  { "Serial No": "016-197", "nama": "GATE 04 CTA" },
-  { "Serial No": "017-197", "nama": "GATE 05 CTA" },
-  { "Serial No": "018-197", "nama": "GATE 06 CTA" },
-  { "Serial No": "019-197", "nama": "GATE 07 CTA" },
-  { "Serial No": "020-197", "nama": "GATE 08 CTA" },
-  { "Serial No": "021-197", "nama": "GATE 09 CTA" },
-  { "Serial No": "346-050", "nama": "GATE 10 CTA" },
-  { "Serial No": "394-100", "nama": "GATE 11 CTA" },
-  { "Serial No": "395-100", "nama": "GATE 12 CTA" },
-  { "Serial No": "396-100", "nama": "GATE 13 CTA" },
-  { "Serial No": "397-100", "nama": "GATE 14 CTA" },
-  { "Serial No": "597-077", "nama": "GATE 15 CTA" },
-  { "Serial No": "568-077", "nama": "GATE 16 CTA" },
-  { "Serial No": "672-200", "nama": "GATE 02 CTR" },
-  { "Serial No": "680-200", "nama": "GATE 03 CTR" },
-  { "Serial No": "622-200", "nama": "GATE 04 CTR" },
-  { "Serial No": "633-200", "nama": "GATE 05 CTR" },
-  { "Serial No": "615-200", "nama": "GATE 06 CTR" },
-  { "Serial No": "746-200", "nama": "GATE 07 CTR" },
-  { "Serial No": "479-100", "nama": "GATE 01 DAR" },
-  { "Serial No": "480-100", "nama": "GATE 02 DAR" },
-  { "Serial No": "481-100", "nama": "GATE 03 DAR" },
-  { "Serial No": "756-200", "nama": "GATE 04 DAR" },
-  { "Serial No": "815-028", "nama": "GATE 01 DL" },
-  { "Serial No": "163-197", "nama": "GATE 02 DL" },
-  { "Serial No": "398-100", "nama": "GATE 01 DP" },
-  { "Serial No": "022-197", "nama": "GATE 02 DP" },
-  { "Serial No": "023-197", "nama": "GATE 03 DP" },
-  { "Serial No": "024-197", "nama": "GATE 04 DP" },
-  { "Serial No": "025-197", "nama": "GATE 05 DP" },
-  { "Serial No": "026-197", "nama": "GATE 06 DP" },
-  { "Serial No": "027-197", "nama": "GATE 07 DP" },
-  { "Serial No": "028-197", "nama": "GATE 08 DP" },
-  { "Serial No": "029-197", "nama": "GATE 09 DP" },
-  { "Serial No": "813-028", "nama": "GATE 10 DP" },
-  { "Serial No": "828-028", "nama": "GATE 11 DP" },
-  { "Serial No": "831-028", "nama": "GATE 12 DP" },
-  { "Serial No": "832-028", "nama": "GATE 13 DP" },
-  { "Serial No": "399-100", "nama": "GATE 01 DPB" },
-  { "Serial No": "350-050", "nama": "GATE 02 DPB" },
-  { "Serial No": "030-197", "nama": "GATE 03 DPB" },
-  { "Serial No": "031-197", "nama": "GATE 04 DPB" },
-  { "Serial No": "032-197", "nama": "GATE 05 DPB" },
-  { "Serial No": "033-197", "nama": "GATE 06 DPB" },
-  { "Serial No": "034-197", "nama": "GATE 07 DPB" },
-  { "Serial No": "400-100", "nama": "GATE 08 DPB" },
-  { "Serial No": "491-23.1", "nama": "GATE 09 DPB" },
-  { "Serial No": "035-197", "nama": "GATE 10 DPB" },
-  { "Serial No": "036-197", "nama": "GATE 11 DPB" },
-  { "Serial No": "037-197", "nama": "GATE 12 DPB" },
-  { "Serial No": "038-197", "nama": "GATE 13 DPB" },
-  { "Serial No": "039-197", "nama": "GATE 14 DPB" },
-  { "Serial No": "040-197", "nama": "GATE 15 DPB" },
-  { "Serial No": "351-050", "nama": "GATE 16 DPB" },
-  { "Serial No": "611-077", "nama": "GATE 17 DPB" },
-  { "Serial No": "1039-097", "nama": "GATE 18 DPB" },
-  { "Serial No": "355-050", "nama": "GATE 02 DRN" },
-  { "Serial No": "074-197", "nama": "GATE 03 DRN" },
-  { "Serial No": "075-197", "nama": "GATE 04 DRN" },
-  { "Serial No": "076-197", "nama": "GATE 05 DRN" },
-  { "Serial No": "077-197", "nama": "GATE 06 DRN" },
-  { "Serial No": "078-197", "nama": "GATE 07 DRN" },
-  { "Serial No": "356-050", "nama": "GATE 08 DRN" },
-  { "Serial No": "720-200", "nama": "GATE 09 DRN" },
-  { "Serial No": "770-200", "nama": "GATE 10 DRN" },
-  { "Serial No": "628-200", "nama": "GATE 01 DU" },
-  { "Serial No": "630-200", "nama": "GATE 02 DU" },
-  { "Serial No": "642-200", "nama": "GATE 03 DU" },
-  { "Serial No": "645-200", "nama": "GATE 04 DU" },
-  { "Serial No": "649-200", "nama": "GATE 05 DU" },
-  { "Serial No": "1048-097", "nama": "GATE 06 DU" },
-  { "Serial No": "1049-097", "nama": "GATE 07 DU" },
-  { "Serial No": "657-200", "nama": "GATE 08 DU" },
-  { "Serial No": "690-200", "nama": "GATE 09 DU" },
-  { "Serial No": "781-200", "nama": "GATE 10 DU" },
-  { "Serial No": "796-200", "nama": "GATE 11 DU" },
-  { "Serial No": "798-200", "nama": "GATE 12 DU" },
-  { "Serial No": "648-200", "nama": "GATE 13 DU" },
-  { "Serial No": "772-200", "nama": "GATE 14 DU" },
-  { "Serial No": "784-200", "nama": "GATE 15 DU" },
-  { "Serial No": "673-200", "nama": "GATE 16 DU" },
-  { "Serial No": "851-031", "nama": "GATE 17 DU" },
-  { "Serial No": "868-031", "nama": "GATE 18 DU" },
-  { "Serial No": "870-031", "nama": "GATE 19 DU" },
-  { "Serial No": "152-197", "nama": "GATE 01 GST" },
-  { "Serial No": "151-197", "nama": "GATE 02 GST" },
-  { "Serial No": "829-028", "nama": "GATE 01 GW" },
-  { "Serial No": "574-077", "nama": "GATE 02 GW" },
-  { "Serial No": "361-050", "nama": "GATE 01 GDD" },
-  { "Serial No": "103-197", "nama": "GATE 02 GDD" },
-  { "Serial No": "104-197", "nama": "GATE 03 GDD" },
-  { "Serial No": "105-197", "nama": "GATE 04 GDD" },
-  { "Serial No": "106-197", "nama": "GATE 05 GDD" },
-  { "Serial No": "107-197", "nama": "GATE 06 GDD" },
-  { "Serial No": "108-197", "nama": "GATE 07 GDD" },
-  { "Serial No": "109-197", "nama": "GATE 08 GDD" },
-  { "Serial No": "110-197", "nama": "GATE 09 GDD" },
-  { "Serial No": "610-077", "nama": "GATE 10 GDD" },
-  { "Serial No": "605-077", "nama": "GATE 11 GDD" },
-  { "Serial No": "604-077", "nama": "GATE 12 GDD" },
-  { "Serial No": "600-077", "nama": "GATE 13 GDD" },
-  { "Serial No": "589-077", "nama": "GATE 14 GDD" },
-  { "Serial No": "603-077", "nama": "GATE 15 GDD" },
-  { "Serial No": "650-200", "nama": "GATE 16 GDD" },
-  { "Serial No": "659-200", "nama": "GATE 17 GDD" },
-  { "Serial No": "571-077", "nama": "GATE 01 GRG" },
-  { "Serial No": "498-23.1", "nama": "GATE 02 GRG" },
-  { "Serial No": "499-23.1", "nama": "GATE 03 GRG" },
-  { "Serial No": "528-23.2", "nama": "GATE 04 GRG" },
-  { "Serial No": "1036-097", "nama": "GATE 05 GRG" },
-  { "Serial No": "218-142", "nama": "GATE 01 JAK" },
-  { "Serial No": "219-142", "nama": "GATE 02 JAK" },
-  { "Serial No": "220-142", "nama": "GATE 03 JAK" },
-  { "Serial No": "221-142", "nama": "GATE 04 JAK" },
-  { "Serial No": "222-142", "nama": "GATE 05 JAK" },
-  { "Serial No": "223-142", "nama": "GATE 06 JAK" },
-  { "Serial No": "224-142", "nama": "GATE 07 JAK" },
-  { "Serial No": "225-142", "nama": "GATE 08 JAK" },
-  { "Serial No": "226-142", "nama": "GATE 09 JAK" },
-  { "Serial No": "227-142", "nama": "GATE 10 JAK" },
-  { "Serial No": "518-23.2", "nama": "GATE 11 JAK" },
-  { "Serial No": "519-23.2", "nama": "GATE 12 JAK" },
-  { "Serial No": "520-23.2", "nama": "GATE 13 JAK" },
-  { "Serial No": "430-100", "nama": "GATE 14 JAK" },
-  { "Serial No": "431-100", "nama": "GATE 15 JAK" },
-  { "Serial No": "521-23.2", "nama": "GATE 16 JAK" },
-  { "Serial No": "522-23.2", "nama": "GATE 17 JAK" },
-  { "Serial No": "523-23.2", "nama": "GATE 18 JAK" },
-  { "Serial No": "524-23.2", "nama": "GATE 19 JAK" },
-  { "Serial No": "525-23.2", "nama": "GATE 20 JAK" },
-  { "Serial No": "362-050", "nama": "GATE 21 JAK" },
-  { "Serial No": "363-050", "nama": "GATE 22 JAK" },
-  { "Serial No": "793-200", "nama": "GATE 23 JAK" },
-  { "Serial No": "785-200", "nama": "GATE 24 JAK" },
-  { "Serial No": "689-200", "nama": "GATE 25 JAK" },
-  { "Serial No": "1040-097", "nama": "GATE 26 JAK" },
-  { "Serial No": "1022-097", "nama": "GATE 27 JAK" },
-  { "Serial No": "1038-097", "nama": "GATE 28 JAK" },
-  { "Serial No": "901-044", "nama": "GATE 01 JBU" },
-  { "Serial No": "897-044", "nama": "GATE 02 JBU" },
-  { "Serial No": "1054-010", "nama": "GATE 01 JTK" },
-  { "Serial No": "1055-010", "nama": "GATE 02 JTK" },
-  { "Serial No": "1056-010", "nama": "GATE 03 JTK" },
-  { "Serial No": "1057-010", "nama": "GATE 04 JTK" },
-  { "Serial No": "1058-010", "nama": "GATE 05 JTK" },
-  { "Serial No": "1059-010", "nama": "GATE 06 JTK" },
-  { "Serial No": "1060-010", "nama": "GATE 07 JTK" },
-  { "Serial No": "1061-010", "nama": "GATE 08 JTK" },
-  { "Serial No": "1062-010", "nama": "GATE 09 JTK" },
-  { "Serial No": "1063-010", "nama": "GATE 10 JTK" },
-  { "Serial No": "818-028", "nama": "GATE 01 JNG" },
-  { "Serial No": "821-028", "nama": "GATE 02 JNG" },
-  { "Serial No": "826-028", "nama": "GATE 03 JNG" },
-  { "Serial No": "827-028", "nama": "GATE 04 JNG" },
-  { "Serial No": "834-028", "nama": "GATE 05 JNG" },
-  { "Serial No": "838-028", "nama": "GATE 06 JNG" },
-  { "Serial No": "839-028", "nama": "GATE 07 JNG" },
-  { "Serial No": "447-100", "nama": "GATE 08 JNG" },
-  { "Serial No": "448-100", "nama": "GATE 09 JNG" },
-  { "Serial No": "128-197", "nama": "GATE 01 JAY" },
-  { "Serial No": "129-197", "nama": "GATE 02 JAY" },
-  { "Serial No": "130-197", "nama": "GATE 03 JAY" },
-  { "Serial No": "131-197", "nama": "GATE 04 JAY" },
-  { "Serial No": "132-197", "nama": "GATE 05 JAY" },
-  { "Serial No": "133-197", "nama": "GATE 06 JAY" },
-  { "Serial No": "748-200", "nama": "GATE 07 JAY" },
-  { "Serial No": "761-200", "nama": "GATE 08 JAY" },
-  { "Serial No": "890-044", "nama": "GATE 01 JN" },
-  { "Serial No": "889-044", "nama": "GATE 02 JN" },
-  { "Serial No": "111-197", "nama": "GATE 01 JUA" },
-  { "Serial No": "112-197", "nama": "GATE 02 JUA" },
-  { "Serial No": "113-197", "nama": "GATE 03 JUA" },
-  { "Serial No": "114-197", "nama": "GATE 04 JUA" },
-  { "Serial No": "115-197", "nama": "GATE 05 JUA" },
-  { "Serial No": "116-197", "nama": "GATE 06 JUA" },
-  { "Serial No": "492-23.1", "nama": "GATE 07 JUA" },
-  { "Serial No": "493-23.1", "nama": "GATE 08 JUA" },
-  { "Serial No": "494-23.1", "nama": "GATE 09 JUA" },
-  { "Serial No": "495-23.1", "nama": "GATE 10 JUA" },
-  { "Serial No": "496-23.1", "nama": "GATE 11 JUA" },
-  { "Serial No": "497-23.1", "nama": "GATE 12 JUA" },
-  { "Serial No": "573-077", "nama": "GATE 13 JUA" },
-  { "Serial No": "289-142", "nama": "GATE 14 JUA" },
-  { "Serial No": "619-200", "nama": "GATE 15 JUA" },
-  { "Serial No": "782-200", "nama": "GATE 16 JUA" },
-  { "Serial No": "626-200", "nama": "GATE 17 JUA" },
-  { "Serial No": "617-200", "nama": "GATE 18 JUA" },
-  { "Serial No": "799-200", "nama": "GATE 19 JUA" },
-  { "Serial No": "803-200", "nama": "GATE 20 JUA" },
-  { "Serial No": "774-200", "nama": "GATE 21 JUA" },
-  { "Serial No": "742-200", "nama": "GATE 22 JUA" },
-  { "Serial No": "804-200", "nama": "GATE 23 JUA" },
-  { "Serial No": "712-200", "nama": "GATE 24 JUA" },
-  { "Serial No": "651-200", "nama": "GATE 25 JUA" },
-  { "Serial No": "319-142", "nama": "GATE 01 JRU" },
-  { "Serial No": "189-197", "nama": "GATE 02 JRU" },
-  { "Serial No": "386-050", "nama": "GATE 03 JRU" },
-  { "Serial No": "561-077", "nama": "GATE 04 JRU" },
-  { "Serial No": "635-200", "nama": "GATE 05 JRU" },
-  { "Serial No": "637-200", "nama": "GATE 06 JRU" },
-  { "Serial No": "625-200", "nama": "GATE 07 JRU" },
-  { "Serial No": "643-200", "nama": "GATE 08 JRU" },
-  { "Serial No": "461-100", "nama": "GATE 09 JRU" },
-  { "Serial No": "462-100", "nama": "GATE 10 JRU" },
-  { "Serial No": "190-197", "nama": "GATE 11 JRU" },
-  { "Serial No": "320-142", "nama": "GATE 12 JRU" },
-  { "Serial No": "387-050", "nama": "GATE 13 JRU" },
-  { "Serial No": "599-077", "nama": "GATE 01 KDS" },
-  { "Serial No": "274-142", "nama": "GATE 02 KDS" },
-  { "Serial No": "275-142", "nama": "GATE 03 KDS" },
-  { "Serial No": "276-142", "nama": "GATE 04 KDS" },
-  { "Serial No": "277-142", "nama": "GATE 05 KDS" },
-  { "Serial No": "164-197", "nama": "GATE 01 KPB" },
-  { "Serial No": "165-197", "nama": "GATE 02 KPB" },
-  { "Serial No": "443-100", "nama": "GATE 03 KPB" },
-  { "Serial No": "590-077", "nama": "GATE 04 KPB" },
-  { "Serial No": "290-142", "nama": "GATE 05 KPB" },
-  { "Serial No": "291-142", "nama": "GATE 06 KPB" },
-  { "Serial No": "370-050", "nama": "GATE 07 KPB" },
-  { "Serial No": "591-077", "nama": "GATE 08 KPB" },
-  { "Serial No": "718-200", "nama": "GATE 09 KPB" },
-  { "Serial No": "913-044", "nama": "GATE 01 KRA" },
-  { "Serial No": "896-044", "nama": "GATE 02 KRA" },
-  { "Serial No": "894-044", "nama": "GATE 03 KRA" },
-  { "Serial No": "166-197", "nama": "GATE 01 KET" },
-  { "Serial No": "167-197", "nama": "GATE 02 KET" },
-  { "Serial No": "292-142", "nama": "GATE 03 KET" },
-  { "Serial No": "293-142", "nama": "GATE 04 KET" },
-  { "Serial No": "294-142", "nama": "GATE 05 KET" },
-  { "Serial No": "295-142", "nama": "GATE 06 KET" },
-  { "Serial No": "807-200", "nama": "GATE 07 KET" },
-  { "Serial No": "183-197", "nama": "GATE 01 KBY" },
-  { "Serial No": "184-197", "nama": "GATE 02 KBY" },
-  { "Serial No": "185-197", "nama": "GATE 03 KBY" },
-  { "Serial No": "315-142", "nama": "GATE 04 KBY" },
-  { "Serial No": "316-142", "nama": "GATE 05 KBY" },
-  { "Serial No": "317-142", "nama": "GATE 06 KBY" },
-  { "Serial No": "456-100", "nama": "GATE 07 KBY" },
-  { "Serial No": "536-077", "nama": "GATE 08 KBY" },
-  { "Serial No": "537-077", "nama": "GATE 09 KBY" },
-  { "Serial No": "538-077", "nama": "GATE 10 KBY" },
-  { "Serial No": "539-077", "nama": "GATE 11 KBY" },
-  { "Serial No": "540-077", "nama": "GATE 12 KBY" },
-  { "Serial No": "541-077", "nama": "GATE 13 KBY" },
-  { "Serial No": "542-077", "nama": "GATE 14 KBY" },
-  { "Serial No": "783-200", "nama": "GATE 17 KBY" },
-  { "Serial No": "510-23.1", "nama": "GATE 18 KBY" },
-  { "Serial No": "SAR 01 KBY", "nama": "SAR 01 KBY" },
-  { "Serial No": "SAR 02 KBY", "nama": "SAR 02 KBY" },
-  { "Serial No": "261-142", "nama": "GATE 01 KMO" },
-  { "Serial No": "262-142", "nama": "GATE 02 KMO" },
-  { "Serial No": "159-197", "nama": "GATE 03 KMO" },
-  { "Serial No": "441-100", "nama": "GATE 04 KMO" },
-  { "Serial No": "425-100", "nama": "GATE 05 KMO" },
-  { "Serial No": "928-036", "nama": "GATE 06 KMO" },
-  { "Serial No": "792-200", "nama": "GATE 01 KT" },
-  { "Serial No": "373-050", "nama": "GATE 02 KT" },
-  { "Serial No": "819-028", "nama": "GATE 03 KT" },
-  { "Serial No": "311-142", "nama": "GATE 04 KT" },
-  { "Serial No": "667-200", "nama": "GATE 01 KLD" },
-  { "Serial No": "674-200", "nama": "GATE 02 KLD" },
-  { "Serial No": "526-23.2", "nama": "GATE 03 KLD" },
-  { "Serial No": "137-197", "nama": "GATE 04 KLD" },
-  { "Serial No": "136-197", "nama": "GATE 05 KLD" },
-  { "Serial No": "433-100", "nama": "GATE 06 KLD" },
-  { "Serial No": "434-100", "nama": "GATE 07 KLD" },
-  { "Serial No": "251-142", "nama": "GATE 08 KLD" },
-  { "Serial No": "250-142", "nama": "GATE 09 KLD" },
-  { "Serial No": "138-197", "nama": "GATE 10 KLD" },
-  { "Serial No": "135-197", "nama": "GATE 11 KLD" },
-  { "Serial No": "143-197", "nama": "GATE 01 KLDB" },
-  { "Serial No": "144-197", "nama": "GATE 02 KLDB" },
-  { "Serial No": "253-142", "nama": "GATE 03 KLDB" },
-  { "Serial No": "254-142", "nama": "GATE 04 KLDB" },
-  { "Serial No": "613-200", "nama": "GATE 05 KLDB" },
-  { "Serial No": "616-200", "nama": "GATE 06 KLDB" },
-  { "Serial No": "632-200", "nama": "GATE 07 KLDB" },
-  { "Serial No": "634-200", "nama": "GATE 08 KLDB" },
-  { "Serial No": "636-200", "nama": "GATE 09 KLDB" },
-  { "Serial No": "745-200", "nama": "GATE 10 KLDB" },
-  { "Serial No": "366-050", "nama": "GATE 04 KMT" },
-  { "Serial No": "432-100", "nama": "GATE 05 KMT" },
-  { "Serial No": "245-142", "nama": "GATE 06 KMT" },
-  { "Serial No": "246-142", "nama": "GATE 07 KMT" },
-  { "Serial No": "247-142", "nama": "GATE 08 KMT" },
-  { "Serial No": "435-100", "nama": "GATE 01 KRI" },
-  { "Serial No": "436-100", "nama": "GATE 02 KRI" },
-  { "Serial No": "142-197", "nama": "GATE 03 KRI" },
-  { "Serial No": "141-197", "nama": "GATE 04 KRI" },
-  { "Serial No": "140-197", "nama": "GATE 05 KRI" },
-  { "Serial No": "139-197", "nama": "GATE 06 KRI" },
-  { "Serial No": "578-077", "nama": "GATE 07 KRI" },
-  { "Serial No": "252-142", "nama": "GATE 08 KRI" },
-  { "Serial No": "367-050", "nama": "GATE 09 KRI" },
-  { "Serial No": "368-050", "nama": "GATE 10 KRI" },
-  { "Serial No": "249-142", "nama": "GATE 11 KRI" },
-  { "Serial No": "369-050", "nama": "GATE 12 KRI" },
-  { "Serial No": "885-044", "nama": "GATE 01 KEN" },
-  { "Serial No": "877-044", "nama": "GATE 02 KEN" },
-  { "Serial No": "134-197", "nama": "GATE 01 KTA" },
-  { "Serial No": "260-142", "nama": "GATE 02 KTA" },
-  { "Serial No": "887-044", "nama": "GATE 03 KTA" },
-  { "Serial No": "883-044", "nama": "GATE 04 KTA" },
-  { "Serial No": "835-028", "nama": "GATE 01 LPN" },
-  { "Serial No": "161-197", "nama": "GATE 02 LPN" },
-  { "Serial No": "794-200", "nama": "GATE 03 LPN" },
-  { "Serial No": "840-028", "nama": "GATE 04 LPN" },
-  { "Serial No": "923-036", "nama": "GATE 05 LPN" },
-  { "Serial No": "352-050", "nama": "GATE 01 LNA" },
-  { "Serial No": "055-197", "nama": "GATE 02 LNA" },
-  { "Serial No": "056-197", "nama": "GATE 03 LNA" },
-  { "Serial No": "406-100", "nama": "GATE 04 LNA" },
-  { "Serial No": "407-100", "nama": "GATE 05 LNA" },
-  { "Serial No": "353-050", "nama": "GATE 06 LNA" },
-  { "Serial No": "057-197", "nama": "GATE 07 LNA" },
-  { "Serial No": "058-197", "nama": "GATE 08 LNA" },
-  { "Serial No": "564-077", "nama": "GATE 09 LNA" },
-  { "Serial No": "565-077", "nama": "GATE 10 LNA" },
-  { "Serial No": "824-028", "nama": "GATE 01 MGW" },
-  { "Serial No": "691-200", "nama": "GATE 02 MGW" },
-  { "Serial No": "805-200", "nama": "GATE 03 MGW" },
-  { "Serial No": "487-100", "nama": "GATE 02 MJ" },
-  { "Serial No": "488-100", "nama": "GATE 03 MJ" },
-  { "Serial No": "489-100", "nama": "GATE 04 MJ" },
-  { "Serial No": "543-077", "nama": "GATE 05 MJ" },
-  { "Serial No": "544-077", "nama": "GATE 06 MJ" },
-  { "Serial No": "546-077", "nama": "GATE 08 MJ" },
-  { "Serial No": "547-077", "nama": "GATE 09 MJ" },
-  { "Serial No": "548-077", "nama": "GATE 10 MJ" },
-  { "Serial No": "549-077", "nama": "GATE 11 MJ" },
-  { "Serial No": "550-077", "nama": "GATE 12 MJ" },
-  { "Serial No": "429-100", "nama": "GATE 01 MGB" },
-  { "Serial No": "122-197", "nama": "GATE 02 MGB" },
-  { "Serial No": "123-197", "nama": "GATE 03 MGB" },
-  { "Serial No": "124-197", "nama": "GATE 04 MGB" },
-  { "Serial No": "125-197", "nama": "GATE 05 MGB" },
-  { "Serial No": "126-197", "nama": "GATE 06 MGB" },
-  { "Serial No": "127-197", "nama": "GATE 07 MGB" },
-  { "Serial No": "584-077", "nama": "GATE 08 MGB" },
-  { "Serial No": "089-197", "nama": "GATE 01 MRI" },
-  { "Serial No": "090-197", "nama": "GATE 02 MRI" },
-  { "Serial No": "091-197", "nama": "GATE 03 MRI" },
-  { "Serial No": "092-197", "nama": "GATE 04 MRI" },
-  { "Serial No": "093-197", "nama": "GATE 05 MRI" },
-  { "Serial No": "094-197", "nama": "GATE 06 MRI" },
-  { "Serial No": "423-100", "nama": "GATE 07 MRI" },
-  { "Serial No": "424-100", "nama": "GATE 08 MRI" },
-  { "Serial No": "608-077", "nama": "GATE 10 MRI" },
-  { "Serial No": "842-031", "nama": "GATE 12 MRI" },
-  { "Serial No": "844-031", "nama": "GATE 13 MRI" },
-  { "Serial No": "862-031", "nama": "GATE 14 MRI" },
-  { "Serial No": "861-031", "nama": "GATE 15 MRI" },
-  { "Serial No": "866-031", "nama": "GATE 16 MRI" },
-  { "Serial No": "867-031", "nama": "GATE 17 MRI" },
-  { "Serial No": "954-036", "nama": "GATE 18 MRI" },
-  { "Serial No": "930-036", "nama": "GATE 19 MRI" },
-  { "Serial No": "927-036", "nama": "GATE 20 MRI" },
-  { "Serial No": "881-044", "nama": "GATE 01 MTR" },
-  { "Serial No": "875-044", "nama": "GATE 02 MTR" },
-  { "Serial No": "878-044", "nama": "GATE 03 MTR" },
-  { "Serial No": "892-044", "nama": "GATE 04 MTR" },
-  { "Serial No": "902-044", "nama": "GATE 05 MTR" },
-  { "Serial No": "903-044", "nama": "GATE 06 MTR" },
-  { "Serial No": "908-044", "nama": "GATE 07 MTR" },
-  { "Serial No": "909-044", "nama": "GATE 01 MER" },
-  { "Serial No": "911-044", "nama": "GATE 02 MER" },
-  { "Serial No": "874-044", "nama": "GATE 03 MER" },
-  { "Serial No": "349-050", "nama": "GATE 01 NMO" },
-  { "Serial No": "515-23.2", "nama": "GATE 02 NMO" },
-  { "Serial No": "490-23.1", "nama": "GATE 03 NMO" },
-  { "Serial No": "652-200", "nama": "GATE 04 NMO" },
-  { "Serial No": "654-200", "nama": "GATE 05 NMO" },
-  { "Serial No": "453-100", "nama": "GATE 01 PLM" },
-  { "Serial No": "383-050", "nama": "GATE 02 PLM" },
-  { "Serial No": "310-142", "nama": "GATE 03 PLM" },
-  { "Serial No": "454-100", "nama": "GATE 04 PLM" },
-  { "Serial No": "179-197", "nama": "GATE 05 PLM" },
-  { "Serial No": "180-197", "nama": "GATE 06 PLM" },
-  { "Serial No": "181-197", "nama": "GATE 07 PLM" },
-  { "Serial No": "182-197", "nama": "GATE 08 PLM" },
-  { "Serial No": "248-142", "nama": "GATE 09 PLM" },
-  { "Serial No": "312-142", "nama": "GATE 10 PLM" },
-  { "Serial No": "313-142", "nama": "GATE 11 PLM" },
-  { "Serial No": "314-142", "nama": "GATE 12 PLM" },
-  { "Serial No": "455-100", "nama": "GATE 13 PLM" },
-  { "Serial No": "177-197", "nama": "GATE 15 PLM" },
-  { "Serial No": "440-100", "nama": "GATE 16 PLM" },
-  { "Serial No": "176-197", "nama": "GATE 17 PLM" },
-  { "Serial No": "475-100", "nama": "GATE 18 PLM" },
-  { "Serial No": "SAR 01 PLM", "nama": "SAR 01 PLM" },
-  { "Serial No": "263-142", "nama": "GATE 01 PL" },
-  { "Serial No": "470-100", "nama": "GATE 02 PL" },
-  { "Serial No": "230-142", "nama": "GATE 03 PL" },
-  { "Serial No": "244-142", "nama": "GATE 04 PL" },
-  { "Serial No": "148-197", "nama": "GATE 05 PL" },
-  { "Serial No": "336-142", "nama": "GATE 01 PRP" },
-  { "Serial No": "337-142", "nama": "GATE 02 PRP" },
-  { "Serial No": "338-142", "nama": "GATE 03 PRP" },
-  { "Serial No": "339-142", "nama": "GATE 04 PRP" },
-  { "Serial No": "472-100", "nama": "GATE 05 PRP" },
-  { "Serial No": "473-100", "nama": "GATE 06 PRP" },
-  { "Serial No": "551-077", "nama": "GATE 09 PRP" },
-  { "Serial No": "552-077", "nama": "GATE 10 PRP" },
-  { "Serial No": "553-077", "nama": "GATE 11 PRP" },
-  { "Serial No": "554-077", "nama": "GATE 12 PRP" },
-  { "Serial No": "555-077", "nama": "GATE 13 PRP" },
-  { "Serial No": "556-077", "nama": "GATE 14 PRP" },
-  { "Serial No": "063-197", "nama": "GATE 01 PSM" },
-  { "Serial No": "064-197", "nama": "GATE 02 PSM" },
-  { "Serial No": "065-197", "nama": "GATE 03 PSM" },
-  { "Serial No": "410-100", "nama": "GATE 04 PSM" },
-  { "Serial No": "411-100", "nama": "GATE 05 PSM" },
-  { "Serial No": "412-100", "nama": "GATE 06 PSM" },
-  { "Serial No": "413-100", "nama": "GATE 07 PSM" },
-  { "Serial No": "066-197", "nama": "GATE 08 PSM" },
-  { "Serial No": "067-197", "nama": "GATE 09 PSM" },
-  { "Serial No": "068-197", "nama": "GATE 10 PSM" },
-  { "Serial No": "581-077", "nama": "GATE 11 PSM" },
-  { "Serial No": "071-197", "nama": "GATE 01 PSMB" },
-  { "Serial No": "070-197", "nama": "GATE 02 PSMB" },
-  { "Serial No": "414-100", "nama": "GATE 03 PSMB" },
-  { "Serial No": "415-100", "nama": "GATE 04 PSMB" },
-  { "Serial No": "073-197", "nama": "GATE 05 PSMB" },
-  { "Serial No": "072-197", "nama": "GATE 06 PSMB" },
-  { "Serial No": "153-197", "nama": "GATE 01 PSE" },
-  { "Serial No": "154-197", "nama": "GATE 02 PSE" },
-  { "Serial No": "155-197", "nama": "GATE 03 PSE" },
-  { "Serial No": "156-197", "nama": "GATE 04 PSE" },
-  { "Serial No": "SAR 01 PSE", "nama": "SAR 01 PSE" },
-  { "Serial No": "286-142", "nama": "GATE 01 PSG" },
-  { "Serial No": "287-142", "nama": "GATE 02 PSG" },
-  { "Serial No": "288-142", "nama": "GATE 03 PSG" },
-  { "Serial No": "500-23.1", "nama": "GATE 04 PSG" },
-  { "Serial No": "1037-097", "nama": "GATE 05 PSG" },
-  { "Serial No": "516-23.2", "nama": "GATE 01 POC" },
-  { "Serial No": "401-100", "nama": "GATE 02 POC" },
-  { "Serial No": "041-197", "nama": "GATE 03 POC" },
-  { "Serial No": "042-197", "nama": "GATE 04 POC" },
-  { "Serial No": "043-197", "nama": "GATE 05 POC" },
-  { "Serial No": "044-197", "nama": "GATE 06 POC" },
-  { "Serial No": "587-077", "nama": "GATE 07 POC" },
-  { "Serial No": "588-077", "nama": "GATE 08 POC" },
-  { "Serial No": "602-077", "nama": "GATE 09 POC" },
-  { "Serial No": "562-077", "nama": "GATE 10 POC" },
-  { "Serial No": "563-077", "nama": "GATE 11 POC" },
-  { "Serial No": "045-197", "nama": "GATE 12 POC" },
-  { "Serial No": "046-197", "nama": "GATE 13 POC" },
-  { "Serial No": "047-197", "nama": "GATE 14 POC" },
-  { "Serial No": "811-200", "nama": "GATE 15 POC" },
-  { "Serial No": "309-142", "nama": "GATE 16 POC" },
-  { "Serial No": "149-197", "nama": "GATE 01 POK" },
-  { "Serial No": "150-197", "nama": "GATE 02 POK" },
-  { "Serial No": "439-100", "nama": "GATE 03 POK" },
-  { "Serial No": "952-036", "nama": "GATE 01 PDRG" },
-  { "Serial No": "951-036", "nama": "GATE 02 PDRG" },
-  { "Serial No": "944-036", "nama": "GATE 03 PDRG" },
-  { "Serial No": "924-036", "nama": "GATE 04 PDRG" },
-  { "Serial No": "922-036", "nama": "GATE 05 PDRG" },
-  { "Serial No": "384-050", "nama": "GATE 01 PDJ" },
-  { "Serial No": "318-142", "nama": "GATE 02 PDJ" },
-  { "Serial No": "186-197", "nama": "GATE 03 PDJ" },
-  { "Serial No": "187-197", "nama": "GATE 04 PDJ" },
-  { "Serial No": "188-197", "nama": "GATE 05 PDJ" },
-  { "Serial No": "385-050", "nama": "GATE 06 PDJ" },
-  { "Serial No": "457-100", "nama": "GATE 07 PDJ" },
-  { "Serial No": "458-100", "nama": "GATE 08 PDJ" },
-  { "Serial No": "459-100", "nama": "GATE 09 PDJ" },
-  { "Serial No": "460-100", "nama": "GATE 10 PDJ" },
-  { "Serial No": "916-005", "nama": "GATE 11 PDJ" },
-  { "Serial No": "917-005", "nama": "GATE 12 PDJ" },
-  { "Serial No": "918-005", "nama": "GATE 13 PDJ" },
-  { "Serial No": "919-005", "nama": "GATE 14 PDJ" },
-  { "Serial No": "920-005", "nama": "GATE 15 PDJ" },
-  { "Serial No": "271-142", "nama": "GATE 01 PI" },
-  { "Serial No": "272-142", "nama": "GATE 02 PI" },
-  { "Serial No": "273-142", "nama": "GATE 03 PI" },
-  { "Serial No": "371-050", "nama": "GATE 04 PI" },
-  { "Serial No": "444-100", "nama": "GATE 05 PI" },
-  { "Serial No": "445-100", "nama": "GATE 06 PI" },
-  { "Serial No": "627-200", "nama": "GATE 01 PWS" },
-  { "Serial No": "545-077", "nama": "GATE 02 PWS" },
-  { "Serial No": "769-200", "nama": "GATE 03 PWS" },
-  { "Serial No": "747-200", "nama": "GATE 04 PWS" },
-  { "Serial No": "236-142", "nama": "GATE 05 PWS" },
-  { "Serial No": "158-197", "nama": "GATE 01 RJW" },
-  { "Serial No": "157-197", "nama": "GATE 02 RJW" },
-  { "Serial No": "442-100", "nama": "GATE 03 RJW" },
-  { "Serial No": "686-200", "nama": "GATE 01 RKS" },
-  { "Serial No": "790-200", "nama": "GATE 02 RKS" },
-  { "Serial No": "730-200", "nama": "GATE 03 RKS" },
-  { "Serial No": "808-200", "nama": "GATE 04 RKS" },
-  { "Serial No": "685-200", "nama": "GATE 05 RKS" },
-  { "Serial No": "467-100", "nama": "GATE 06 RKS" },
-  { "Serial No": "469-100", "nama": "GATE 07 RKS" },
-  { "Serial No": "1020-097", "nama": "GATE 08 RKS" },
-  { "Serial No": "1021-097", "nama": "GATE 09 RKS" },
-  { "Serial No": "1023-097", "nama": "GATE 10 RKS" },
-  { "Serial No": "1024-097", "nama": "GATE 11 RKS" },
-  { "Serial No": "1026-097", "nama": "GATE 12 RKS" },
-  { "Serial No": "1028-097", "nama": "GATE 13 RKS" },
-  { "Serial No": "1029-097", "nama": "GATE 14 RKS" },
-  { "Serial No": "1031-097", "nama": "GATE 15 RKS" },
-  { "Serial No": "703-200", "nama": "GATE 01 RW" },
-  { "Serial No": "640-200", "nama": "GATE 02 RW" },
-  { "Serial No": "684-200", "nama": "GATE 03 RW" },
-  { "Serial No": "722-200", "nama": "GATE 04 RW" },
-  { "Serial No": "278-142", "nama": "GATE 05 RW" },
-  { "Serial No": "279-142", "nama": "GATE 06 RW" },
-  { "Serial No": "280-142", "nama": "GATE 07 RW" },
-  { "Serial No": "281-142", "nama": "GATE 08 RW" },
-  { "Serial No": "533-23.2", "nama": "GATE 01 RU" },
-  { "Serial No": "534-23.2", "nama": "GATE 02 RU" },
-  { "Serial No": "463-100", "nama": "GATE 03 RU" },
-  { "Serial No": "464-100", "nama": "GATE 04 RU" },
-  { "Serial No": "388-050", "nama": "GATE 05 RU" },
-  { "Serial No": "331-142", "nama": "GATE 06 RU" },
-  { "Serial No": "332-142", "nama": "GATE 07 RU" },
-  { "Serial No": "333-142", "nama": "GATE 08 RU" },
-  { "Serial No": "389-050", "nama": "GATE 09 RU" },
-  { "Serial No": "191-197", "nama": "GATE 10 RU" },
-  { "Serial No": "192-197", "nama": "GATE 11 RU" },
-  { "Serial No": "193-197", "nama": "GATE 12 RU" },
-  { "Serial No": "210-142", "nama": "GATE 13 RU" },
-  { "Serial No": "211-142", "nama": "GATE 14 RU" },
-  { "Serial No": "212-142", "nama": "GATE 15 RU" },
-  { "Serial No": "342-050", "nama": "GATE 16 RU" },
-  { "Serial No": "428-100", "nama": "GATE 01 SW" },
-  { "Serial No": "117-197", "nama": "GATE 02 SW" },
-  { "Serial No": "118-197", "nama": "GATE 03 SW" },
-  { "Serial No": "119-197", "nama": "GATE 04 SW" },
-  { "Serial No": "120-197", "nama": "GATE 05 SW" },
-  { "Serial No": "121-197", "nama": "GATE 06 SW" },
-  { "Serial No": "575-077", "nama": "GATE 07 SW" },
-  { "Serial No": "915-044", "nama": "GATE 01 SG" },
-  { "Serial No": "912-044", "nama": "GATE 02 SG" },
-  { "Serial No": "898-044", "nama": "GATE 03 SG" },
-  { "Serial No": "886-044", "nama": "GATE 04 SG" },
-  { "Serial No": "465-100", "nama": "GATE 01 SRP" },
-  { "Serial No": "466-100", "nama": "GATE 02 SRP" },
-  { "Serial No": "194-197", "nama": "GATE 03 SRP" },
-  { "Serial No": "197-197", "nama": "GATE 04 SRP" },
-  { "Serial No": "196-197", "nama": "GATE 05 SRP" },
-  { "Serial No": "195-197", "nama": "GATE 06 SRP" },
-  { "Serial No": "557-077", "nama": "GATE 07 SRP" },
-  { "Serial No": "558-077", "nama": "GATE 08 SRP" },
-  { "Serial No": "731-200", "nama": "GATE 09 SRP" },
-  { "Serial No": "708-200", "nama": "GATE 10 SRP" },
-  { "Serial No": "SAR 01 SRP", "nama": "SAR 01 SRP" },
-  { "Serial No": "740-200", "nama": "GATE 01 SLO" },
-  { "Serial No": "816-028", "nama": "GATE 02 SLO" },
-  { "Serial No": "486-100", "nama": "GATE 03 SLO" },
-  { "Serial No": "583-077", "nama": "GATE 04 SLO" },
-  { "Serial No": "147-197", "nama": "GATE 05 SLO" },
-  { "Serial No": "527-23.2", "nama": "GATE 06 SLO" },
-  { "Serial No": "943-036", "nama": "GATE 07 SLO" },
-  { "Serial No": "242-142", "nama": "GATE 01 SK" },
-  { "Serial No": "229-142", "nama": "GATE 02 SK" },
-  { "Serial No": "259-142", "nama": "GATE 03 SK" },
-  { "Serial No": "235-142", "nama": "GATE 04 SK" },
-  { "Serial No": "814-028", "nama": "GATE 01 SWT" },
-  { "Serial No": "450-100", "nama": "GATE 02 SWT" },
-  { "Serial No": "532-23.2", "nama": "GATE 01 SDM" },
-  { "Serial No": "321-142", "nama": "GATE 02 SDM" },
-  { "Serial No": "322-142", "nama": "GATE 03 SDM" },
-  { "Serial No": "323-142", "nama": "GATE 04 SDM" },
-  { "Serial No": "324-142", "nama": "GATE 05 SDM" },
-  { "Serial No": "325-142", "nama": "GATE 06 SDM" },
-  { "Serial No": "326-142", "nama": "GATE 07 SDM" },
-  { "Serial No": "505-23.1", "nama": "GATE 08 SDM" },
-  { "Serial No": "327-142", "nama": "GATE 09 SDM" },
-  { "Serial No": "328-142", "nama": "GATE 10 SDM" },
-  { "Serial No": "329-142", "nama": "GATE 11 SDM" },
-  { "Serial No": "330-142", "nama": "GATE 12 SDM" },
-  { "Serial No": "560-077", "nama": "GATE 13 SDM" },
-  { "Serial No": "559-077", "nama": "GATE 14 SDM" },
-  { "Serial No": "609-077", "nama": "GATE 15 SDM" },
-  { "Serial No": "168-197", "nama": "GATE 01 SUD" },
-  { "Serial No": "169-197", "nama": "GATE 02 SUD" },
-  { "Serial No": "296-142", "nama": "GATE 03 SUD" },
-  { "Serial No": "297-142", "nama": "GATE 04 SUD" },
-  { "Serial No": "298-142", "nama": "GATE 05 SUD" },
-  { "Serial No": "299-142", "nama": "GATE 06 SUD" },
-  { "Serial No": "300-142", "nama": "GATE 07 SUD" },
-  { "Serial No": "301-142", "nama": "GATE 08 SUD" },
-  { "Serial No": "446-100", "nama": "GATE 09 SUD" },
-  { "Serial No": "170-197", "nama": "GATE 10 SUD" },
-  { "Serial No": "171-197", "nama": "GATE 11 SUD" },
-  { "Serial No": "302-142", "nama": "GATE 12 SUD" },
-  { "Serial No": "303-142", "nama": "GATE 13 SUD" },
-  { "Serial No": "304-142", "nama": "GATE 14 SUD" },
-  { "Serial No": "305-142", "nama": "GATE 15 SUD" },
-  { "Serial No": "935-036", "nama": "GATE 16 SUD" },
-  { "Serial No": "948-036", "nama": "GATE 17 SUD" },
-  { "Serial No": "949-036", "nama": "GATE 18 SUD" },
-  { "Serial No": "950-036", "nama": "GATE 19 SUD" },
-  { "Serial No": "836-028", "nama": "GATE 22 SUD" },
-  { "Serial No": "830-028", "nama": "GATE 23 SUD" },
-  { "Serial No": "823-028", "nama": "GATE 24 SUD" },
-  { "Serial No": "817-028", "nama": "GATE 25 SUD" },
-  { "Serial No": "237-142", "nama": "GATE 06 SUDB" },
-  { "Serial No": "771-200", "nama": "GATE 07 SUDB" },
-  { "Serial No": "940-036", "nama": "GATE 08 SUDB" },
-  { "Serial No": "941-036", "nama": "GATE 09 SUDB" },
-  { "Serial No": "942-036", "nama": "GATE 10 SUDB" },
-  { "Serial No": "773-200", "nama": "GATE 11 SUDB" },
-  { "Serial No": "809-200", "nama": "GATE 12 SUDB" },
-  { "Serial No": "452-100", "nama": "GATE 13 SUDB" },
-  { "Serial No": "A1", "nama": "GATE A1 SUDB" },
-  { "Serial No": "A2", "nama": "GATE A2 SUDB" },
-  { "Serial No": "A3", "nama": "GATE A3 SUDB" },
-  { "Serial No": "A4", "nama": "GATE A4 SUDB" },
-  { "Serial No": "A5", "nama": "GATE A5 SUDB" },
-  { "Serial No": "A6", "nama": "GATE A6 SUDB" },
-  { "Serial No": "A7", "nama": "GATE A7 SUDB" },
-  { "Serial No": "A8", "nama": "GATE A8 SUDB" },
-  { "Serial No": "A9", "nama": "GATE A9 SUDB" },
-  { "Serial No": "B1", "nama": "GATE B1 SUDB" },
-  { "Serial No": "B2", "nama": "GATE B2 SUDB" },
-  { "Serial No": "B3", "nama": "GATE B3 SUDB" },
-  { "Serial No": "B4", "nama": "GATE B4 SUDB" },
-  { "Serial No": "B5", "nama": "GATE B5 SUDB" },
-  { "Serial No": "529-23.2", "nama": "GATE 01 TKO" },
-  { "Serial No": "501-23.1", "nama": "GATE 02 TKO" },
-  { "Serial No": "502-23.1", "nama": "GATE 03 TKO" },
-  { "Serial No": "566-077", "nama": "GATE 04 TKO" },
-  { "Serial No": "700-200", "nama": "GATE 01 TB" },
-  { "Serial No": "762-200", "nama": "GATE 02 TB" },
-  { "Serial No": "753-200", "nama": "GATE 03 TB" },
-  { "Serial No": "775-200", "nama": "GATE 04 TB" },
-  { "Serial No": "669-200", "nama": "GATE 05 TB" },
-  { "Serial No": "787-200", "nama": "GATE 06 TB" },
-  { "Serial No": "702-200", "nama": "GATE 07 TB" },
-  { "Serial No": "687-200", "nama": "GATE 08 TB" },
-  { "Serial No": "707-200", "nama": "GATE 09 TB" },
-  { "Serial No": "449-100", "nama": "GATE 10 TB" },
-  { "Serial No": "306-142", "nama": "GATE 01 THB" },
-  { "Serial No": "172-197", "nama": "GATE 02 THB" },
-  { "Serial No": "307-142", "nama": "GATE 03 THB" },
-  { "Serial No": "308-142", "nama": "GATE 04 THB" },
-  { "Serial No": "173-197", "nama": "GATE 05 THB" },
-  { "Serial No": "174-197", "nama": "GATE 06 THB" },
-  { "Serial No": "175-197", "nama": "GATE 07 THB" },
-  { "Serial No": "374-050", "nama": "GATE 08 THB" },
-  { "Serial No": "375-050", "nama": "GATE 09 THB" },
-  { "Serial No": "376-050", "nama": "GATE 10 THB" },
-  { "Serial No": "377-050", "nama": "GATE 11 THB" },
-  { "Serial No": "378-050", "nama": "GATE 12 THB" },
-  { "Serial No": "379-050", "nama": "GATE 13 THB" },
-  { "Serial No": "380-050", "nama": "GATE 14 THB" },
-  { "Serial No": "381-050", "nama": "GATE 15 THB" },
-  { "Serial No": "1053-097", "nama": "GATE 16 THB" },
-  { "Serial No": "1052-097", "nama": "GATE 17 THB" },
-  { "Serial No": "1051-097", "nama": "GATE 18 THB" },
-  { "Serial No": "1047-097", "nama": "GATE 19 THB" },
-  { "Serial No": "1046-097", "nama": "GATE 20 THB" },
-  { "Serial No": "1044-097", "nama": "GATE 21 THB" },
-  { "Serial No": "592-077", "nama": "GATE 22 THB" },
-  { "Serial No": "1025-097", "nama": "GATE 23 THB" },
-  { "Serial No": "579-077", "nama": "GATE 24 THB" },
-  { "Serial No": "570-077", "nama": "GATE 25 THB" },
-  { "Serial No": "618-200", "nama": "GATE 26 THB" },
-  { "Serial No": "763-200", "nama": "GATE 27 THB" },
-  { "Serial No": "786-200", "nama": "GATE 28 THB" },
-  { "Serial No": "663-200", "nama": "GATE 29 THB" },
-  { "Serial No": "978-097", "nama": "GATE 32 THB" },
-  { "Serial No": "988-097", "nama": "GATE 33 THB" },
-  { "Serial No": "990-097", "nama": "GATE 34 THB" },
-  { "Serial No": "991-097", "nama": "GATE 35 THB" },
-  { "Serial No": "992-097", "nama": "GATE 36 THB" },
-  { "Serial No": "993-097", "nama": "GATE 37 THB" },
-  { "Serial No": "957-097", "nama": "GATE 38 THB" },
-  { "Serial No": "958-097", "nama": "GATE 39 THB" },
-  { "Serial No": "959-097", "nama": "GATE 40 THB" },
-  { "Serial No": "960-097", "nama": "GATE 41 THB" },
-  { "Serial No": "961-097", "nama": "GATE 42 THB" },
-  { "Serial No": "962-097", "nama": "GATE 43 THB" },
-  { "Serial No": "963-097", "nama": "GATE 44 THB" },
-  { "Serial No": "964-097", "nama": "GATE 45 THB" },
-  { "Serial No": "965-097", "nama": "GATE 46 THB" },
-  { "Serial No": "966-097", "nama": "GATE 47 THB" },
-  { "Serial No": "967-097", "nama": "GATE 48 THB" },
-  { "Serial No": "968-097", "nama": "GATE 49 THB" },
-  { "Serial No": "969-097", "nama": "GATE 50 THB" },
-  { "Serial No": "970-097", "nama": "GATE 51 THB" },
-  { "Serial No": "994-097", "nama": "GATE 52 THB" },
-  { "Serial No": "999-097", "nama": "GATE 53 THB" },
-  { "Serial No": "1004-097", "nama": "GATE 54 THB" },
-  { "Serial No": "1005-097", "nama": "GATE 55 THB" },
-  { "Serial No": "1006-097", "nama": "GATE 56 THB" },
-  { "Serial No": "1007-097", "nama": "GATE 57 THB" },
-  { "Serial No": "971-097", "nama": "GATE 60 THB" },
-  { "Serial No": "972-097", "nama": "GATE 61 THB" },
-  { "Serial No": "973-097", "nama": "GATE 62 THB" },
-  { "Serial No": "974-097", "nama": "GATE 63 THB" },
-  { "Serial No": "975-097", "nama": "GATE 64 THB" },
-  { "Serial No": "976-097", "nama": "GATE 65 THB" },
-  { "Serial No": "982-097", "nama": "GATE 66 THB" },
-  { "Serial No": "979-097", "nama": "GATE 67 THB" },
-  { "Serial No": "983-097", "nama": "GATE 68 THB" },
-  { "Serial No": "985-097", "nama": "GATE 69 THB" },
-  { "Serial No": "986-097", "nama": "GATE 70 THB" },
-  { "Serial No": "987-097", "nama": "GATE 71 THB" },
-  { "Serial No": "989-097", "nama": "GATE 72 THB" },
-  { "Serial No": "995-097", "nama": "GATE 73 THB" },
-  { "Serial No": "1010-097", "nama": "GATE 74 THB" },
-  { "Serial No": "1008-097", "nama": "GATE 75 THB" },
-  { "Serial No": "1009-097", "nama": "GATE 76 THB" },
-  { "Serial No": "1012-097", "nama": "GATE 77 THB" },
-  { "Serial No": "1013-097", "nama": "GATE 78 THB" },
-  { "Serial No": "1014-097", "nama": "GATE 79 THB" },
-  { "Serial No": "1015-097", "nama": "GATE 80 THB" },
-  { "Serial No": "1016-097", "nama": "GATE 81 THB" },
-  { "Serial No": "984-097", "nama": "GATE 82 THB" },
-  { "Serial No": "996-097", "nama": "GATE 83 THB" },
-  { "Serial No": "997-097", "nama": "GATE 84 THB" },
-  { "Serial No": "998-097", "nama": "GATE 85 THB" },
-  { "Serial No": "1000-097", "nama": "GATE 86 THB" },
-  { "Serial No": "1001-097", "nama": "GATE 87 THB" },
-  { "Serial No": "1002-097", "nama": "GATE 88 THB" },
-  { "Serial No": "1003-097", "nama": "GATE 89 THB" },
-  { "Serial No": "451-100", "nama": "GATE 90 THB" },
-  { "Serial No": "1011-097", "nama": "GATE 91 THB" },
-  { "Serial No": "977-097", "nama": "GATE 92 THB" },
-  { "Serial No": "981-097", "nama": "GATE 93 THB" },
-  { "Serial No": "980-097", "nama": "GATE 94 THB" },
-  { "Serial No": "530-23.2", "nama": "GATE 01 TTI" },
-  { "Serial No": "503-23.1", "nama": "GATE 02 TTI" },
-  { "Serial No": "504-23.1", "nama": "GATE 03 TTI" },
-  { "Serial No": "264-142", "nama": "GATE 02 TNG" },
-  { "Serial No": "265-142", "nama": "GATE 03 TNG" },
-  { "Serial No": "266-142", "nama": "GATE 04 TNG" },
-  { "Serial No": "372-050", "nama": "GATE 05 TNG" },
-  { "Serial No": "569-077", "nama": "GATE 07 TNG" },
-  { "Serial No": "606-077", "nama": "GATE 08 TNG" },
-  { "Serial No": "660-200", "nama": "GATE 11 TNG" },
-  { "Serial No": "800-200", "nama": "GATE 12 TNG" },
-  { "Serial No": "729-200", "nama": "GATE 13 TNG" },
-  { "Serial No": "646-200", "nama": "GATE 14 TNG" },
-  { "Serial No": "694-200", "nama": "GATE 15 TNG" },
-  { "Serial No": "710-200", "nama": "GATE 16 TNG" },
-  { "Serial No": "713-200", "nama": "GATE 17 TNG" },
-  { "Serial No": "716-200", "nama": "GATE 18 TNG" },
-  { "Serial No": "738-200", "nama": "GATE 19 TNG" },
-  { "Serial No": "797-200", "nama": "GATE 20 TNG" },
-  { "Serial No": "802-200", "nama": "GATE 21 TNG" },
-  { "Serial No": "517-23.2", "nama": "GATE 01 TNT" },
-  { "Serial No": "408-100", "nama": "GATE 02 TNT" },
-  { "Serial No": "059-197", "nama": "GATE 03 TNT" },
-  { "Serial No": "060-197", "nama": "GATE 04 TNT" },
-  { "Serial No": "409-100", "nama": "GATE 05 TNT" },
-  { "Serial No": "061-197", "nama": "GATE 06 TNT" },
-  { "Serial No": "062-197", "nama": "GATE 07 TNT" },
-  { "Serial No": "697-200", "nama": "GATE 08 TNT" },
-  { "Serial No": "780-200", "nama": "GATE 09 TNT" },
-  { "Serial No": "1018-097", "nama": "GATE 10 TNT" },
-  { "Serial No": "1042-097", "nama": "GATE 11 TNT" },
-  { "Serial No": "1045-097", "nama": "GATE 12 TNT" },
-  { "Serial No": "1033-097", "nama": "GATE 13 TNT" },
-  { "Serial No": "1043-097", "nama": "GATE 14 TNT" },
-  { "Serial No": "1019-097", "nama": "GATE 15 TNT" },
-  { "Serial No": "1034-097", "nama": "GATE 16 TNT" },
-  { "Serial No": "426-100", "nama": "GATE 01 TPK" },
-  { "Serial No": "364-050", "nama": "GATE 02 TPK" },
-  { "Serial No": "365-050", "nama": "GATE 03 TPK" },
-  { "Serial No": "719-200", "nama": "GATE 04 TPK" },
-  { "Serial No": "777-200", "nama": "GATE 05 TPK" },
-  { "Serial No": "681-200", "nama": "GATE 06 TPK" },
-  { "Serial No": "682-200", "nama": "GATE 07 TPK" },
-  { "Serial No": "419-100", "nama": "GATE 01 TEB" },
-  { "Serial No": "420-100", "nama": "GATE 02 TEB" },
-  { "Serial No": "421-100", "nama": "GATE 03 TEB" },
-  { "Serial No": "422-100", "nama": "GATE 04 TEB" },
-  { "Serial No": "359-050", "nama": "GATE 05 TEB" },
-  { "Serial No": "360-050", "nama": "GATE 06 TEB" },
-  { "Serial No": "083-197", "nama": "GATE 07 TEB" },
-  { "Serial No": "084-197", "nama": "GATE 08 TEB" },
-  { "Serial No": "085-197", "nama": "GATE 09 TEB" },
-  { "Serial No": "086-197", "nama": "GATE 10 TEB" },
-  { "Serial No": "087-197", "nama": "GATE 11 TEB" },
-  { "Serial No": "088-197", "nama": "GATE 12 TEB" },
-  { "Serial No": "728-200", "nama": "GATE 13 TEB" },
-  { "Serial No": "721-200", "nama": "GATE 14 TEB" },
-  { "Serial No": "726-200", "nama": "GATE 15 TEB" },
-  { "Serial No": "810-200", "nama": "GATE 16 TEB" },
-  { "Serial No": "714-200", "nama": "GATE 17 TEB" },
-  { "Serial No": "789-200", "nama": "GATE 18 TEB" },
-  { "Serial No": "677-200", "nama": "GATE 19 TEB" },
-  { "Serial No": "641-200", "nama": "GATE 20 TEB" },
-  { "Serial No": "647-200", "nama": "GATE 21 TEB" },
-  { "Serial No": "758-200", "nama": "GATE 22 TEB" },
-  { "Serial No": "656-200", "nama": "GATE 23 TEB" },
-  { "Serial No": "658-200", "nama": "GATE 24 TEB" },
-  { "Serial No": "760-200", "nama": "GATE 01 MTM" },
-  { "Serial No": "631-200", "nama": "GATE 02 MTM" },
-  { "Serial No": "1017-097", "nama": "GATE 03 MTM" },
-  { "Serial No": "705-200", "nama": "GATE 04 MTM" },
-  { "Serial No": "752-200", "nama": "GATE 05 MTM" },
-  { "Serial No": "755-200", "nama": "GATE 06 MTM" },
-  { "Serial No": "1032-097", "nama": "GATE 07 MTM" },
-  { "Serial No": "506-23.1", "nama": "GATE 01 TEJ" },
-  { "Serial No": "507-23.1", "nama": "GATE 02 TEJ" },
-  { "Serial No": "508-23.1", "nama": "GATE 03 TEJ" },
-  { "Serial No": "509-23.1", "nama": "GATE 04 TEJ" },
-  { "Serial No": "1050-097", "nama": "GATE 05 TEJ" },
-  { "Serial No": "535-23.2", "nama": "GATE 01 TGS" },
-  { "Serial No": "482-100", "nama": "GATE 02 TGS" },
-  { "Serial No": "483-100", "nama": "GATE 03 TGS" },
-  { "Serial No": "484-100", "nama": "GATE 04 TGS" },
-  { "Serial No": "485-100", "nama": "GATE 05 TGS" },
-  { "Serial No": "873-044", "nama": "GATE 01 TOJB" },
-  { "Serial No": "895-044", "nama": "GATE 02 TOJB" },
-  { "Serial No": "402-100", "nama": "GATE 01 UI" },
-  { "Serial No": "403-100", "nama": "GATE 02 UI" },
-  { "Serial No": "217-142", "nama": "GATE 03 UI" },
-  { "Serial No": "048-197", "nama": "GATE 04 UI" },
-  { "Serial No": "049-197", "nama": "GATE 05 UI" },
-  { "Serial No": "050-197", "nama": "GATE 06 UI" },
-  { "Serial No": "644-200", "nama": "GATE 07 UI" },
-  { "Serial No": "665-200", "nama": "GATE 08 UI" },
-  { "Serial No": "675-200", "nama": "GATE 09 UI" },
-  { "Serial No": "759-200", "nama": "GATE 10 UI" },
-  { "Serial No": "596-077", "nama": "GATE 01 UP" },
-  { "Serial No": "051-197", "nama": "GATE 02 UP" },
-  { "Serial No": "052-197", "nama": "GATE 03 UP" },
-  { "Serial No": "404-100", "nama": "GATE 04 UP" },
-  { "Serial No": "053-197", "nama": "GATE 05 UP" },
-  { "Serial No": "054-197", "nama": "GATE 06 UP" },
-  { "Serial No": "405-100", "nama": "GATE 07 UP" },
-  { "Serial No": "1041-097", "nama": "GATE 08 UP" },
-  { "Serial No": "872-044", "nama": "GATE 01 WLT" },
-  { "Serial No": "914-044", "nama": "GATE 02 WLT" },
-  { "Serial No": "910-044", "nama": "GATE 01 WT" },
-  { "Serial No": "906-044", "nama": "GATE 02 WT" },
-  { "Serial No": "904-044", "nama": "GATE 01 WJ" },
-  { "Serial No": "891-044", "nama": "GATE 02 WJ" },
-  { "Serial No": "822-028", "nama": "GATE 01 YK" },
-  { "Serial No": "833-028", "nama": "GATE 02 YK" },
-  { "Serial No": "683-200", "nama": "GATE 03 YK" },
-  { "Serial No": "820-028", "nama": "GATE 04 YK" },
-  { "Serial No": "474-100", "nama": "GATE 05 YK" },
-  { "Serial No": "855-031", "nama": "GATE 06 YK" },
-  { "Serial No": "863-031", "nama": "GATE 07 YK" },
-  { "Serial No": "865-031", "nama": "GATE 08 YK" },
-  { "Serial No": "925-036", "nama": "GATE 09 YK" },
-  { "Serial No": "926-036", "nama": "GATE 10 YK" },
-  { "Serial No": "929-036", "nama": "GATE 11 YK" },
-  { "Serial No": "932-036", "nama": "GATE 12 YK" },
-  { "Serial No": "933-036", "nama": "GATE 13 YK" },
-  { "Serial No": "934-036", "nama": "GATE 14 YK" },
-  { "Serial No": "936-036", "nama": "GATE 15 YK" },
-  { "Serial No": "937-036", "nama": "GATE 16 YK" },
-  { "Serial No": "938-036", "nama": "GATE 17 YK" },
-  { "Serial No": "939-036", "nama": "GATE 18 YK" },
-  { "Serial No": "SAR 01 YK", "nama": "SAR 01 YK" }
+  {
+    "Serial No": "001-050",
+    "nama": "CVIM REG ANCOL 01"
+  },
+  {
+    "Serial No": "226-186",
+    "nama": "CVIM FA BATU CEPER 01"
+  },
+  {
+    "Serial No": "128-186",
+    "nama": "CVIM TUP BEKASI 01"
+  },
+  {
+    "Serial No": "164-186",
+    "nama": "CVIM TUP BEKASI 02"
+  },
+  {
+    "Serial No": "158-186",
+    "nama": "CVIM TUP BEKASI 03"
+  },
+  {
+    "Serial No": "179-186",
+    "nama": "CVIM TUP BEKASI 04"
+  },
+  {
+    "Serial No": "173-186",
+    "nama": "CVIM TUP BEKASI TIMUR 01"
+  },
+  {
+    "Serial No": "042-050",
+    "nama": "CVIM REG BEKASI TIMUR 02"
+  },
+  {
+    "Serial No": "043-050",
+    "nama": "CVIM REG BEKASI TIMUR 03"
+  },
+  {
+    "Serial No": "249-024",
+    "nama": "CVIM CASHLESS BOGOR 09"
+  },
+  {
+    "Serial No": "032-050",
+    "nama": "CVIM REG BOGOR 10"
+  },
+  {
+    "Serial No": "207-186",
+    "nama": "CVIM THB BOGOR 11"
+  },
+  {
+    "Serial No": "067-186",
+    "nama": "CVIM THB BOGOR 12"
+  },
+  {
+    "Serial No": "068-186",
+    "nama": "CVIM TUP BOGOR 13"
+  },
+  {
+    "Serial No": "069-186",
+    "nama": "CVIM TUP BOGOR 14"
+  },
+  {
+    "Serial No": "070-186",
+    "nama": "CVIM TUP BOGOR 15"
+  },
+  {
+    "Serial No": "071-186",
+    "nama": "CVIM TUP BOGOR 16"
+  },
+  {
+    "Serial No": "118-186",
+    "nama": "CVIM TUP BOGOR 17"
+  },
+  {
+    "Serial No": "153-186",
+    "nama": "CVIM TUP BOGOR 18"
+  },
+  {
+    "Serial No": "116-186",
+    "nama": "CVIM TUP BOJONG GEDE 01"
+  },
+  {
+    "Serial No": "162-186",
+    "nama": "CVIM TUP BOJONG GEDE 02"
+  },
+  {
+    "Serial No": "212-186",
+    "nama": "CVIM FA BOJONG GEDE 03"
+  },
+  {
+    "Serial No": "208-186",
+    "nama": "CVIM THB BOJONG GEDE 04"
+  },
+  {
+    "Serial No": "236-186",
+    "nama": "CVIM FA BOJONG INDAH 01"
+  },
+  {
+    "Serial No": "064-186",
+    "nama": "CVIM THB BRAMBANAN 01"
+  },
+  {
+    "Serial No": "229-186",
+    "nama": "CVIM FA BUARAN 01"
+  },
+  {
+    "Serial No": "203-186",
+    "nama": "CVIM THB BUARAN 02"
+  },
+  {
+    "Serial No": "072-186",
+    "nama": "CVIM THB CAKUNG 01"
+  },
+  {
+    "Serial No": "073-186",
+    "nama": "CVIM THB CAKUNG 02"
+  },
+  {
+    "Serial No": "122-186",
+    "nama": "CVIM THB CAWANG 01"
+  },
+  {
+    "Serial No": "123-186",
+    "nama": "CVIM THB CAWANG 02"
+  },
+  {
+    "Serial No": "110-186",
+    "nama": "CVIM TUP CAWANG 03"
+  },
+  {
+    "Serial No": "111-186",
+    "nama": "CVIM TUP CAWANG 04"
+  },
+  {
+    "Serial No": "061-186",
+    "nama": "CVIM THB CEPER 01"
+  },
+  {
+    "Serial No": "117-186",
+    "nama": "CVIM TUP CIBINONG 01"
+  },
+  {
+    "Serial No": "113-186",
+    "nama": "CVIM TUP CIBITUNG 01"
+  },
+  {
+    "Serial No": "205-186",
+    "nama": "CVIM THB CIBITUNG 02"
+  },
+  {
+    "Serial No": "021-050",
+    "nama": "CVIM REG CIBITUNG 03"
+  },
+  {
+    "Serial No": "077-186",
+    "nama": "CVIM THB CICAYUR 01"
+  },
+  {
+    "Serial No": "080-186",
+    "nama": "CVIM TUP CIKARANG 01"
+  },
+  {
+    "Serial No": "145-186",
+    "nama": "CVIM THB CIKARANG 03"
+  },
+  {
+    "Serial No": "012-050",
+    "nama": "CVIM REG CIKINI 03"
+  },
+  {
+    "Serial No": "088-186",
+    "nama": "CVIM TUP CIKINI 05"
+  },
+  {
+    "Serial No": "087-186",
+    "nama": "CVIM TUP CIKINI 06"
+  },
+  {
+    "Serial No": "093-186",
+    "nama": "CVIM TUP CIKINI 07"
+  },
+  {
+    "Serial No": "025-050",
+    "nama": "CVIM REG CIKOYA 01"
+  },
+  {
+    "Serial No": "139-186",
+    "nama": "CVIM THB CILEBUT 01"
+  },
+  {
+    "Serial No": "177-186",
+    "nama": "CVIM THB CILEBUT 02"
+  },
+  {
+    "Serial No": "163-186",
+    "nama": "CVIM TUP CILEBUT 03"
+  },
+  {
+    "Serial No": "211-186",
+    "nama": "CVIM FA CILEBUT 04"
+  },
+  {
+    "Serial No": "209-186",
+    "nama": "CVIM THB CILEBUT 05"
+  },
+  {
+    "Serial No": "185-186",
+    "nama": "CVIM TUP CILEBUT 06"
+  },
+  {
+    "Serial No": "230-186",
+    "nama": "CVIM FA CILEJIT 01"
+  },
+  {
+    "Serial No": "178-186",
+    "nama": "CVIM TUP CISAUK 01"
+  },
+  {
+    "Serial No": "144-186",
+    "nama": "CVIM THB CISAUK 02"
+  },
+  {
+    "Serial No": "256-024",
+    "nama": "CVIM CASHLESS CISAUK 03"
+  },
+  {
+    "Serial No": "247-024",
+    "nama": "CVIM CASHLESS CITAYAM 04"
+  },
+  {
+    "Serial No": "200-186",
+    "nama": "CVIM TUP CITAYAM 05"
+  },
+  {
+    "Serial No": "198-186",
+    "nama": "CVIM THB CITAYAM 06"
+  },
+  {
+    "Serial No": "197-186",
+    "nama": "CVIM THB CITAYAM 07"
+  },
+  {
+    "Serial No": "201-186",
+    "nama": "CVIM TUP CITAYAM 08"
+  },
+  {
+    "Serial No": "213-186",
+    "nama": "CVIM FA CITAYAM 09"
+  },
+  {
+    "Serial No": "224-186",
+    "nama": "CVIM FA DARU 01"
+  },
+  {
+    "Serial No": "015-050",
+    "nama": "CVIM REG DARU 02"
+  },
+  {
+    "Serial No": "062-186",
+    "nama": "CVIM THB DELANGGU 01"
+  },
+  {
+    "Serial No": "210-186",
+    "nama": "CVIM THB DEPOK 04"
+  },
+  {
+    "Serial No": "184-186",
+    "nama": "CVIM TUP DEPOK 05"
+  },
+  {
+    "Serial No": "214-186",
+    "nama": "CVIM FA DEPOK 07"
+  },
+  {
+    "Serial No": "114-186",
+    "nama": "CVIM TUP DEPOK 08"
+  },
+  {
+    "Serial No": "115-186",
+    "nama": "CVIM TUP DEPOK 09"
+  },
+  {
+    "Serial No": "215-186",
+    "nama": "CVIM FA DEPOK BARU 01"
+  },
+  {
+    "Serial No": "138-186",
+    "nama": "CVIM THB DEPOK BARU 02"
+  },
+  {
+    "Serial No": "142-186",
+    "nama": "CVIM THB DEPOK BARU 03"
+  },
+  {
+    "Serial No": "248-024",
+    "nama": "CVIM CASHLESS DEPOK BARU 04"
+  },
+  {
+    "Serial No": "098-186",
+    "nama": "CVIM THB DUREN KALIBATA 01"
+  },
+  {
+    "Serial No": "099-186",
+    "nama": "CVIM THB DUREN KALIBATA 02"
+  },
+  {
+    "Serial No": "100-186",
+    "nama": "CVIM TUP DUREN KALIBATA 03"
+  },
+  {
+    "Serial No": "101-186",
+    "nama": "CVIM TUP DUREN KALIBATA 04"
+  },
+  {
+    "Serial No": "223-186",
+    "nama": "CVIM FA DURI 01"
+  },
+  {
+    "Serial No": "187-186",
+    "nama": "CVIM TUP DURI 02"
+  },
+  {
+    "Serial No": "109-186",
+    "nama": "CVIM TUP DURI 03"
+  },
+  {
+    "Serial No": "252-024",
+    "nama": "CVIM CASHLESS DURI 04"
+  },
+  {
+    "Serial No": "058-186",
+    "nama": "CVIM THB GAWOK 01"
+  },
+  {
+    "Serial No": "106-186",
+    "nama": "CVIM THB GONDANGDIA 01"
+  },
+  {
+    "Serial No": "107-186",
+    "nama": "CVIM THB GONDANGDIA 02"
+  },
+  {
+    "Serial No": "090-186",
+    "nama": "CVIM TUP GONDANGDIA 04"
+  },
+  {
+    "Serial No": "092-186",
+    "nama": "CVIM TUP GONDANGDIA 05"
+  },
+  {
+    "Serial No": "091-186",
+    "nama": "CVIM TUP GONDANGDIA 06"
+  },
+  {
+    "Serial No": "242-024",
+    "nama": "CVIM CASHLESS GONDANGDIA 07"
+  },
+  {
+    "Serial No": "165-186",
+    "nama": "CVIM TUP GROGOL 01"
+  },
+  {
+    "Serial No": "104-186",
+    "nama": "CVIM TUP JAKARTA KOTA 01"
+  },
+  {
+    "Serial No": "002-050",
+    "nama": "CVIM REG JAKARTA KOTA 02"
+  },
+  {
+    "Serial No": "003-050",
+    "nama": "CVIM REG JAKARTA KOTA 03"
+  },
+  {
+    "Serial No": "102-186",
+    "nama": "CVIM TUP JAKARTA KOTA 04"
+  },
+  {
+    "Serial No": "010-050",
+    "nama": "CVIM REG JAKARTA KOTA 05"
+  },
+  {
+    "Serial No": "011-050",
+    "nama": "CVIM REG JAKARTA KOTA 06"
+  },
+  {
+    "Serial No": "074-186",
+    "nama": "CVIM THB JAKARTA KOTA 07"
+  },
+  {
+    "Serial No": "243-024",
+    "nama": "CVIM CASHLESS JAKARTA KOTA 08"
+  },
+  {
+    "Serial No": "121-186",
+    "nama": "CVIM TUP JATAKE 01"
+  },
+  {
+    "Serial No": "250-024",
+    "nama": "CVIM CASHLESS JATAKE 02"
+  },
+  {
+    "Serial No": "134-186",
+    "nama": "CVIM TUP JATINEGARA 01"
+  },
+  {
+    "Serial No": "218-186",
+    "nama": "CVIM FA JATINEGARA 02"
+  },
+  {
+    "Serial No": "089-186",
+    "nama": "CVIM TUP JATINEGARA 03"
+  },
+  {
+    "Serial No": "037-050",
+    "nama": "CVIM REG JAYAKARTA 02"
+  },
+  {
+    "Serial No": "018-050",
+    "nama": "CVIM REG JAYAKARTA 03"
+  },
+  {
+    "Serial No": "041-050",
+    "nama": "CVIM REG JUANDA 01"
+  },
+  {
+    "Serial No": "051-186",
+    "nama": "CVIM THB JUANDA 04"
+  },
+  {
+    "Serial No": "052-186",
+    "nama": "CVIM THB JUANDA 05"
+  },
+  {
+    "Serial No": "053-186",
+    "nama": "CVIM TUP JUANDA 06"
+  },
+  {
+    "Serial No": "054-186",
+    "nama": "CVIM TUP JUANDA 07"
+  },
+  {
+    "Serial No": "241-024",
+    "nama": "CVIM CASHLESS JUANDA 08"
+  },
+  {
+    "Serial No": "031-050",
+    "nama": "CVIM REG JUANDA 09"
+  },
+  {
+    "Serial No": "146-186",
+    "nama": "CVIM THB JUANDA 10"
+  },
+  {
+    "Serial No": "234-186",
+    "nama": "CVIM FA JURANG MANGU 01"
+  },
+  {
+    "Serial No": "258-024",
+    "nama": "CVIM CASHLESS JURANG MANGU 02"
+  },
+  {
+    "Serial No": "172-186",
+    "nama": "CVIM TUP KALIDERES 01"
+  },
+  {
+    "Serial No": "094-186",
+    "nama": "CVIM THB KEBAYORAN 01"
+  },
+  {
+    "Serial No": "095-186",
+    "nama": "CVIM THB KEBAYORAN 02"
+  },
+  {
+    "Serial No": "096-186",
+    "nama": "CVIM THB KEBAYORAN 03"
+  },
+  {
+    "Serial No": "097-186",
+    "nama": "CVIM THB KEBAYORAN 04"
+  },
+  {
+    "Serial No": "085-186",
+    "nama": "CVIM TUP KEBAYORAN 05"
+  },
+  {
+    "Serial No": "262-024",
+    "nama": "CVIM CASHLESS KEBAYORAN 06"
+  },
+  {
+    "Serial No": "221-186",
+    "nama": "CVIM FA KEBAYORAN 07"
+  },
+  {
+    "Serial No": "063-186",
+    "nama": "CVIM THB KLATEN 01"
+  },
+  {
+    "Serial No": "029-050",
+    "nama": "CVIM REG KLENDER 01"
+  },
+  {
+    "Serial No": "030-050",
+    "nama": "CVIM REG KLENDER 02"
+  },
+  {
+    "Serial No": "219-186",
+    "nama": "CVIM FA KLENDER BARU 01"
+  },
+  {
+    "Serial No": "004-050",
+    "nama": "CVIM REG KLENDER BARU 02"
+  },
+  {
+    "Serial No": "005-050",
+    "nama": "CVIM REG KLENDER BARU 03"
+  },
+  {
+    "Serial No": "008-050",
+    "nama": "CVIM REG KRANJI 01"
+  },
+  {
+    "Serial No": "009-050",
+    "nama": "CVIM REG KRANJI 02"
+  },
+  {
+    "Serial No": "220-186",
+    "nama": "CVIM FA KRANJI 04"
+  },
+  {
+    "Serial No": "017-050",
+    "nama": "CVIM REG KRANJI 05"
+  },
+  {
+    "Serial No": "066-186",
+    "nama": "CVIM THB LEMPUYANGAN 01"
+  },
+  {
+    "Serial No": "154-186",
+    "nama": "CVIM THB LENTENG AGUNG 02"
+  },
+  {
+    "Serial No": "156-186",
+    "nama": "CVIM THB LENTENG AGUNG 03"
+  },
+  {
+    "Serial No": "155-186",
+    "nama": "CVIM TUP LENTENG AGUNG 04"
+  },
+  {
+    "Serial No": "216-186",
+    "nama": "CVIM FA LENTENG AGUNG 05"
+  },
+  {
+    "Serial No": "065-186",
+    "nama": "CVIM THB MAGUWO 01"
+  },
+  {
+    "Serial No": "024-050",
+    "nama": "CVIM REG MAJA 03"
+  },
+  {
+    "Serial No": "023-050",
+    "nama": "CVIM REG MAJA 04"
+  },
+  {
+    "Serial No": "082-186",
+    "nama": "CVIM TUP MAJA 05"
+  },
+  {
+    "Serial No": "127-186",
+    "nama": "CVIM THB MANGGA BESAR 01"
+  },
+  {
+    "Serial No": "126-186",
+    "nama": "CVIM THB MANGGA BESAR 02"
+  },
+  {
+    "Serial No": "108-186",
+    "nama": "CVIM TUP MANGGA BESAR 03"
+  },
+  {
+    "Serial No": "240-024",
+    "nama": "CVIM CASHLESS MANGGARAI 01"
+  },
+  {
+    "Serial No": "033-050",
+    "nama": "CVIM REG MANGGARAI 03"
+  },
+  {
+    "Serial No": "103-186",
+    "nama": "CVIM TUP MANGGARAI 04"
+  },
+  {
+    "Serial No": "016-050",
+    "nama": "CVIM REG MANGGARAI 05"
+  },
+  {
+    "Serial No": "204-186",
+    "nama": "CVIM THB MANGGARAI 06"
+  },
+  {
+    "Serial No": "105-186",
+    "nama": "CVIM TUP MANGGARAI 07"
+  },
+  {
+    "Serial No": "045-050",
+    "nama": "CVIM REG MATRAMAN 01"
+  },
+  {
+    "Serial No": "046-050",
+    "nama": "CVIM REG MATRAMAN 02"
+  },
+  {
+    "Serial No": "180-186",
+    "nama": "CVIM THB NAMBO 01"
+  },
+  {
+    "Serial No": "181-186",
+    "nama": "CVIM THB NAMBO 02"
+  },
+  {
+    "Serial No": "261-024",
+    "nama": "CVIM CASHLESS PALMERAH 02"
+  },
+  {
+    "Serial No": "014-050",
+    "nama": "CVIM REG PALMERAH 03"
+  },
+  {
+    "Serial No": "159-186",
+    "nama": "CVIM TUP PALMERAH 04"
+  },
+  {
+    "Serial No": "152-186",
+    "nama": "CVIM TUP PALMERAH 07"
+  },
+  {
+    "Serial No": "076-186",
+    "nama": "CVIM THB PALUR 01"
+  },
+  {
+    "Serial No": "083-186",
+    "nama": "CVIM TUP PARUNG PANJANG 01"
+  },
+  {
+    "Serial No": "020-050",
+    "nama": "CVIM REG PARUNG PANJANG 04"
+  },
+  {
+    "Serial No": "019-050",
+    "nama": "CVIM REG PARUNG PANJANG 05"
+  },
+  {
+    "Serial No": "084-186",
+    "nama": "CVIM TUP PARUNG PANJANG 06"
+  },
+  {
+    "Serial No": "135-186",
+    "nama": "CVIM TUP PASAR MINGGU 01"
+  },
+  {
+    "Serial No": "148-186",
+    "nama": "CVIM THB PASAR MINGGU 02"
+  },
+  {
+    "Serial No": "149-186",
+    "nama": "CVIM THB PASAR MINGGU 03"
+  },
+  {
+    "Serial No": "150-186",
+    "nama": "CVIM THB PASAR MINGGU 04"
+  },
+  {
+    "Serial No": "151-186",
+    "nama": "CVIM TUP PASAR MINGGU 05"
+  },
+  {
+    "Serial No": "254-024",
+    "nama": "CVIM CASHLESS PASAR MINGGU 06"
+  },
+  {
+    "Serial No": "217-186",
+    "nama": "CVIM FA PASAR MINGGU 07"
+  },
+  {
+    "Serial No": "190-186",
+    "nama": "CVIM TUP PASAR MINGGU BARU 01"
+  },
+  {
+    "Serial No": "167-186",
+    "nama": "CVIM TUP PESING 01"
+  },
+  {
+    "Serial No": "136-186",
+    "nama": "CVIM THB PONDOK CINA 01"
+  },
+  {
+    "Serial No": "137-186",
+    "nama": "CVIM THB PONDOK CINA 02"
+  },
+  {
+    "Serial No": "028-050",
+    "nama": "CVIM REG PONDOK CINA 03"
+  },
+  {
+    "Serial No": "007-050",
+    "nama": "CVIM REG PONDOK CINA 04"
+  },
+  {
+    "Serial No": "140-186",
+    "nama": "CVIM TUP PONDOK CINA 05"
+  },
+  {
+    "Serial No": "141-186",
+    "nama": "CVIM TUP PONDOK CINA 06"
+  },
+  {
+    "Serial No": "235-186",
+    "nama": "CVIM FA PONDOK CINA 07"
+  },
+  {
+    "Serial No": "161-186",
+    "nama": "CVIM TUP PONDOK CINA 08"
+  },
+  {
+    "Serial No": "245-024",
+    "nama": "CVIM CASHLESS PONDOK CINA 09"
+  },
+  {
+    "Serial No": "196-186",
+    "nama": "CVIM THB PONDOK RAJEG 01"
+  },
+  {
+    "Serial No": "199-186",
+    "nama": "CVIM TUP PONDOK RAJEG 02"
+  },
+  {
+    "Serial No": "039-050",
+    "nama": "CVIM REG PONDOK RANJI 01"
+  },
+  {
+    "Serial No": "040-050",
+    "nama": "CVIM REG PONDOK RANJI 02"
+  },
+  {
+    "Serial No": "047-050",
+    "nama": "CVIM REG PONDOK RANJI 03"
+  },
+  {
+    "Serial No": "157-186",
+    "nama": "CVIM TUP PONDOK RANJI 04"
+  },
+  {
+    "Serial No": "237-002",
+    "nama": "CVIM THB PONDOK RANJI 05"
+  },
+  {
+    "Serial No": "238-002",
+    "nama": "CVIM TUP PONDOK RANJI 06"
+  },
+  {
+    "Serial No": "013-050",
+    "nama": "CVIM REG PONDOK RANJI 07"
+  },
+  {
+    "Serial No": "035-050",
+    "nama": "CVIM REG PORIS 01"
+  },
+  {
+    "Serial No": "036-050",
+    "nama": "CVIM REG PORIS 02"
+  },
+  {
+    "Serial No": "169-186",
+    "nama": "CVIM TUP PORIS 03"
+  },
+  {
+    "Serial No": "057-186",
+    "nama": "CVIM THB PURWOSARI 01"
+  },
+  {
+    "Serial No": "239-024",
+    "nama": "CVIM CASHLESS RANGKAS BITUNG 01"
+  },
+  {
+    "Serial No": "081-186",
+    "nama": "CVIM TUP RANGKAS BITUNG 03"
+  },
+  {
+    "Serial No": "225-186",
+    "nama": "CVIM FA RAWA BUAYA 01"
+  },
+  {
+    "Serial No": "124-186",
+    "nama": "CVIM THB SAWAH BESAR 01"
+  },
+  {
+    "Serial No": "125-186",
+    "nama": "CVIM THB SAWAH BESAR 02"
+  },
+  {
+    "Serial No": "112-186",
+    "nama": "CVIM TUP SAWAH BESAR 03"
+  },
+  {
+    "Serial No": "078-186",
+    "nama": "CVIM THB SERPONG 04"
+  },
+  {
+    "Serial No": "079-186",
+    "nama": "CVIM TUP SERPONG 05"
+  },
+  {
+    "Serial No": "257-024",
+    "nama": "CVIM CASHLESS SERPONG 06"
+  },
+  {
+    "Serial No": "222-186",
+    "nama": "CVIM FA SERPONG 07"
+  },
+  {
+    "Serial No": "059-186",
+    "nama": "CVIM THB SOLO BALAPAN 01"
+  },
+  {
+    "Serial No": "171-186",
+    "nama": "CVIM TUP SOLO BALAPAN 02"
+  },
+  {
+    "Serial No": "075-186",
+    "nama": "CVIM THB SOLO JEBRES 01"
+  },
+  {
+    "Serial No": "060-186",
+    "nama": "CVIM THB SROWOT 01"
+  },
+  {
+    "Serial No": "186-186",
+    "nama": "CVIM TUP SUDIMARA 01"
+  },
+  {
+    "Serial No": "259-024",
+    "nama": "CVIM CASHLESS SUDIMARA 02"
+  },
+  {
+    "Serial No": "192-186",
+    "nama": "CVIM TUP SUDIMARA 03"
+  },
+  {
+    "Serial No": "244-024",
+    "nama": "CVIM CASHLESS SUDIRMAN 04"
+  },
+  {
+    "Serial No": "131-186",
+    "nama": "CVIM TUP SUDIRMAN 05"
+  },
+  {
+    "Serial No": "132-186",
+    "nama": "CVIM TUP SUDIRMAN 06"
+  },
+  {
+    "Serial No": "055-186",
+    "nama": "CVIM TUP SUDIRMAN 08"
+  },
+  {
+    "Serial No": "175-186",
+    "nama": "CVIM TUP SUDIRMAN BARU 01"
+  },
+  {
+    "Serial No": "176-186",
+    "nama": "CVIM TUP SUDIRMAN BARU 02"
+  },
+  {
+    "Serial No": "233-186",
+    "nama": "CVIM FA SUDIRMAN BARU 03"
+  },
+  {
+    "Serial No": "133-186",
+    "nama": "CVIM TUP SUDIRMAN BARU 04"
+  },
+  {
+    "Serial No": "246-024",
+    "nama": "CVIM CASHLESS SUDIRMAN BARU 05"
+  },
+  {
+    "Serial No": "147-186",
+    "nama": "CVIM TUP TAMAN KOTA 02"
+  },
+  {
+    "Serial No": "232-186",
+    "nama": "CVIM FA TAMAN KOTA 03"
+  },
+  {
+    "Serial No": "188-186",
+    "nama": "CVIM TUP TAMBUN 01"
+  },
+  {
+    "Serial No": "129-186",
+    "nama": "CVIM TUP TANAH ABANG 01"
+  },
+  {
+    "Serial No": "130-186",
+    "nama": "CVIM TUP TANAH ABANG 02"
+  },
+  {
+    "Serial No": "086-186",
+    "nama": "CVIM TUP TANAH ABANG 03"
+  },
+  {
+    "Serial No": "174-186",
+    "nama": "CVIM TUP TANAH ABANG 04"
+  },
+  {
+    "Serial No": "255-024",
+    "nama": "CVIM CASHLESS TANAH ABANG 05"
+  },
+  {
+    "Serial No": "227-186",
+    "nama": "CVIM FA TANAH TINGGI 01"
+  },
+  {
+    "Serial No": "044-050",
+    "nama": "CVIM REG TANGERANG 01"
+  },
+  {
+    "Serial No": "260-024",
+    "nama": "CVIM CASHLESS TANGERANG 02"
+  },
+  {
+    "Serial No": "048-050",
+    "nama": "CVIM REG TANGERANG 04"
+  },
+  {
+    "Serial No": "166-186",
+    "nama": "CVIM TUP TANGERANG 05"
+  },
+  {
+    "Serial No": "168-186",
+    "nama": "CVIM TUP TANGERANG 06"
+  },
+  {
+    "Serial No": "119-186",
+    "nama": "CVIM TUP TANJUNG BARAT 01"
+  },
+  {
+    "Serial No": "120-186",
+    "nama": "CVIM TUP TANJUNG BARAT 02"
+  },
+  {
+    "Serial No": "195-186",
+    "nama": "CVIM THB TANJUNG BARAT 03"
+  },
+  {
+    "Serial No": "194-186",
+    "nama": "CVIM THB TANJUNG BARAT 04"
+  },
+  {
+    "Serial No": "253-024",
+    "nama": "CVIM CASHLESS TANJUNG BARAT 05"
+  },
+  {
+    "Serial No": "228-186",
+    "nama": "CVIM FA TANJUNG PRIOK 01"
+  },
+  {
+    "Serial No": "049-050",
+    "nama": "CVIM REG TANJUNG PRIOK 02"
+  },
+  {
+    "Serial No": "050-050",
+    "nama": "CVIM REG TANJUNG PRIOK 03"
+  },
+  {
+    "Serial No": "006-050",
+    "nama": "CVIM REG TANJUNG PRIOK 04"
+  },
+  {
+    "Serial No": "027-050",
+    "nama": "CVIM REG TANJUNG PRIOK 05"
+  },
+  {
+    "Serial No": "202-186",
+    "nama": "CVIM THB TEBET 02"
+  },
+  {
+    "Serial No": "206-186",
+    "nama": "CVIM THB TEBET 04"
+  },
+  {
+    "Serial No": "189-186",
+    "nama": "CVIM TUP TEBET 07"
+  },
+  {
+    "Serial No": "191-186",
+    "nama": "CVIM TUP TEBET 09"
+  },
+  {
+    "Serial No": "231-186",
+    "nama": "CVIM FA TEBET 10"
+  },
+  {
+    "Serial No": "160-186",
+    "nama": "CVIM TUP TEBET 12"
+  },
+  {
+    "Serial No": "170-186",
+    "nama": "CVIM TUP TEBET 13"
+  },
+  {
+    "Serial No": "143-186",
+    "nama": "CVIM THB TELAGA MURNI 01"
+  },
+  {
+    "Serial No": "193-186",
+    "nama": "CVIM TUP TELAGA MURNI 02"
+  },
+  {
+    "Serial No": "022-050",
+    "nama": "CVIM REG TELAGA MURNI 03"
+  },
+  {
+    "Serial No": "038-050",
+    "nama": "CVIM REG TIGARAKSA 01"
+  },
+  {
+    "Serial No": "026-050",
+    "nama": "CVIM REG TIGARAKSA 02"
+  },
+  {
+    "Serial No": "034-050",
+    "nama": "CVIM REG UNIVERSITAS INDONESIA 02"
+  },
+  {
+    "Serial No": "182-186",
+    "nama": "CVIM TUP UNIVERSITAS INDONESIA 03"
+  },
+  {
+    "Serial No": "183-186",
+    "nama": "CVIM TUP UNIVERSITAS INDONESIA 04"
+  },
+  {
+    "Serial No": "251-024",
+    "nama": "CVIM CASHLESS UNIVERSITAS INDONESIA 05"
+  },
+  {
+    "Serial No": "056-186",
+    "nama": "CVIM THB YOGYAKARTA 01"
+  }
 ]

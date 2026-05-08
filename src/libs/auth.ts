@@ -3,6 +3,7 @@ import CredentialProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
 import type { NextAuthOptions } from 'next-auth'
 import axios from 'axios'
+import * as jsonwebtoken from 'jsonwebtoken'
 
 export const authOptions: NextAuthOptions = {
   // ** Configure one or more authentication providers
@@ -85,7 +86,7 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
 
     // ** Seconds - How long until an idle session expires and is no longer valid
-    maxAge: 30 * 24 * 60 * 60 // ** 30 days
+    maxAge: 1 * 24 * 60 * 60 // ** 1 days
   },
 
   // ** Please refer to https://next-auth.js.org/configuration/options#pages for more `pages` options
@@ -101,30 +102,68 @@ export const authOptions: NextAuthOptions = {
      * via `jwt()` callback to make them accessible in the `session()` callback
      */
     async jwt({ token, user }: any) {
+      // 1. Saat pertama kali login
       if (user) {
-        /*
-         * For adding custom parameters to user in session, we first need to add those parameters
-         * in token which then will be available in the `session()` callback
-         */
         token.id = user.id
         token.username = user.username
         token.accessToken = user.accessToken
         token.refreshToken = user.refreshToken
         token.roleId = user.roleId
         token.image = user.image
+
+        // Decode token untuk mendapatkan waktu expired (berupa Unix timestamp)
+        const decoded = jsonwebtoken.decode(user.accessToken) as any
+
+        token.accessTokenExpires = (decoded?.exp || 0) * 1000 // Konversi ke milidetik
       }
 
-      return token
+      // 2. Jika token masih valid (beri jeda aman 1 menit sebelum expired)
+      if (Date.now() < token.accessTokenExpires - 60 * 1000) {
+        return token
+      }
+
+      // 3. Jika token expired dan user punya Refresh Token (karena remember me dicentang)
+      if (token.refreshToken) {
+        try {
+          // Sesuaikan URL ini dengan environment aplikasi Anda
+          const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+
+          const res = await axios.post(`${baseUrl}/api/auth/refresh`, {
+            refreshToken: token.refreshToken
+          })
+
+          if (res.data?.status === 200) {
+            const newAccessToken = res.data.data.accessToken
+            const decodedNewToken = jsonwebtoken.decode(newAccessToken) as any
+
+            // Simpan token baru ke session NextAuth
+            token.accessToken = newAccessToken
+            token.accessTokenExpires = (decodedNewToken?.exp || 0) * 1000
+
+            return token
+          }
+        } catch (error) {
+          console.error('Gagal refresh token:', error)
+
+          // Jika gagal, set error untuk ditangkap di client
+          return { ...token, error: 'RefreshAccessTokenError' }
+        }
+      }
+
+      // Jika tidak punya refresh token, biarkan token hangus
+      return { ...token, error: 'RefreshAccessTokenError' }
     },
     async session({ session, token }: any) {
       if (session.user) {
-        // ** Add custom params to user in session which are added in `jwt()` callback via `token` parameter
         session.user.id = token.id
         session.user.username = token.username
         session.user.accessToken = token.accessToken
         session.user.refreshToken = token.refreshToken
         session.user.roleId = token.roleId
         session.user.image = token.image
+
+        // Pass pesan error (jika ada) ke client agar bisa ditangkap oleh Axios
+        session.error = token.error
       }
 
       return session

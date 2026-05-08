@@ -59,7 +59,7 @@ export async function POST(req: Request) {
     }
 
     const accessToken = jwt.sign({ id: user.id, username: user.username, type: 'access' }, JWT_SECRET, {
-      expiresIn: (TOKEN_EXPIRES ? Number(TOKEN_EXPIRES) : '1d') as jwt.SignOptions['expiresIn']
+      expiresIn: (TOKEN_EXPIRES ? Number(TOKEN_EXPIRES) : '2d') as jwt.SignOptions['expiresIn']
     })
 
     const refreshToken = remember
