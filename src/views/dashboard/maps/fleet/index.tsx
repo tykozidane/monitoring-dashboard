@@ -141,7 +141,7 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
 
       if (findWarning) return { ...m, ...findWarning };
 
-      return { ...m };
+      return { ...m, status: 'normal' };
     }));
 
     setExpandedData((prev) => {
@@ -157,7 +157,7 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
 
         if (findTerminal) return { ...m, ...findTerminal };
 
-        return { ...m };
+        return { ...m, status: 'normal' };
       });
 
       setPopupInfo((currentPopup) => {
