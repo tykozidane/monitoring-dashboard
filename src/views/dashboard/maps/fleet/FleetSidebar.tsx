@@ -34,6 +34,7 @@ import CustomAvatar from '@core/components/mui/Avatar'
 import type { GeojsonProps, StationData, TerminalMonitoringProps, ViewStateType } from './'
 
 type Props = {
+  LoadingAllStation: boolean;
   backdropOpen: boolean; setBackdropOpen: (value: boolean) => void;
   sidebarOpen: boolean; setSidebarOpen: (value: boolean) => void;
   isBelowLgScreen: boolean; isBelowMdScreen: boolean; isBelowSmScreen: boolean;
@@ -197,7 +198,7 @@ const FleetSidebar = (props: Props) => {
     backdropOpen, setBackdropOpen, sidebarOpen, setSidebarOpen,
     isBelowLgScreen, isBelowMdScreen, isBelowSmScreen,
     expanded, expandedData, loadingExpanded, setExpandedDataSelected, setExpanded, setViewState, geojson,
-    searchQuery, setSearchQuery, popupInfo, setPopupInfo, fetchAllTerminalsApi
+    searchQuery, setSearchQuery, popupInfo, setPopupInfo, fetchAllTerminalsApi, LoadingAllStation
   } = props
 
   const [showFilters, setShowFilters] = useState(false);
@@ -288,7 +289,7 @@ const FleetSidebar = (props: Props) => {
         }
       }}
     >
-      <div className='flex justify-between items-center plb-6 pli-6'>
+      <div className={`${LoadingAllStation && 'hidden'} flex justify-between items-center plb-6 pli-6`}>
         <Typography variant='h5'>Monitoring Station</Typography>
 
         <div className='flex items-center gap-1'>
@@ -309,7 +310,7 @@ const FleetSidebar = (props: Props) => {
         </div>
       </div>
 
-      <div className="px-6 pb-6 mb-2 flex flex-col gap-4 border-b border-divider shrink-0">
+      <div className={`${LoadingAllStation && 'hidden'} px-6 pb-6 mb-2 flex flex-col gap-4 border-b border-divider shrink-0`}>
 
         {/* KOLOM PENCARIAN STASIUN DISEMBUNYIKAN JIKA FILTER TERMINAL TERBUKA */}
         {!showFilters && (
@@ -366,6 +367,16 @@ const FleetSidebar = (props: Props) => {
           </div>
         )}
       </div>
+
+
+      {LoadingAllStation && (
+        <div className="px-6 mt-5 mb-4 shrink-0">
+          <LinearProgress color="primary" />
+          <Typography variant="caption" color="text.secondary" className="block text-center mt-2 italic animate-pulse">
+            Preparing data all station...
+          </Typography>
+        </div>
+      )}
 
       {isFetchingAll && (
         <div className="px-6 mb-4 shrink-0">
@@ -432,14 +443,14 @@ const FleetSidebar = (props: Props) => {
           </div>
         ) : (
           <>
-            {filteredStations.length === 0 && (
+            {filteredStations.length === 0 && !LoadingAllStation && (
               <Typography variant='body2' color="text.secondary" className='text-center mt-6 italic'>No stations found.</Typography>
             )}
             {filteredStations.map((item, index) => (
               <VehicleTracking
                 vehicleTrackingData={item.data}
                 expanded={expanded}
-                expandedData={expandedData}
+                expandedData={expandedData.filter((f) => f.c_terminal_sn)}
                 loadingExpanded={loadingExpanded}
                 handleChange={handleChange}
                 setExpandedDataSelected={setExpandedDataSelected}

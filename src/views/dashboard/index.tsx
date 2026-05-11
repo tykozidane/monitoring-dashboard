@@ -68,10 +68,13 @@ export interface DashboardRawData {
   danger_station: number
   list_danger: Station[]
   list_warning: Station[]
+  list_nodata: Station[]
 }
 
 export interface DashboardProcessedData extends DashboardRawData {
   list_warning: Station[]
+  list_nodata: Station[]
+  list_danger: Station[]
 }
 
 type SummaryDataType = {
@@ -141,8 +144,9 @@ const Dashboard = ({ user, mapboxAccessToken }: { user: UserDefaultProps | null,
 
     const actualDanger = [...(raw.list_danger || [])].sort(sortByLatest);
     const actualWarning = [...(raw.list_warning || [])].sort(sortByLatest);
+    const actualNodata = [...(raw.list_nodata || [])].sort(sortByLatest);
 
-    return { ...raw, list_danger: actualDanger, list_warning: actualWarning }
+    return { ...raw, list_danger: actualDanger, list_warning: actualWarning, list_nodata: actualNodata }
   }
 
   const renderSafeDate = (dateString: string) => {
@@ -191,7 +195,7 @@ const Dashboard = ({ user, mapboxAccessToken }: { user: UserDefaultProps | null,
       );
 
       const rawData: DashboardRawData = response.data?.data || {
-        green_station: 0, warning_station: 0, danger_station: 0, list_danger: [], list_warning: []
+        green_station: 0, warning_station: 0, danger_station: 0, list_danger: [], list_warning: [], list_nodata: []
       };
 
       setDashboardData(processDashboardData(rawData));

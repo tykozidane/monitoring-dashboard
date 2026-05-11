@@ -67,6 +67,7 @@ type FleetProps = {
 const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardData }: FleetProps) => {
   const [backdropOpen, setBackdropOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [LoadingAllStation, setLoadingAllStation] = useState(true)
 
   const [expanded, setExpanded] = useState<string | false>(false)
   const [expandedData, setExpandedData] = useState<TerminalMonitoringProps[]>([])
@@ -96,6 +97,8 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
     let isMounted = true;
 
     const fetchStations = async (projectCode: string) => {
+      setLoadingAllStation(true);
+
       try {
         const session = await getSession();
         const apiUrl = process.env.NEXT_PUBLIC_API_MONITORING_URL || process.env.API_MONITORING_URL || 'https://da-device.devops-nutech.com/api/v1';
@@ -121,6 +124,8 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
           setOriginalStations([]);
           setRawStations([]);
         }
+      } finally {
+        setLoadingAllStation(false);
       }
     };
 
@@ -141,6 +146,11 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
 
       if (findWarning) return { ...m, ...findWarning };
 
+
+      const findNodata = dashboardData.list_nodata?.find((f) => f.c_station === m.c_station);
+
+      if (findNodata) return { ...m, ...findNodata };
+
       return { ...m, status: 'normal' };
     }));
 
@@ -148,11 +158,16 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
       const newExpandedData = prev.map((m) => {
         const findStationDanger = dashboardData.list_danger?.find((f) => f.c_station === m.c_station);
         const findStationWarning = dashboardData.list_warning?.find((f) => f.c_station === m.c_station);
+        const findStationNodata = dashboardData.list_nodata?.find((f) => f.c_station === m.c_station);
 
         let findTerminal = findStationDanger?.terminal?.find((f) => f.c_terminal_sn === m.c_terminal_sn);
 
         if (!findTerminal) {
           findTerminal = findStationWarning?.terminal?.find((f) => f.c_terminal_sn === m.c_terminal_sn);
+        }
+
+        if (!findTerminal) {
+          findTerminal = findStationNodata?.terminal?.find((f) => f.c_terminal_sn === m.c_terminal_sn);
         }
 
         if (findTerminal) return { ...m, ...findTerminal };
@@ -249,11 +264,16 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
         const syncedData = terminalData.map((term) => {
           const findStationDanger = dashboardData?.list_danger?.find((f) => f.c_station === stationId);
           const findStationWarning = dashboardData?.list_warning?.find((f) => f.c_station === stationId);
+          const findStationNodata = dashboardData?.list_nodata?.find((f) => f.c_station === stationId);
 
           let findTerminal = findStationDanger?.terminal?.find((f) => f.c_terminal_sn === term.c_terminal_sn);
 
           if (!findTerminal) {
             findTerminal = findStationWarning?.terminal?.find((f) => f.c_terminal_sn === term.c_terminal_sn);
+          }
+
+          if (!findTerminal) {
+            findTerminal = findStationNodata?.terminal?.find((f) => f.c_terminal_sn === term.c_terminal_sn);
           }
 
           if (findTerminal) return { ...term, ...findTerminal };
@@ -275,7 +295,6 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
       if (!isBackground) setLoadingExpanded(false);
     }
   }
-
 
   // --- FUNGSI BARU: Mengambil seluruh terminal dengan melakukan hit API per Stasiun ---
   const fetchAllTerminalsApi = async (): Promise<TerminalMonitoringProps[]> => {
@@ -324,11 +343,16 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
       const syncedData = allTerminals.map((term) => {
         const findStationDanger = dashboardData?.list_danger?.find((f) => f.c_station === term.c_station);
         const findStationWarning = dashboardData?.list_warning?.find((f) => f.c_station === term.c_station);
+        const findStationNodata = dashboardData?.list_nodata?.find((f) => f.c_station === term.c_station);
 
         let findTerminal = findStationDanger?.terminal?.find((f) => f.c_terminal_sn === term.c_terminal_sn);
 
         if (!findTerminal) {
           findTerminal = findStationWarning?.terminal?.find((f) => f.c_terminal_sn === term.c_terminal_sn);
+        }
+
+        if (!findTerminal) {
+          findTerminal = findStationNodata?.terminal?.find((f) => f.c_terminal_sn === term.c_terminal_sn);
         }
 
         if (findTerminal) return { ...term, ...findTerminal };
@@ -389,6 +413,7 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
         popupInfo={popupInfo}
         setPopupInfo={setPopupInfo}
         loadingExpanded={loadingExpanded}
+        LoadingAllStation={LoadingAllStation}
 
         // Passing fungsi hit API ke sidebar!
         fetchAllTerminalsApi={fetchAllTerminalsApi}
