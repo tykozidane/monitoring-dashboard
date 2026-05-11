@@ -8,7 +8,7 @@ COPY package.json pnpm-lock.yaml* ./
 # Copy prisma schema agar bisa generate client
 COPY src/prisma ./src/prisma/
 RUN echo "node-linker=hoisted" > .npmrc
-RUN pnpm install --frozen-lockfile --ignore-scripts
+RUN pnpm install --no-frozen-lockfile --ignore-scripts
 
 # Stage 2: Build aplikasi
 FROM node:22-alpine AS builder
