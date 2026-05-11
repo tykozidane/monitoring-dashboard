@@ -1,8 +1,10 @@
 'use client'
 
 // React Imports
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, memo } from 'react'
 import type { ReactNode, SyntheticEvent } from 'react'
+
+import { Virtuoso } from 'react-virtuoso'
 
 // Mui Imports
 import MuiAccordion from '@mui/material/Accordion'
@@ -101,7 +103,7 @@ const getStatusIcon = (status: string) => {
   return 'tabler-info-circle';
 }
 
-const VehicleTracking = ({
+const VehicleTracking = memo(({
   vehicleTrackingData, expanded, expandedData, loadingExpanded, handleChange, setExpandedDataSelected, setPopupInfo
 }: {
   vehicleTrackingData: StationData
@@ -191,7 +193,18 @@ const VehicleTracking = ({
       </AccordionDetails>
     </Accordion>
   )
-}
+}, (prevProps, nextProps) => {
+  // Custom comparison untuk memastikan hanya re-render jika benar-benar perlu
+  return (
+    prevProps.expanded === nextProps.expanded &&
+    prevProps.loadingExpanded === nextProps.loadingExpanded &&
+    prevProps.vehicleTrackingData.c_station === nextProps.vehicleTrackingData.c_station &&
+    prevProps.vehicleTrackingData.status === nextProps.vehicleTrackingData.status &&
+
+    // Cek apakah data expanded berubah khusus untuk station ini
+    (nextProps.expanded !== nextProps.vehicleTrackingData.c_station || prevProps.expandedData === nextProps.expandedData)
+  );
+})
 
 const FleetSidebar = (props: Props) => {
   const {
@@ -252,7 +265,6 @@ const FleetSidebar = (props: Props) => {
 
     return geojson.features.filter((item) => {
       const stationName = item.data.n_station?.toLowerCase() || '';
-
 
       return stationName.includes(searchQuery.toLowerCase());
     });
@@ -386,81 +398,86 @@ const FleetSidebar = (props: Props) => {
           </Typography>
         </div>
       )}
-
-      <ScrollWrapper isBelowLgScreen={isBelowLgScreen}>
-
+      <div className="flex-1 overflow-hidden pl-5">
         {isAdvancedFilterActive ? (
-          <div className="flex flex-col gap-2 mt-4">
-            <Typography variant="caption" className="font-bold uppercase mb-2 block text-primary">
+          <div className="flex flex-col gap-2 mt-4 h-full">
+            <Typography variant="caption" className="font-bold uppercase mb-2 block text-primary px-2">
               Search Results: {globalFilteredTerminals.length} Terminal(s)
             </Typography>
 
             {globalFilteredTerminals.length === 0 && !isFetchingAll && (
-              <Typography variant='body2' color="text.secondary" className='text-center mt-4 italic bg-actionHover p-3 rounded-md'>
+              <Typography variant='body2' color="text.secondary" className='text-center mt-4 italic bg-actionHover p-3 rounded-md mx-2'>
                 No terminal data found matching the filters.
               </Typography>
             )}
 
-            {globalFilteredTerminals.map((item, index) => {
-              const statusColor = getStatusColorClass(item.status);
-              const statusIcon = getStatusIcon(item.status);
+            {/* VIRTUALIZATION UNTUK GLOBAL FILTER */}
+            <Virtuoso
+              style={{ height: 'calc(100vh - 250px)' }} // Sesuaikan tinggi dengan sisa layar
+              data={globalFilteredTerminals}
+              itemContent={(index, item) => {
+                const statusColor = getStatusColorClass(item.status);
+                const statusIcon = getStatusIcon(item.status);
+                const stationFeature = geojson.features.find(f => f.data.c_station === item.c_station);
+                const stationName = stationFeature ? stationFeature.data.n_station : item.c_station;
 
-              const stationFeature = geojson.features.find(f => f.data.c_station === item.c_station);
-              const stationName = stationFeature ? stationFeature.data.n_station : item.c_station;
-
-              return (
-                <div
-                  key={index}
-                  className="p-4 border rounded-lg cursor-pointer hover:bg-actionHover transition-colors border-divider flex items-start gap-4 shadow-sm"
-                  onClick={() => {
-                    setExpandedDataSelected({ longitude: Number(item.n_lng), latitude: Number(item.n_lat), zoom: 22 });
-                    setPopupInfo(item);
-                  }}
-                >
-                  <CustomAvatar skin='light' color='secondary' className="mt-1">
-                    <i className={`${statusIcon} text-2xl ${statusColor}`} />
-                  </CustomAvatar>
-                  <div className="flex flex-col gap-1 w-full">
-                    <div className="flex justify-between items-center">
-                      <Typography className="font-bold text-[14px]">
-                        {item.c_terminal_type}
+                return (
+                  <div
+                    key={item.c_terminal_sn || index}
+                    className="p-4 border rounded-lg cursor-pointer hover:bg-actionHover transition-colors border-divider flex items-start gap-4 shadow-sm mb-2 mx-2"
+                    onClick={() => {
+                      setExpandedDataSelected({ longitude: Number(item.n_lng), latitude: Number(item.n_lat), zoom: 22 });
+                      setPopupInfo(item);
+                    }}
+                  >
+                    {/* Isi dari item list Anda tetap sama */}
+                    <CustomAvatar skin='light' color='secondary' className="mt-1">
+                      <i className={`${statusIcon} text-2xl ${statusColor}`} />
+                    </CustomAvatar>
+                    <div className="flex flex-col gap-1 w-full">
+                      <div className="flex justify-between items-center">
+                        <Typography className="font-bold text-[14px]">{item.c_terminal_type}</Typography>
+                        <Typography className={`uppercase font-bold text-[10px] px-2 py-0.5 rounded-full bg-opacity-20 ${statusColor} bg-current`}>
+                          {item.status}
+                        </Typography>
+                      </div>
+                      <Typography variant="body2" className="text-[12px]" color="text.secondary">
+                        SN: <span className="font-semibold">{item.c_terminal_sn ?? '-'}</span>
                       </Typography>
-                      <Typography className={`uppercase font-bold text-[10px] px-2 py-0.5 rounded-full bg-opacity-20 ${statusColor} bg-current`}>
-                        {item.status}
+                      <Typography variant="caption" className="text-[11px] flex items-center gap-1 mt-0.5" color="text.disabled">
+                        <i className="tabler-map-pin text-[12px]" />
+                        {stationName}
                       </Typography>
                     </div>
-                    <Typography variant="body2" className="text-[12px]" color="text.secondary">
-                      SN: <span className="font-semibold">{item.c_terminal_sn ?? '-'}</span>
-                    </Typography>
-                    <Typography variant="caption" className="text-[11px] flex items-center gap-1 mt-0.5" color="text.disabled">
-                      <i className="tabler-map-pin text-[12px]" />
-                      {stationName}
-                    </Typography>
                   </div>
-                </div>
-              )
-            })}
+                )
+              }}
+            />
           </div>
         ) : (
           <>
             {filteredStations.length === 0 && !LoadingAllStation && (
               <Typography variant='body2' color="text.secondary" className='text-center mt-6 italic'>No stations found.</Typography>
             )}
-            {filteredStations.map((item, index) => (
-              <VehicleTracking
-                vehicleTrackingData={item.data}
-                expanded={expanded}
-                expandedData={expandedData.filter((f) => f.c_terminal_sn)}
-                loadingExpanded={loadingExpanded}
-                handleChange={handleChange}
-                setExpandedDataSelected={setExpandedDataSelected}
-                setPopupInfo={setPopupInfo}
-                key={item.data.c_station || index}
-              />
-            ))}
+
+            {/* VIRTUALIZATION UNTUK STATION LIST */}
+            <Virtuoso
+              className='h-full overflow-x-hidden'
+              data={filteredStations}
+              itemContent={(index, item) => (
+                <VehicleTracking
+                  vehicleTrackingData={item.data}
+                  expanded={expanded}
+                  expandedData={expandedData.filter((f) => f.c_terminal_sn)}
+                  loadingExpanded={loadingExpanded}
+                  handleChange={handleChange}
+                  setExpandedDataSelected={setExpandedDataSelected}
+                  setPopupInfo={setPopupInfo}
+                />
+              )}
+            />
           </>
-        )}
-      </ScrollWrapper>
+        )}</div>
     </Drawer>
   )
 }

@@ -138,18 +138,19 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
     if (!dashboardData) return;
 
     setRawStations(originalStations.map((m) => {
-      const findDanger = dashboardData.list_danger?.find((f) => f.c_station === m.c_station);
-
-      if (findDanger) return { ...m, ...findDanger };
-
       const findWarning = dashboardData.list_warning?.find((f) => f.c_station === m.c_station);
 
       if (findWarning) return { ...m, ...findWarning };
 
+      const findDanger = dashboardData.list_danger?.find((f) => f.c_station === m.c_station);
 
-      const findNodata = dashboardData.list_nodata?.find((f) => f.c_station === m.c_station);
+      if (findDanger) return { ...m, ...findDanger };
 
-      if (findNodata) return { ...m, ...findNodata };
+      const findNodata = dashboardData.list_nodata?.filter((f) => f.c_station === m.c_station);
+
+      if (findNodata.flatMap((f) => f.terminal).length === findNodata?.[0].terminal_total) {
+        return { ...m, ...findNodata };
+      }
 
       return { ...m, status: 'normal' };
     }));
@@ -160,17 +161,22 @@ const Fleet = ({ mapboxAccessToken, selectedStation, activeProject, dashboardDat
         const findStationWarning = dashboardData.list_warning?.find((f) => f.c_station === m.c_station);
         const findStationNodata = dashboardData.list_nodata?.find((f) => f.c_station === m.c_station);
 
-        let findTerminal = findStationDanger?.terminal?.find((f) => f.c_terminal_sn === m.c_terminal_sn);
 
-        if (!findTerminal) {
-          findTerminal = findStationWarning?.terminal?.find((f) => f.c_terminal_sn === m.c_terminal_sn);
+        const findTerminalDanger = findStationDanger?.terminal?.find((f) => f.c_terminal_sn === m.c_terminal_sn);
+
+        if (findTerminalDanger) {
+          return { ...m, ...findTerminalDanger }
         }
 
-        if (!findTerminal) {
-          findTerminal = findStationNodata?.terminal?.find((f) => f.c_terminal_sn === m.c_terminal_sn);
+        const findTerminalWarning = findStationWarning?.terminal?.find((f) => f.c_terminal_sn === m.c_terminal_sn);
+
+        if (findTerminalWarning) {
+          return { ...m, ...findTerminalWarning }
         }
 
-        if (findTerminal) return { ...m, ...findTerminal };
+        const findTerminalNodata = findStationNodata?.terminal?.find((f) => f.c_terminal_sn === m.c_terminal_sn);
+
+        if (findTerminalNodata) return { ...m, ...findTerminalNodata };
 
         return { ...m, status: 'normal' };
       });

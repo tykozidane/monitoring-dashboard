@@ -55,6 +55,7 @@ export interface Station {
   n_lng: string
   status: string
   terminal: Terminal[]
+  terminal_total?: number
 }
 
 export interface ProjectOption {
