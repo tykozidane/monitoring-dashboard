@@ -138,6 +138,9 @@ const FleetMap = (props: Props) => {
 
         if (isMounted) {
           const apiData = response.data?.data;
+
+          console.log(apiData);
+
           const rawDevices = Array.isArray(apiData?.devices) ? apiData.devices : [];
           const rawMetrics = Array.isArray(apiData?.data) ? apiData.data : [];
 
@@ -189,7 +192,7 @@ const FleetMap = (props: Props) => {
           setMetricDetails(processedMetrics);
 
           setLastUpdate(
-            Array.isArray(apiData?.devices) && apiData?.d_monitoring
+            apiData?.d_monitoring
               ? dayjs(apiData.d_monitoring).fromNow()
               : '-'
           );
